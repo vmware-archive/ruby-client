@@ -1,0 +1,5 @@
+*.gem
+Gemfile.lock
+pkg
+rdoc
+spec/reports

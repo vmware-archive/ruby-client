@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+
+#     Copyright 2015 Wavefront Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+# http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+#    limitations under the License.
+
+require 'wavefront/client'
+require 'slop'
+
+@opts = Slop.parse(strict: true) do
+  banner 'Usage: wavefront-client QUERY (OPTIONS)'
+  on 'm', 'minutes', 'Query granularity of minutes'
+  on 'h', 'hours', 'Query granularity of hours'
+  on 'S', 'seconds', 'Query granularity of seconds'
+  on 's', 'start=', 'Time in UNIX epoch seconds to begin the query from'
+  on 't', 'token=', 'Wavefront authentication token'
+  on 'e', 'end=', 'Time in UNIX epoch seconds to query to'
+  on 'h', 'help', 'Display this message'
+end
+
+if @opts.help?
+  puts @opts
+  exit 0
+end
+
+query = ARGV[0]
+if @opts.minutes?
+  granularity = 'm'
+elsif @opts.hours?
+  granularity = 'h'
+elsif @opts.seconds?
+  granularity = 's'
+else
+  puts "You must specify a granularity of either --seconds, --minutes or --hours. See --help for more information."
+  exit 1
+end
+
+options = Hash.new
+if @opts[:start]
+  options[:start_time] = @opts[:start]
+end
+
+if @opts[:end]
+  options[:end_time] = @opts[:end]
+end
+
+wave = Wavefront::Client.new(@opts[:token])
+puts wave.query(query, granularity, options)
