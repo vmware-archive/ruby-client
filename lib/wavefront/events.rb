@@ -1,5 +1,5 @@
-require 'wavefront/client/version'
-require 'wavefront/exception'
+require_relative 'client/version'
+require_relative 'exception'
 require 'rest_client'
 require 'uri'
 require 'logger'
@@ -12,7 +12,7 @@ module Wavefront
   #
   class Events
     DEFAULT_HOST = 'metrics.wavefront.com'
-    DEFAULT_PATH = '/api/events'
+    DEFAULT_PATH = '/api/events/'
 
     attr_reader :token
 
@@ -27,7 +27,7 @@ module Wavefront
       uri = URI::HTTPS.build(
         host:  options[:host],
         path:  options[:path],
-        query: "?t=#{@token}"
+        query: "t=#{@token}"
       )
 
       RestClient.post(uri.to_s, payload)
@@ -44,9 +44,10 @@ module Wavefront
         host:  options[:host],
         path:  options[:path] + 'close',
         query: URI.escape(
-            payload.map { |k, v| [k, v].join('=') }.join('&') + "&t=#{@token}"
+          payload.map { |k, v| [k, v].join('=') }.join('&') + '&t=' + @token
         )
       )
+      puts uri.to_s
 
       RestClient.post(uri.to_s, payload)
     end
