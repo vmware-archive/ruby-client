@@ -3,12 +3,18 @@ require_relative 'exception'
 require 'rest_client'
 require 'uri'
 require 'logger'
-
+#
+# Add basic support to cover Wavefront's events API. I have followed
+# the standards and conventions established in the files already in
+# this repository.
+#
+# R Fisher 07/2015
+#
 module Wavefront
   #
-  # These methods expect to be called with a hash whose keys are as defined in
-  # the Wavefront API Console. That is, 'n' as 'name for the event', 's' as
-  # 'start time for the event' and so-on.
+  # These methods expect to be called with a hash whose keys are as
+  # defined in the Wavefront API Console. That is, 'n' as 'name for
+  # the event', 's' as 'start time for the event' and so-on.
   #
   class Events
     DEFAULT_HOST = 'metrics.wavefront.com'
@@ -37,8 +43,9 @@ module Wavefront
       options[:host] ||= DEFAULT_HOST
       options[:path] ||= DEFAULT_PATH
 
-      # This request seems to need the data as a query string. I was getting a
-      # 500 when I posted a hash. A map will do the needful.
+      # This request seems to need the data as a query string. I was
+      # getting a 500 when I posted a hash. A map will do the
+      # needful.
 
       uri = URI::HTTPS.build(
         host:  options[:host],
