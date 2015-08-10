@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ describe Wavefront::Writer do
 
   it 'has some defaults' do
     expect(Wavefront::Writer::DEFAULT_HOST).to_not be_nil
-    expect(Wavefront::Writer::DEFAULT_HOST).to be_a_kind_of String 
+    expect(Wavefront::Writer::DEFAULT_HOST).to be_a_kind_of String
     expect(Wavefront::Writer::DEFAULT_PORT).to_not be_nil
-    expect(Wavefront::Writer::DEFAULT_PORT).to be_a_kind_of Fixnum 
+    expect(Wavefront::Writer::DEFAULT_PORT).to be_a_kind_of Fixnum
     expect(Wavefront::Writer::DEFAULT_HOSTNAME).to_not be_nil
-    expect(Wavefront::Writer::DEFAULT_HOSTNAME).to be_a_kind_of String 
+    expect(Wavefront::Writer::DEFAULT_HOSTNAME).to be_a_kind_of String
   end
 
 
@@ -62,9 +62,9 @@ describe Wavefront::Writer do
       allow(Time).to receive(:now).and_return(123456789)
       expect(socket).to receive(:puts).with("metric 50 123456789 host=somehost")
       writer = Wavefront::Writer.new
-      writer.write(50, "metric", host, {}, 123456789)
+      writer.write(50, "metric", {host: host, timestamp: 123456789})
     end
-    
+
     it 'should accept a single tag and append it correctly' do
       host = 'somehost'
       port = '8566'
@@ -74,7 +74,8 @@ describe Wavefront::Writer do
       allow(Time).to receive(:now).and_return(123456789)
       expect(socket).to receive(:puts).with("metric 50 123456789 host=somehost tag_key_one=\"tag_val_one\"")
       writer = Wavefront::Writer.new
-      writer.write(50, "metric", host, tags, 123456789)
+      writer.write(50, "metric",
+                   {host: host, point_tags: tags, timestamp: 123456789})
     end
 
    it 'should accept multiple tags and append them correctly' do
@@ -86,9 +87,9 @@ describe Wavefront::Writer do
       allow(Time).to receive(:now).and_return(123456789)
       expect(socket).to receive(:puts).with("metric 50 123456789 host=somehost tag_key_one=\"tag_val_one\" k2=\"v2\"")
       writer = Wavefront::Writer.new
-      writer.write(50, "metric", host, tags, 123456789)
+      writer.write(50, "metric",
+                   {host: host, point_tags: tags, timestamp: 123456789})
 
    end
   end
-
 end
