@@ -40,7 +40,7 @@ module Wavefront
     end
 
     def write(metric_value, metric_name = @metric_name, options = {})
-      options[:host] ||= @host_name
+      options[:host_name] ||= @host_name
       options[:point_tags] ||= @point_tags
       options[:timestamp] ||= Time.now
 
@@ -49,10 +49,10 @@ module Wavefront
       end
 
       if options[:point_tags].empty?
-        append = "host=#{options[:host]}"
+        append = "host=#{options[:host_name]}"
       else
         tags = options[:point_tags].map { |k, v| "#{k}=\"#{v}\"" }.join(' ')
-        append = "host=#{options[:host]} #{tags}"
+        append = "host=#{options[:host_name]} #{tags}"
       end
 
       @socket.puts [metric_name, metric_value, options[:timestamp].to_i,
