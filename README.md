@@ -20,7 +20,7 @@ writer = Wavefront::Writer.new({:agent_host => 'agent.local.com', :host_name => 
 # value of the metric at current timestamp is: 5
 writer.write(5)
 # Let's write a different metric overwriting the default options from the constructor
-writer.write(6, 'namespace.my.other.metric', {host: 'server2'})
+writer.write(6, 'namespace.my.other.metric', {host_name: 'server2'})
 ```
 
 * The initializer takes a hash of options, wherein one can set
