@@ -20,7 +20,7 @@ writer = Wavefront::Writer.new({:agent_host => 'agent.local.com', :host_name => 
 # value of the metric at current timestamp is: 5
 writer.write(5)
 # Let's write a different metric overwriting the default options from the constructor
-writer.write(6, 'namespace.my.other.metric', 'server2', {})
+writer.write(6, 'namespace.my.other.metric', {host: 'server2'})
 ```
 
 * The initializer takes a hash of options, wherein one can set
@@ -32,9 +32,17 @@ writer.write(6, 'namespace.my.other.metric', 'server2', {})
   * The write method parameters are:
     * `metric_value` - A number, the value of the metric reporting at the current timestamp
     * `metric_name` - A `String`, this must be present, either within the write method call or set on the Writer class
-    * `host_name` - A `String`, which will appear as the host for the sent metric in Wavefront. 
-    * `point_tags` - A `Map` of key, value pairs of strings which will be sent to Wavefront. Not required. Note that if you specify these as part of the write method call they replace any set at the class level. The two maps are _not_ merged.
-    * `timestamp` - The Epoch Seconds of the reported point. Default: `Time.now`
+    * A hash of options:
+      * `host_name` - A `String`, which will appear as the host for the sent
+         metric in Wavefront. Defaults to the `host_name` used to initialize
+         the class.
+      * `point_tags` - A `Map` of key, value pairs of strings which will be
+        sent to Wavefront. Not required. Note that if you specify these as
+        part of the write method call they replace any set at the class level.
+        The two maps are _not_ merged. Defaults to the `point_tags` used to
+        initialize the class
+      * `timestamp` - The Epoch Seconds (`Fixnum`), or a Ruby `Time` object, of
+        the reported point Default: `Time.now`
 
 ### Host Tags
 
@@ -52,13 +60,13 @@ meta.add_tags(["host.server1.server.com","host.server2.server.com"],["tag1","tag
 meta.remove_tags(["server1.server.com","server2.server.com"],["tag1","tag2"]) # Remove an arbitrary number of tags from an arbitrary number of hosts
 ```
 
-* The initializer takes up to 3 parameters: 
+* The initializer takes up to 3 parameters:
   * `token`              - A valid Wavefront API Token. This is required.
   * `host`               - A `String` representing the Wavefront endpoint to connect to. Default: `metrics.wavefront.com`.
   * `debug` `true|false` - When set to `true` output `RestClient` debugging to `stdout`. Default: `false`.
 
 ### Query Client
-  
+
 The `Wavefront::Client` class can be used to send queries to Wavefront and get a response
 
 Example usage:
@@ -72,7 +80,7 @@ response = wave.query('<TS_EXPRESSION>')  # <TS_EXPRESSION> : Placeholder for a 
 response = wave.query('<TS_EXPRESSION>', 'm', {:start_time => Time.now - 86400, :end_time => Time.now})  # <TS_EXPRESSION> : Placeholder for a valid Wavefront ts() query
 ```
 
-* Like the Metadata class, the initializer takes up to 3 parameters: 
+* Like the Metadata class, the initializer takes up to 3 parameters:
   * `token`              - A valid Wavefront API Token. This is required.
   * `host`               - A `String` representing the Wavefront endpoint to connect to. Default: `metrics.wavefront.com`.
   * `debug` `true|false` - When set to `true` output `RestClient` debugging to `stdout`. Default: `false`.
@@ -105,7 +113,7 @@ response.class  # Wavefront::Response::Raw
 response = wave.query('<TS_EXPRESSION>', 'm', {:response_format => :ruby}) # <TS_EXPRESSION> : Placeholder for a valid Wavefront ts() query
 response.class # Wavefront::Response::Ruby
 response.instance_variables  # [:@response, :@query, :@name, :@timeseries, :@stats]
-response.query  
+response.query
 ```
 
 * `:response_format => :graphite`
