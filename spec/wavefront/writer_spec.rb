@@ -62,7 +62,7 @@ describe Wavefront::Writer do
       allow(Time).to receive(:now).and_return(123456789)
       expect(socket).to receive(:puts).with("metric 50 123456789 host=somehost")
       writer = Wavefront::Writer.new
-      writer.write(50, "metric", {host: host, timestamp: 123456789})
+      writer.write(50, "metric", {host_name: host, timestamp: 123456789})
     end
 
     it 'should accept a single tag and append it correctly' do
@@ -75,7 +75,7 @@ describe Wavefront::Writer do
       expect(socket).to receive(:puts).with("metric 50 123456789 host=somehost tag_key_one=\"tag_val_one\"")
       writer = Wavefront::Writer.new
       writer.write(50, "metric",
-                   {host: host, point_tags: tags, timestamp: 123456789})
+                   {host_name: host, point_tags: tags, timestamp: 123456789})
     end
 
    it 'should accept multiple tags and append them correctly' do
@@ -88,7 +88,7 @@ describe Wavefront::Writer do
       expect(socket).to receive(:puts).with("metric 50 123456789 host=somehost tag_key_one=\"tag_val_one\" k2=\"v2\"")
       writer = Wavefront::Writer.new
       writer.write(50, "metric",
-                   {host: host, point_tags: tags, timestamp: 123456789})
+                   {host_name: host, point_tags: tags, timestamp: 123456789})
 
    end
   end
