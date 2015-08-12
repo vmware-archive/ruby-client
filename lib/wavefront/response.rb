@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 
 require 'wavefront/client/version'
 require 'wavefront/exception'
+require 'wavefront/mixins'
 require 'json'
 
 module Wavefront
@@ -51,19 +52,27 @@ module Wavefront
     end
 
     class Graphite < Wavefront::Response::Ruby
+      include Wavefront::Mixins
       attr_reader :response, :graphite, :options
 
       def initialize(response, options={})
         super
         
-        datapoints = Array.new
+        @graphite = Array.new
         self.timeseries.each do |ts|
+
+          output_timeseries = Hash.new
+          output_timeseries['target'] = interpolate_schema(ts['label'], ts['host'], options[:prefix_length])
+
+          datapoints = Array.new
           ts['data'].each do |d|
             datapoints << [d[1], d[0]]
           end
-        end
 
-        @graphite = [{ 'target' => self.query, 'datapoints' => datapoints }]
+          output_timeseries['datapoints'] = datapoints
+          @graphite << output_timeseries 
+
+        end
       end
 
     end
