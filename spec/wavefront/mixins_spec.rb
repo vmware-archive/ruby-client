@@ -23,7 +23,7 @@ describe Wavefront::Mixins do
   include Wavefront::Mixins
   it 'provides a method to interpolate the schema' do
     wavefront_schema = "a.b.c.d.e"
-    expect(interpolate_schema(wavefront_schema, HOST, 1).to eq("a.#{HOST}.b.c.d.e")
-    expect(interpolate_schema(wavefront_schema, HOST, 2).to eq("a.b.#{HOST}.c.d.e")
+    expect(interpolate_schema(wavefront_schema, HOST, 1)).to eq("a.#{HOST}.b.c.d.e")
+    expect(interpolate_schema(wavefront_schema, HOST, 2)).to eq("a.b.#{HOST}.c.d.e")
   end
 end
