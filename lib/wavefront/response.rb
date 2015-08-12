@@ -88,14 +88,25 @@ module Wavefront
         @response = JSON.parse(response)
 	      @highcharts = []
 	      self.timeseries.each do |series|
-	        # Highcharts expects the time in milliseconds since the epoch
-	        # And for some reason the first value tends to be BS
-	        @highcharts << { 'name' => series['label'],  'data' => series['data'][1..-1].map!{|x,y| [ x * 1000, y ]} }
-	      end
+          # Highcharts expects the time in milliseconds since the epoch
+          # And for some reason the first value tends to be BS
+          # We also have to deal with missing (null/nil) data points.
+          amended_data = Array.new
+          next unless series['data'].size > 0
+          series['data'][1..-1].each do |time_value_pair|
+            if time_value_pair[0]
+              time_value_pair[0] = time_value_pair[0] * 1000
+            else
+              time_value_pair[0] = "null"
+            end
+            amended_data << time_value_pair
+          end
+          @highcharts << { 'name' => series['label'],  'data' => amended_data }
+        end
       end
 
       def to_json
-	      @highcharts.to_json
+        @highcharts.to_json
       end
     end
 
