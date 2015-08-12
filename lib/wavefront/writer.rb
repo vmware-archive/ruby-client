@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,23 +31,37 @@ module Wavefront
       options[:host_name] ||= DEFAULT_HOSTNAME
       options[:metric_name] ||= ''
       options[:point_tags] ||= {}
-      
+
       @host_name = options[:host_name]
       @metric_name = options[:metric_name]
       @point_tags = options[:point_tags]
-      
+
       @socket = get_socket(options[:agent_host], options[:agent_port])
     end
-    
-    def write(metric_value, metric_name=@metric_name, host=@host_name, point_tags=@point_tags, timestamp=Time.now)
-      raise Wavefront::Exception::EmptyMetricName if metric_name.empty?
-      tags = point_tags.empty? ? '' : point_tags.map{|k,v| "#{k}=\"#{v}\""}.join(' ')
-      append = tags.empty? ? "host=#{host}" : "host=#{host} #{tags}"
-      @socket.puts "#{metric_name} #{metric_value} #{timestamp.to_i} #{append}"
+
+    def write(metric_value, metric_name = @metric_name, options = {})
+      options[:host_name] ||= @host_name
+      options[:point_tags] ||= @point_tags
+      options[:timestamp] ||= Time.now
+
+      if metric_name.empty?
+        raise Wavefront::Exception::EmptyMetricName
+      end
+
+      if options[:point_tags].empty?
+        append = "host=#{options[:host_name]}"
+      else
+        tags = options[:point_tags].map { |k, v| "#{k}=\"#{v}\"" }.join(' ')
+        append = "host=#{options[:host_name]} #{tags}"
+      end
+
+      @socket.puts [metric_name, metric_value, options[:timestamp].to_i,
+                    append].join(' ')
     end
 
     private
-    def get_socket(host,port)
+
+    def get_socket(host, port)
       TCPSocket.new(host, port)
     end
 
