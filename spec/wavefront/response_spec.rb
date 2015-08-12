@@ -61,10 +61,10 @@ describe Wavefront::Response::Graphite do
     response_hash = JSON.parse(example_response)
     schema = interpolate_schema(response_hash['timeseries'][0]['label'], response_hash['timeseries'][0]['host'], 1)
 
-    expect(response.graphite.size).to eq(1)
+    expect(response.graphite.size).to eq(21)
     expect(response.graphite[0].keys.size).to eq(2)
     expect(response.graphite[0]['target']).to eq(schema)
-    expect(response.graphite[0]['datapoints'].size).to eq(21)
+    expect(response.graphite[15]['datapoints'].size).to eq(31)
   end
 end
 
