@@ -57,6 +57,7 @@ module Wavefront
 
       def initialize(response, options={})
         super
+        options[:prefix_length] ||= 1     # See also Wavefront::Client
         
         @graphite = Array.new
         self.timeseries.each do |ts|
