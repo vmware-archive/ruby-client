@@ -43,10 +43,12 @@ module Wavefront
       options[:end_time] ||= Time.now
       options[:start_time] ||= options[:end_time] - DEFAULT_PERIOD_SECONDS
       options[:response_format] ||= DEFAULT_FORMAT
+      options[:prefix_length] ||= 1
 
       [ options[:start_time], options[:end_time] ].each { |o| raise Wavefront::Exception::InvalidTimeFormat unless o.is_a?(Time) }
       raise Wavefront::Exception::InvalidGranularity unless GRANULARITIES.include?(granularity)
       raise Wavefront::Exception::InvalidResponseFormat unless FORMATS.include?(options[:response_format])
+      raise InvalidPrefixLength unless options[:prefix_length].is_a?(Fixnum)
 
       args = {:params =>
               {:q => query, :g => granularity, :n => 'Unknown',
@@ -54,7 +56,7 @@ module Wavefront
       response = RestClient.get @base_uri.to_s, args
 
       klass = Object.const_get('Wavefront').const_get('Response').const_get(options[:response_format].to_s.capitalize)
-      return klass.new(response)
+      return klass.new(response, options)
 
     end
 

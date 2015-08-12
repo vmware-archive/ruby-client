@@ -84,6 +84,7 @@ response = wave.query('<TS_EXPRESSION>', 'm', {:start_time => Time.now - 86400, 
     * `:start_time` - An object of class `Time` that specifies the query start time. Default: `Time.now - 600`.
     * `:end_time` - And object of class `Time` that specifies the query end time. Default: `Time.now`.
     * `:response_format` `[ :raw, :ruby, :graphite, :highcharts ]` - See the section "Response Classes" below. Default: `:raw`.
+    * `:prefix_length` - Used when performing schema manipulations. See the Graphite response format below. Default `1`.
 
 
 ### Response Classes
@@ -115,6 +116,17 @@ A ruby object that returns graphite-format data via the `graphite` method:
 ```
 response = wave.query('<TS_EXPRESSION>', 'm', {:response_format => :graphite}) # <TS_EXPRESSION> : Placeholder for a valid Wavefront ts() query
 response.graphite[0]['datapoints'].first  # [99.8, 1403702640]
+```
+
+**Note:** The `target` schema String is constructed from the `label` and the `host` portions of the raw Wavefront response in order to be idiomatically Graphite. In order to determine how to do this properly one must split the `label` into a prefix and a postfix, inserting the `host` between then.
+
+For example, `label: "web.prod.base.host.cpu-0.percent-idle"` and `host: i-12345678`, by default, would yield: `web.i-12345678.prod.base.host.cpu-0.percent-idle` as the Graphite target.
+
+Depending on the vagaries of your particular configuration you may wish to specify more than the default 1 field as a prefix. This can be achieved passing the `:prefix_length` key as an option with an appropriate `Fixnum`. For example:
+
+```
+response = wave.query('<TS_EXPRESSION>', 'm', {:response_format => :graphite, :prefix_length => 2})
+response.graphite[0]['target'] # web.prod.i-12345678.base.host.cpu-0.percent-idle
 ```
 
 * `:response_format => :highcharts`
