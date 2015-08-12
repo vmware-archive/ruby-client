@@ -21,10 +21,11 @@ require 'json'
 module Wavefront
   class Response
     class Raw
-      attr_reader :response
+      attr_reader :response, :options
 
       def initialize(response, options={})
         @response = response
+        @options = options
       end
 
       def to_s
@@ -35,10 +36,11 @@ module Wavefront
 
     class Ruby
       include JSON
-      attr_reader :response
+      attr_reader :response, :options
       
       def initialize(response, options={})
         @response = response
+        @options = options
 
         JSON.parse(response).each_pair do |k,v|
           self.instance_variable_set("@#{k}", v)	# Dynamically populate instance vars
@@ -49,7 +51,7 @@ module Wavefront
     end
 
     class Graphite < Wavefront::Response::Ruby
-      attr_reader :response, :graphite
+      attr_reader :response, :graphite, :options
 
       def initialize(response, options={})
         super
@@ -68,7 +70,7 @@ module Wavefront
 
     class Highcharts < Wavefront::Response::Ruby
       include JSON
-      attr_reader :response, :highcharts
+      attr_reader :response, :highcharts, :options
 
       def initialize(response, options={})
         super
