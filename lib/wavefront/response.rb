@@ -23,7 +23,7 @@ module Wavefront
     class Raw
       attr_reader :response
 
-      def initialize(response)
+      def initialize(response, options={})
         @response = response
       end
 
@@ -37,7 +37,7 @@ module Wavefront
       include JSON
       attr_reader :response
       
-      def initialize(response)
+      def initialize(response, options={})
         @response = response
 
         JSON.parse(response).each_pair do |k,v|
@@ -51,7 +51,7 @@ module Wavefront
     class Graphite < Wavefront::Response::Ruby
       attr_reader :response, :graphite
 
-      def initialize(response)
+      def initialize(response, options={})
         super
         
         datapoints = Array.new
@@ -70,22 +70,20 @@ module Wavefront
       include JSON
       attr_reader :response, :highcharts
 
-      def initialize(response)
+      def initialize(response, options={})
         super
 
         @response = JSON.parse(response)
-
-	@highcharts = []
-	self.timeseries.each do |series|
-	  # Highcharts expects the time in milliseconds since the epoch
-	  # And for some reason the first value tends to be BS
-
-	  @highcharts << { 'name' => series['label'],  'data' => series['data'][1..-1].map!{|x,y| [ x * 1000, y ]} }
-	end
+	      @highcharts = []
+	      self.timeseries.each do |series|
+	        # Highcharts expects the time in milliseconds since the epoch
+	        # And for some reason the first value tends to be BS
+	        @highcharts << { 'name' => series['label'],  'data' => series['data'][1..-1].map!{|x,y| [ x * 1000, y ]} }
+	      end
       end
 
       def to_json
-	@highcharts.to_json
+	      @highcharts.to_json
       end
     end
 
