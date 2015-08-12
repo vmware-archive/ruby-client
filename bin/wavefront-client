@@ -24,6 +24,7 @@ require 'slop'
   on 's', 'start=', 'Time in UNIX epoch seconds to begin the query from'
   on 't', 'token=', 'Wavefront authentication token'
   on 'e', 'end=', 'Time in UNIX epoch seconds to query to'
+  on 'f', 'format=', "Output format (#{Wavefront::Client::FORMATS.join(', ')})", default: Wavefront::Client::DEFAULT_FORMAT.to_s
   on 'h', 'help', 'Display this message'
 end
 
@@ -44,7 +45,14 @@ else
   exit 1
 end
 
+unless Wavefront::Client::FORMATS.include?(@opts[:format].to_sym)
+  puts "The output format must be on of #{Wavefront::Client::FORMATS.join(', ')}"
+  exit 1
+end
+
 options = Hash.new
+options[:response_format] = @opts[:format].to_sym
+
 if @opts[:start]
   options[:start_time] = @opts[:start]
 end
