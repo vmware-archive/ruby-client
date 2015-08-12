@@ -54,11 +54,11 @@ options = Hash.new
 options[:response_format] = @opts[:format].to_sym
 
 if @opts[:start]
-  options[:start_time] = @opts[:start]
+  options[:start_time] = Time.at(@opts[:start].to_i)
 end
 
 if @opts[:end]
-  options[:end_time] = @opts[:end]
+  options[:end_time] = Time.at(@opts[:end].to_i)
 end
 
 wave = Wavefront::Client.new(@opts[:token])
