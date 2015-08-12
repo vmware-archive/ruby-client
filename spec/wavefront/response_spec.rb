@@ -73,7 +73,7 @@ describe Wavefront::Response::Highcharts do
     example_response = File.read(Pathname.new(__FILE__).parent.parent.join('example_response.json'))
     response = Wavefront::Response::Highcharts.new(example_response)
     
-    expect(JSON.parse(response.to_json).size).to eq(response.timeseries.size)
+    expect(response.highcharts[0]['data'].size).to eq(30)
     JSON.parse(response.to_json).each { |m| expect(m.keys.size).to eq(2) }
   end
 end
