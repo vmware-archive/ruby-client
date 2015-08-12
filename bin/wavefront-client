@@ -15,6 +15,7 @@
 
 require 'wavefront/client'
 require 'slop'
+require 'pp'
 
 @opts = Slop.parse(strict: true) do
   banner 'Usage: wavefront-client QUERY (OPTIONS)'
@@ -62,4 +63,8 @@ if @opts[:end]
 end
 
 wave = Wavefront::Client.new(@opts[:token])
-puts wave.query(query, granularity, options)
+if options[:response_format] == :raw
+  puts wave.query(query, granularity, options)
+else
+  pp wave.query(query, granularity, options)
+end
