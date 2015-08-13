@@ -1,4 +1,4 @@
-=begin
+=begin 
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,8 +14,16 @@ See the License for the specific language governing permissions and
 
 =end
 
-module Wavefront
-  class Client
-    VERSION = "1.0.0"
+require 'spec_helper'
+require 'wavefront/mixins'
+
+HOST = 'i-12345678'
+
+describe Wavefront::Mixins do
+  include Wavefront::Mixins
+  it 'provides a method to interpolate the schema' do
+    wavefront_schema = "a.b.c.d.e"
+    expect(interpolate_schema(wavefront_schema, HOST, 1)).to eq("a.#{HOST}.b.c.d.e")
+    expect(interpolate_schema(wavefront_schema, HOST, 2)).to eq("a.b.#{HOST}.c.d.e")
   end
 end

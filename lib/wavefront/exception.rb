@@ -23,5 +23,6 @@ module Wavefront
     class InvaldResponseFormat < ::Exception; end
     class EmptyMetricName < ::Exception; end
     class NotImplemented < ::Exception; end
+    class InvalidPrefixLength < ::Exception; end
   end
 end

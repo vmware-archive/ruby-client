@@ -15,6 +15,8 @@
 
 require 'wavefront/client'
 require 'slop'
+require 'pp'
+require 'json'
 
 @opts = Slop.parse(strict: true) do
   banner 'Usage: wavefront-client QUERY (OPTIONS)'
@@ -24,6 +26,8 @@ require 'slop'
   on 's', 'start=', 'Time in UNIX epoch seconds to begin the query from'
   on 't', 'token=', 'Wavefront authentication token'
   on 'e', 'end=', 'Time in UNIX epoch seconds to query to'
+  on 'f', 'format=', "Output format (#{Wavefront::Client::FORMATS.join(', ')})", default: Wavefront::Client::DEFAULT_FORMAT.to_s
+  on 'p', 'prefixlength=', 'The number of path elements to treat as a prefix when doing schema manipulations', default: 1
   on 'h', 'help', 'Display this message'
 end
 
@@ -44,7 +48,15 @@ else
   exit 1
 end
 
+unless Wavefront::Client::FORMATS.include?(@opts[:format].to_sym)
+  puts "The output format must be on of #{Wavefront::Client::FORMATS.join(', ')}"
+  exit 1
+end
+
 options = Hash.new
+options[:response_format] = @opts[:format].to_sym
+options[:prefix_length] = @opts[:prefixlength].to_i
+
 if @opts[:start]
   options[:start_time] = Time.at(@opts[:start].to_i)
 end
@@ -54,4 +66,11 @@ if @opts[:end]
 end
 
 wave = Wavefront::Client.new(@opts[:token])
-puts wave.query(query, granularity, options)
+case options[:response_format]
+when :raw
+  puts wave.query(query, granularity, options)
+when :graphite
+  puts wave.query(query, granularity, options).graphite.to_json
+else
+  pp wave.query(query, granularity, options)
+end

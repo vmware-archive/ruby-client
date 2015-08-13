@@ -1,4 +1,4 @@
-=begin
+=begin 
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,7 +15,15 @@ See the License for the specific language governing permissions and
 =end
 
 module Wavefront
-  class Client
-    VERSION = "1.0.0"
+  module Mixins
+    def interpolate_schema(label, host, prefix_length)
+      label_parts = label.split('.')
+      interpolated = Array.new
+      interpolated << label_parts.shift(prefix_length)
+      interpolated << host
+      interpolated << label_parts
+      interpolated.flatten!
+      return interpolated.join('.')
+    end
   end
 end

@@ -16,15 +16,17 @@ See the License for the specific language governing permissions and
 
 require 'wavefront/client/version'
 require 'wavefront/exception'
+require 'wavefront/mixins'
 require 'json'
 
 module Wavefront
   class Response
     class Raw
-      attr_reader :response
+      attr_reader :response, :options
 
-      def initialize(response)
+      def initialize(response, options={})
         @response = response
+        @options = options
       end
 
       def to_s
@@ -35,10 +37,11 @@ module Wavefront
 
     class Ruby
       include JSON
-      attr_reader :response
+      attr_reader :response, :options
       
-      def initialize(response)
+      def initialize(response, options={})
         @response = response
+        @options = options
 
         JSON.parse(response).each_pair do |k,v|
           self.instance_variable_set("@#{k}", v)	# Dynamically populate instance vars
@@ -49,43 +52,61 @@ module Wavefront
     end
 
     class Graphite < Wavefront::Response::Ruby
-      attr_reader :response, :graphite
+      include Wavefront::Mixins
+      attr_reader :response, :graphite, :options
 
-      def initialize(response)
+      def initialize(response, options={})
         super
+        options[:prefix_length] ||= 1     # See also Wavefront::Client
         
-        datapoints = Array.new
+        @graphite = Array.new
         self.timeseries.each do |ts|
+
+          output_timeseries = Hash.new
+          output_timeseries['target'] = interpolate_schema(ts['label'], ts['host'], options[:prefix_length])
+
+          datapoints = Array.new
           ts['data'].each do |d|
             datapoints << [d[1], d[0]]
           end
-        end
 
-        @graphite = [{ 'target' => self.query, 'datapoints' => datapoints }]
+          output_timeseries['datapoints'] = datapoints
+          @graphite << output_timeseries 
+
+        end
       end
 
     end
 
     class Highcharts < Wavefront::Response::Ruby
       include JSON
-      attr_reader :response, :highcharts
+      attr_reader :response, :highcharts, :options
 
-      def initialize(response)
+      def initialize(response, options={})
         super
 
         @response = JSON.parse(response)
-
-	@highcharts = []
-	self.timeseries.each do |series|
-	  # Highcharts expects the time in milliseconds since the epoch
-	  # And for some reason the first value tends to be BS
-
-	  @highcharts << { 'name' => series['label'],  'data' => series['data'][1..-1].map!{|x,y| [ x * 1000, y ]} }
-	end
+	      @highcharts = []
+	      self.timeseries.each do |series|
+          # Highcharts expects the time in milliseconds since the epoch
+          # And for some reason the first value tends to be BS
+          # We also have to deal with missing (null/nil) data points.
+          amended_data = Array.new
+          next unless series['data'].size > 0
+          series['data'][1..-1].each do |time_value_pair|
+            if time_value_pair[0]
+              time_value_pair[0] = time_value_pair[0] * 1000
+            else
+              time_value_pair[0] = "null"
+            end
+            amended_data << time_value_pair
+          end
+          @highcharts << { 'name' => series['label'],  'data' => amended_data }
+        end
       end
 
       def to_json
-	@highcharts.to_json
+        @highcharts.to_json
       end
     end
 
