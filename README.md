@@ -175,4 +175,15 @@ rake install
 5. Create new Pull Request
 
 
+## Credits
+
+Many thanks to SpaceApe games for initially contributing this Ruby client. Contributors include:
+
+Sam Pointer
+Louis McCormack
+Joshua McGhee
+Robert Fisher
+Salil Deshmukh
+Conor Beverland
+
 [1]: http://wavefront.com
