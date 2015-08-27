@@ -27,22 +27,53 @@ module Wavefront
 
     attr_reader :token
 
-    def initialize(token)
+    def initialize(token, debug=false)
       @token = token
+      debug(debug)
     end
 
     def active(options={})
+      get_alerts('active', options)
+    end
 
+    def all(options={})
+      get_alerts('all', options)
+    end
+
+    def invalid(options={})
+      get_alerts('invalid', options)
+    end
+
+    def snoozed(options={})
+      get_alerts('snoozed', options)
+    end
+
+    def affected_by_maintenance(options={})
+      get_alerts('affected_by_maintenance', options)
+    end
+
+    def get_alerts(path, options={})
       options[:host] ||= DEFAULT_HOST
       options[:path] ||= DEFAULT_PATH
 
-      uri = URI::HTTPS.build(:host => options[:host], :path => options[:path])
-      uri = URI.join(uri.to_s,"active")
-      uri = URI.join(uri.to_s,"?t=#{@token}")
-      
-      response = RestClient.get(uri.to_s)
+      query = "t=#{@token}"
 
-      return response
+      if options[:shared_tags]
+        tags = options[:shared_tags].class == Array ? options[:shared_tags] : [ options[:shared_tags] ] # Force an array, even if string given
+        query += "&#{tags.map{|t| "customerTag=#{t}"}.join('&')}"
+      end
+
+      if options[:private_tags]
+        tags = options[:private_tags].class == Array ? options[:private_tags] : [ options[:private_tags] ] # Force an array, even if string given
+        query += "&#{tags.map{|t| "userTag=#{t}"}.join('&')}"
+      end
+
+      uri = URI::HTTPS.build(
+        host: options[:host],
+	path: File.join(options[:path], path),
+	query: query
+      )
+      RestClient.get(uri.to_s)
     end
 
     private
