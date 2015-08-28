@@ -38,8 +38,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec"
 
-  spec.add_dependency "rest-client", "~> 1.6.7"
-  spec.add_dependency "slop", "= 3.4.7"
+  spec.add_dependency "rest-client", ">= 1.6.7", "<= 1.8"
+  spec.add_dependency "slop", ">= 3.4.7", "<= 3.6"
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
 
 end
