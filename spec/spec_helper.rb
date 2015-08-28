@@ -18,6 +18,7 @@ $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'wavefront/client'
 require 'wavefront/writer'
 require 'wavefront/metadata'
+require 'wavefront/alerting'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
