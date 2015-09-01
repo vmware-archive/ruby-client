@@ -27,7 +27,7 @@ require 'json'
   on 't', 'token=', 'Wavefront authentication token'
   on 'e', 'end=', 'Time in UNIX epoch seconds to query to'
   on 'f', 'format=', "Output format (#{Wavefront::Client::FORMATS.join(', ')})", default: Wavefront::Client::DEFAULT_FORMAT.to_s
-  on 'p', 'prefixlength=', 'The number of path elements to treat as a prefix when doing schema manipulations', default: 1
+  on 'p', 'prefixlength=', 'The number of path elements to treat as a prefix when doing schema manipulations', default: Wavefront::Client::DEFAULT_PREFIX_LENGTH
   on 'h', 'help', 'Display this message'
 end
 

@@ -27,6 +27,7 @@ module Wavefront
     DEFAULT_PERIOD_SECONDS = 600
     DEFAULT_PATH = '/chart/api'
     DEFAULT_FORMAT = :raw
+    DEFAULT_PREFIX_LENGTH = 1
     FORMATS = [ :raw, :ruby, :graphite, :highcharts ]
     GRANULARITIES = %w( s m h d )
 
@@ -43,7 +44,7 @@ module Wavefront
       options[:end_time] ||= Time.now
       options[:start_time] ||= options[:end_time] - DEFAULT_PERIOD_SECONDS
       options[:response_format] ||= DEFAULT_FORMAT
-      options[:prefix_length] ||= 1
+      options[:prefix_length] ||= DEFAULT_PREFIX_LENGTH
 
       [ options[:start_time], options[:end_time] ].each { |o| raise Wavefront::Exception::InvalidTimeFormat unless o.is_a?(Time) }
       raise Wavefront::Exception::InvalidGranularity unless GRANULARITIES.include?(granularity)
