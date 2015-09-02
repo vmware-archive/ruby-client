@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 
 =end
 
+require 'wavefront/client'
 require 'wavefront/client/version'
 require 'wavefront/exception'
 require 'wavefront/mixins'
@@ -57,7 +58,7 @@ module Wavefront
 
       def initialize(response, options={})
         super
-        options[:prefix_length] ||= 1     # See also Wavefront::Client
+        options[:prefix_length] ||= Wavefront::Client::DEFAULT_PREFIX_LENGTH
         
         @graphite = Array.new
         self.timeseries.each do |ts|
