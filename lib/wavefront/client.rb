@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -54,6 +54,11 @@ module Wavefront
       args = {:params =>
               {:q => query, :g => granularity, :n => 'Unknown',
                :s => options[:start_time].to_i, :e => options[:end_time].to_i}}.merge(@headers)
+
+      if options[:passthru]
+        args.merge!(options[:passthru])
+      end
+
       response = RestClient.get @base_uri.to_s, args
 
       klass = Object.const_get('Wavefront').const_get('Response').const_get(options[:response_format].to_s.capitalize)
