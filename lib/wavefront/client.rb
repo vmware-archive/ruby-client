@@ -56,7 +56,7 @@ module Wavefront
                :s => options[:start_time].to_i, :e => options[:end_time].to_i}}.merge(@headers)
 
       if options[:passthru]
-        args.merge!(options[:passthru])
+        args[:params].merge!(options[:passthru])
       end
 
       response = RestClient.get @base_uri.to_s, args
