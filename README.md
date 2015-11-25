@@ -100,7 +100,7 @@ response = wave.query('<TS_EXPRESSION>', 'm', {:start_time => Time.now - 86400, 
       `strict` was introduced, which removes this padding. By
       default we set this to `true`, so you will get back exactly
       the range you request with `:start_time` and `:end_time`. If
-      you wish to have the old behaviour, set this to `true`.
+      you wish to have the old behaviour, set this to `false`.
     * `:passthru` - as Wavefront develops it is hard to keep pace with
       the API changes and cover everything in the SDK. The `passthru`
       hash lets you pass parameters directly to the Wavefront API.
