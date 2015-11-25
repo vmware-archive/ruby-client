@@ -93,6 +93,14 @@ response = wave.query('<TS_EXPRESSION>', 'm', {:start_time => Time.now - 86400, 
     * `:end_time` - And object of class `Time` that specifies the query end time. Default: `Time.now`.
     * `:response_format` `[ :raw, :ruby, :graphite, :highcharts ]` - See the section "Response Classes" below. Default: `:raw`.
     * `:prefix_length` - Used when performing schema manipulations. See the Graphite response format below. Default `1`.
+    * `:strict` - originally Wavefront would return data points
+      either side of the requested range. These extra points are
+      required by the UI, but when you use the API you almost
+      certainly don't want them. In Wavefront 2.4, an API parameter
+      `strict` was introduced, which removes this padding. By
+      default we set this to `true`, so you will get back exactly
+      the range you request with `:start_time` and `:end_time`. If
+      you wish to have the old behaviour, set this to `true`.
     * `:passthru` - as Wavefront develops it is hard to keep pace with
       the API changes and cover everything in the SDK. The `passthru`
       hash lets you pass parameters directly to the Wavefront API.
