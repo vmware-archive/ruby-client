@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ module Wavefront
     DEFAULT_PATH = '/chart/api'
     DEFAULT_FORMAT = :raw
     DEFAULT_PREFIX_LENGTH = 1
+    DEFAULT_STRICT = true
     FORMATS = [ :raw, :ruby, :graphite, :highcharts ]
     GRANULARITIES = %w( s m h d )
 
@@ -45,6 +46,7 @@ module Wavefront
       options[:start_time] ||= options[:end_time] - DEFAULT_PERIOD_SECONDS
       options[:response_format] ||= DEFAULT_FORMAT
       options[:prefix_length] ||= DEFAULT_PREFIX_LENGTH
+      options[:strict] = DEFAULT_STRICT unless options.keys.include?(:strict)
 
       [ options[:start_time], options[:end_time] ].each { |o| raise Wavefront::Exception::InvalidTimeFormat unless o.is_a?(Time) }
       raise Wavefront::Exception::InvalidGranularity unless GRANULARITIES.include?(granularity)
@@ -53,7 +55,15 @@ module Wavefront
 
       args = {:params =>
               {:q => query, :g => granularity, :n => 'Unknown',
-               :s => options[:start_time].to_i, :e => options[:end_time].to_i}}.merge(@headers)
+               :s => options[:start_time].to_i,
+               :e => options[:end_time].to_i,
+               :strict => options[:strict],
+              }}.merge(@headers)
+
+      if options[:passthru]
+        args[:params].merge!(options[:passthru])
+      end
+
       response = RestClient.get @base_uri.to_s, args
 
       klass = Object.const_get('Wavefront').const_get('Response').const_get(options[:response_format].to_s.capitalize)
