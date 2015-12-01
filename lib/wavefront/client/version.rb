@@ -16,6 +16,6 @@ See the License for the specific language governing permissions and
 
 module Wavefront
   class Client
-    VERSION = "1.0.3"
+    VERSION = "1.1.0"
   end
 end
