@@ -59,7 +59,7 @@ module Wavefront
         extended_uri = URI.join(host_uri.to_s,"tags/")        
         tags.each do |tag|
           final_uri = URI.join(extended_uri.to_s,tag)
-          RestClient.put(final_uri.to_s, {}, @headers)
+          RestClient.post(final_uri.to_s, {}, @headers)
         end
       end
 
