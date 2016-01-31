@@ -33,15 +33,21 @@ module Wavefront
       debug(debug)
     end
 
-    def get_tags(hostname='')
+    def get_tags(hostname='', limit=100)
       uri = @base_uri
       
       unless hostname.empty?
         uri = URI.join(@base_uri.to_s, hostname)
       end
+
+      if limit > 10000
+        limit = 10000
+      end
+      
+      args = {:params => {:limit => limit}}.merge(@headers)
       
       begin
-        response = RestClient.get(uri.to_s, @headers)
+        response = RestClient.get(uri.to_s, args)
       rescue RestClient::ResourceNotFound
         # If a 404 is returned, we return an empty JSON as this is the expected behaviour for untagged hosts
         response = {}        
