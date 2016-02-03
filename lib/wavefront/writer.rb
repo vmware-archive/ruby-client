@@ -16,11 +16,13 @@ See the License for the specific language governing permissions and
 
 require "wavefront/client/version"
 require "wavefront/exception"
+require "wavefront/constants"
 require 'uri'
 require 'socket'
 
 module Wavefront
   class Writer
+    include Wavefront::Constants
     DEFAULT_AGENT_HOST = 'localhost'
     DEFAULT_PORT = 2878
     DEFAULT_HOSTNAME = %x{hostname -f}.chomp
