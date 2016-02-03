@@ -24,7 +24,7 @@ require 'json'
   on 'D', 'debug', 'Enable debug mode'
   on 'm', 'minutes', 'Query granularity of minutes'
   on 'H', 'hours', 'Query granularity of hours'
-  on 'e', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
+  on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
   on 'S', 'seconds', 'Query granularity of seconds'
   on 's', 'start=', 'Time in UNIX epoch seconds to begin the query from'
   on 't', 'token=', 'Wavefront authentication token'
