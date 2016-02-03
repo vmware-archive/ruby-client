@@ -24,13 +24,6 @@ require 'logger'
 
 module Wavefront
   class Client
-    DEFAULT_PERIOD_SECONDS = 600
-    DEFAULT_PATH = '/chart/api'
-    DEFAULT_FORMAT = :raw
-    DEFAULT_PREFIX_LENGTH = 1
-    DEFAULT_STRICT = true
-    FORMATS = [ :raw, :ruby, :graphite, :highcharts ]
-    GRANULARITIES = %w( s m h d )
 
     attr_reader :headers, :base_uri
 

@@ -15,3 +15,10 @@ See the License for the specific language governing permissions and
 =end
 
 DEFAULT_HOST = 'metrics.wavefront.com'
+DEFAULT_PERIOD_SECONDS = 600
+DEFAULT_PATH = '/chart/api'
+DEFAULT_FORMAT = :raw
+DEFAULT_PREFIX_LENGTH = 1
+DEFAULT_STRICT = true
+FORMATS = [ :raw, :ruby, :graphite, :highcharts ]
+GRANULARITIES = %w( s m h d )
