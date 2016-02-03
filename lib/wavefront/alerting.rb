@@ -16,13 +16,14 @@ See the License for the specific language governing permissions and
 
 require "wavefront/client/version"
 require "wavefront/exception"
+require "wavefront/constants"
 require 'rest_client'
 require 'uri'
 require 'logger'
 
 module Wavefront
   class Alerting
-    DEFAULT_HOST = 'metrics.wavefront.com'
+    include Wavefront::Constants
     DEFAULT_PATH = '/api/alert/'
 
     attr_reader :token

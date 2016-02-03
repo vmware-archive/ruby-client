@@ -3,6 +3,7 @@ require_relative 'exception'
 require 'rest_client'
 require 'uri'
 require 'logger'
+require 'wavefront/constants'
 #
 # Add basic support to cover Wavefront's events API. I have followed
 # the standards and conventions established in the files already in
@@ -17,7 +18,7 @@ module Wavefront
   # the event', 's' as 'start time for the event' and so-on.
   #
   class Events
-    DEFAULT_HOST = 'metrics.wavefront.com'
+    include Wavefront::Constants
     DEFAULT_PATH = '/api/events/'
 
     attr_reader :token
