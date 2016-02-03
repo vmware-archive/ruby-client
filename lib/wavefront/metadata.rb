@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 =end
 
 require "wavefront/client/version"
-require "wavefront/client/constants"
+require "wavefront/constants"
 require "wavefront/exception"
 require 'rest_client'
 require 'uri'
@@ -23,6 +23,7 @@ require 'logger'
 
 module Wavefront
   class Metadata
+    include Wavefront::Constants
     DEFAULT_PATH = '/api/manage/source/'
 
     attr_reader :headers, :base_uri

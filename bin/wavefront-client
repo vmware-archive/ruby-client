@@ -20,8 +20,11 @@ require 'json'
 
 @opts = Slop.parse(strict: true) do
   banner 'Usage: wavefront-client QUERY (OPTIONS)'
+  on 'd', 'days', 'Query granularity of days'
+  on 'D', 'debug', 'Enable debug mode'
   on 'm', 'minutes', 'Query granularity of minutes'
-  on 'h', 'hours', 'Query granularity of hours'
+  on 'H', 'hours', 'Query granularity of hours'
+  on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
   on 'S', 'seconds', 'Query granularity of seconds'
   on 's', 'start=', 'Time in UNIX epoch seconds to begin the query from'
   on 't', 'token=', 'Wavefront authentication token'
@@ -43,8 +46,10 @@ elsif @opts.hours?
   granularity = 'h'
 elsif @opts.seconds?
   granularity = 's'
+elsif @opts.days?
+  granularity = 'd'
 else
-  puts "You must specify a granularity of either --seconds, --minutes or --hours. See --help for more information."
+  puts "You must specify a granularity of either --seconds, --minutes --hours or --days. See --help for more information."
   exit 1
 end
 
@@ -65,7 +70,7 @@ if @opts[:end]
   options[:end_time] = Time.at(@opts[:end].to_i)
 end
 
-wave = Wavefront::Client.new(@opts[:token])
+wave = Wavefront::Client.new(@opts[:token], @opts[:endpoint], @opts[:debug])
 case options[:response_format]
 when :raw
   puts wave.query(query, granularity, options)

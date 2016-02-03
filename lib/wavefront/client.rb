@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 =end
 
 require "wavefront/client/version"
-require "wavefront/client/constants"
+require "wavefront/constants"
 require "wavefront/exception"
 require "wavefront/response"
 require 'rest_client'
@@ -24,13 +24,9 @@ require 'logger'
 
 module Wavefront
   class Client
-    DEFAULT_PERIOD_SECONDS = 600
+
+    include Wavefront::Constants
     DEFAULT_PATH = '/chart/api'
-    DEFAULT_FORMAT = :raw
-    DEFAULT_PREFIX_LENGTH = 1
-    DEFAULT_STRICT = true
-    FORMATS = [ :raw, :ruby, :graphite, :highcharts ]
-    GRANULARITIES = %w( s m h d )
 
     attr_reader :headers, :base_uri
 
