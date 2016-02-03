@@ -23,8 +23,8 @@ require 'json'
   on 'd', 'days', 'Query granularity of days'
   on 'D', 'debug', 'Enable debug mode'
   on 'm', 'minutes', 'Query granularity of minutes'
-  on 'h', 'hours', 'Query granularity of hours'
-  on 'H', 'host=', 'Connect to alternative cluster host', default: Wavefront::Client::DEFAULT_HOST.to_s
+  on 'H', 'hours', 'Query granularity of hours'
+  on 'e', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
   on 'S', 'seconds', 'Query granularity of seconds'
   on 's', 'start=', 'Time in UNIX epoch seconds to begin the query from'
   on 't', 'token=', 'Wavefront authentication token'
@@ -43,7 +43,7 @@ query = ARGV[0]
 if @opts.minutes?
   granularity = 'm'
 elsif @opts.hours?
-  granularity = 'h'
+  granularity = 'H'
 elsif @opts.seconds?
   granularity = 's'
 elsif @opts.days?
@@ -70,7 +70,7 @@ if @opts[:end]
   options[:end_time] = Time.at(@opts[:end].to_i)
 end
 
-wave = Wavefront::Client.new(@opts[:token], @opts[:host], @opts[:debug])
+wave = Wavefront::Client.new(@opts[:token], @opts[:endpoint], @opts[:debug])
 case options[:response_format]
 when :raw
   puts wave.query(query, granularity, options)
