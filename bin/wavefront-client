@@ -43,7 +43,7 @@ query = ARGV[0]
 if @opts.minutes?
   granularity = 'm'
 elsif @opts.hours?
-  granularity = 'H'
+  granularity = 'h'
 elsif @opts.seconds?
   granularity = 's'
 elsif @opts.days?
