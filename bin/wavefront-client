@@ -31,6 +31,9 @@ require 'json'
   on 'e', 'end=', 'Time in UNIX epoch seconds to query to'
   on 'f', 'format=', "Output format (#{Wavefront::Client::FORMATS.join(', ')})", default: Wavefront::Client::DEFAULT_FORMAT.to_s
   on 'p', 'prefixlength=', 'The number of path elements to treat as a prefix when doing schema manipulations', default: Wavefront::Client::DEFAULT_PREFIX_LENGTH
+  on 'X', 'strict=','Flag to not return points outside the query window [q;s) ', default: Wavefront::Client::DEFAULT_STRICT
+  on 'O', 'includeObsoleteMetrics=', 'Flag to include metrics that have not been reporting for more than 4 weeks,defaults to false', default: Wavefront::Client::DEFAULT_OBSOLETE_METRICS
+
   on 'h', 'help', 'Display this message'
 end
 
