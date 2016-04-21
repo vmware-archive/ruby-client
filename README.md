@@ -101,6 +101,10 @@ response = wave.query('<TS_EXPRESSION>', 'm', {:start_time => Time.now - 86400, 
       default we set this to `true`, so you will get back exactly
       the range you request with `:start_time` and `:end_time`. If
       you wish to have the old behaviour, set this to `false`.
+    * `:includeObsoleteMetrics` - With Wavefront 3.0 onwards, the non-reporting metrics
+       are treated as obsolete after 4 weeks of no data being reported for them.
+       Setting  `includeObsoleteMetrics` to true allows you to pull these obsolete metrics.
+       It defaults to `false`
     * `:passthru` - as Wavefront develops it is hard to keep pace with
       the API changes and cover everything in the SDK. The `passthru`
       hash lets you pass parameters directly to the Wavefront API.
