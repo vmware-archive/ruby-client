@@ -21,6 +21,7 @@ module Wavefront
     DEFAULT_FORMAT = :raw
     DEFAULT_PREFIX_LENGTH = 1
     DEFAULT_STRICT = true
+    DEFAULT_OBSOLETE_METRICS = false
     FORMATS = [ :raw, :ruby, :graphite, :highcharts ]
     GRANULARITIES = %w( s m h d )
   end
