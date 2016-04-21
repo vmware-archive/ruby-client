@@ -43,6 +43,7 @@ module Wavefront
       options[:response_format] ||= DEFAULT_FORMAT
       options[:prefix_length] ||= DEFAULT_PREFIX_LENGTH
       options[:strict] = DEFAULT_STRICT unless options.keys.include?(:strict)
+      options[:includeObsoleteMetrics] = DEFAULT_OBSOLETE_METRICS unless options.keys.include?(:includeObsoleteMetrics)
 
       [ options[:start_time], options[:end_time] ].each { |o| raise Wavefront::Exception::InvalidTimeFormat unless o.is_a?(Time) }
       raise Wavefront::Exception::InvalidGranularity unless GRANULARITIES.include?(granularity)
@@ -54,6 +55,7 @@ module Wavefront
                :s => options[:start_time].to_i,
                :e => options[:end_time].to_i,
                :strict => options[:strict],
+               :includeObsoleteMetrics => options[:includeObsoleteMetrics]
               }}.merge(@headers)
 
       if options[:passthru]
