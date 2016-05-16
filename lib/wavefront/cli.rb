@@ -1,4 +1,4 @@
-=begin
+=begin 
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,7 +15,19 @@ See the License for the specific language governing permissions and
 =end
 
 module Wavefront
-  class Client
-    VERSION = "3.0.0"
+  class Cli
+
+    attr_accessor :options, :arguments
+
+    def initialize(options, arguments)
+      @options   = options
+      @arguments = arguments
+
+      if @options.help?
+        puts @options
+        exit 0
+      end
+    end
+
   end
 end

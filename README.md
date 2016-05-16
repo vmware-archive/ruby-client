@@ -1,8 +1,8 @@
-Wavefront::Client
+Wavefront
 ==========
 [![Build Status](https://travis-ci.org/wavefrontHQ/ruby-client.svg?branch=v0.5.2)](https://travis-ci.org/wavefrontHQ/ruby-client)
 
-This is a simple ruby gem for speaking to the [Wavefront][1] monitoring and graphing system.
+This is a ruby gem for speaking to the [Wavefront][1] monitoring and graphing system.
 
 ## Usage
 Within your own ruby code:
@@ -165,11 +165,45 @@ response.highcharts[0]['data'].first  # [1436849460000, 517160277.3333333]
 ```
 
 ### Command-line client
-A simple command line client is included too. You can see the full list of options by typing `wavefront-client --help` from a prompt.
+A command line client is included too. You can see the full list of options by typing `wavefront --help` from a prompt.
 
 ```bash
-$ wavefront-client '<TS_EXPRESSION>' --minutes --token <YOUR_TOKEN > # <TS_EXPRESSION> : Placeholder for a valid Wavefront ts() query , <YOUR_TOKEN> : Placeholder for your Wavefront token
-response.class # Wavefront::Response::Ruby
+$ wavefront --help                                                                                                        
+Usage: wavefront COMMAND QUERY (OPTIONS)
+    -h, --help      Display this message
+
+Available commands:
+
+  ts   Query the timeseries
+
+See `<command> --help` for more information on a specific command.
+
+$ wavefront ts --help
+Usage: wavefront COMMAND QUERY (OPTIONS)
+    -d, --days                        Query granularity of days
+    -D, --debug                       Enable debug mode
+    -m, --minutes                     Query granularity of minutes
+    -H, --hours                       Query granularity of hours
+    -E, --endpoint                    Connect to alternative cluster endpoint (default: metrics.wavefront.com)
+    -S, --seconds                     Query granularity of seconds
+    -s, --start                       Time in UNIX epoch seconds to begin the query from
+    -t, --token                       Wavefront authentication token
+    -e, --end                         Time in UNIX epoch seconds to query to
+    -f, --format                      Output format (raw, ruby, graphite, highcharts) (default: raw)
+    -p, --prefixlength                The number of path elements to treat as a prefix when doing schema manipulations (default: 1)
+    -X, --strict                      Flag to not return points outside the query window [q;s)  (default: true)
+    -O, --includeObsoleteMetrics      Flag to include metrics that have not been reporting for more than 4 weeks,defaults to false
+    -h, --help                        Display this message
+
+$ wavefront ts "ts(my.metric.path.host.cpu-0.percent-idle)" -t SECRET -m -f ruby
+#<Wavefront::Response::Ruby:0x007f02f6bf9d70
+ @granularity=60,
+ @name="Unknown",
+ @options=
+  {:response_format=>:ruby,
+   :prefix_length=>1,
+
+   ...
 ```
 
 
