@@ -53,6 +53,8 @@ module Wavefront
       get_alerts('affected_by_maintenance', options)
     end
 
+    private
+
     def get_alerts(path, options={})
       options[:host] ||= DEFAULT_HOST
       options[:path] ||= DEFAULT_PATH
@@ -76,8 +78,6 @@ module Wavefront
       )
       RestClient.get(uri.to_s)
     end
-
-    private
 
     def debug(enabled)
       if enabled
