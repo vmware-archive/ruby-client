@@ -42,6 +42,21 @@ options = Slop.parse(strict: true) do
       cli.run
     end
   end
+
+  command 'alerts' do
+    description "Query alerts"
+    on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
+    on 'h', 'help', 'Display this message'
+    on 'p', 'private', 'Retrieve private tags'
+    on 's', 'shared', 'Retrieve shared tags'
+    on 't', 'token=', 'Wavefront authentication token'
+    run do |options, arguments|
+      require 'wavefront/cli/alerts'
+      cli = Wavefront::Cli::Alerts.new(options, arguments)
+      cli.run
+    end
+  end
+
 end
 
 if options[:help]
