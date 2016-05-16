@@ -26,7 +26,13 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     alerts = Wavefront::Alerting.new(@options[:token])
     queries = alerts.public_methods(false).sort
     queries.delete(:token)
-    query = arguments[0].to_sym
+ 
+    if arguments[0]
+      query = arguments[0].to_sym
+    else
+      puts "Your query should be one of: #{ queries.each {|q| q.to_s}.join(', ') }. See --help for more information"
+      exit 1
+    end
 
     # This isn't especially nice, but if require to
     # avoiding breaking the Alerting interface :(
@@ -43,7 +49,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     if queries.include?(query)
       result = alerts.send(query, options)
     else
-      puts "Your query should be one of: #{ queries.each {|q| q.to_s}.join(', ') }"
+      puts "Your query should be one of: #{ queries.each {|q| q.to_s}.join(', ') }. See --help for more information"
       exit 1
     end
 
