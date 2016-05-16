@@ -168,13 +168,13 @@ response.highcharts[0]['data'].first  # [1436849460000, 517160277.3333333]
 A command line client is included too. You can see the full list of options by typing `wavefront --help` from a prompt.
 
 ```bash
-$ wavefront --help                                                                                                        
 Usage: wavefront COMMAND QUERY (OPTIONS)
     -h, --help      Display this message
 
 Available commands:
 
-  ts   Query the timeseries
+  ts       Query the timeseries
+  alerts   Query alerts
 
 See `<command> --help` for more information on a specific command.
 
