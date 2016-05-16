@@ -63,5 +63,7 @@ class Wavefront::Cli::Ts < Wavefront::Cli
     else
       pp wave.query(query, granularity, options)
     end
+
+    exit 0
   end
 end

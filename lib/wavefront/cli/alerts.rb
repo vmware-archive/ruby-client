@@ -50,6 +50,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     case @options[:format].to_sym
     when :ruby
       pp result
+      exit 0
     when :json
       puts JSON.pretty_generate(JSON.parse(result))
     else
