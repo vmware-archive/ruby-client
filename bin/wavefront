@@ -60,7 +60,4 @@ options = Slop.parse(strict: true) do
 
 end
 
-if options[:help]
-  puts options
-  exit 0
-end
+puts options
