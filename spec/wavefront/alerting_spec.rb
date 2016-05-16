@@ -45,38 +45,38 @@ describe Wavefront::Alerting do
   describe '#get_alerts' do
     it 'makes API request with default options' do
       expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}")}")
-      @wave.get_alerts('all')
+      @wave.all
     end
 
     it 'makes API request with specified host' do
       host = 'madeup.wavefront.com'
       expect(RestClient).to receive(:get).with("https://#{File.join(host, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}")}")
-      @wave.get_alerts('all', { :host => host } )
+      @wave.all({ :host => host })
     end
 
     it 'makes API request with specified path' do
       path = '/api/new_alerts' 
       expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, path, "all?t=#{TEST_TOKEN}")}")
-      @wave.get_alerts('all', { :path => path })
+      @wave.all({ :path => path })
     end
 
     it 'makes API request with appended shared tags' do
       tags = [ 'first', 'second' ]
       expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}&customerTag=first&customerTag=second")}")
-      @wave.get_alerts('all', { :shared_tags => tags })
+      @wave.all({ :shared_tags => tags })
     end
 
     it 'makes API request with appended private tags' do
       tags = [ 'first', 'second' ]
       expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}&userTag=first&userTag=second")}")
-      @wave.get_alerts('all', { :private_tags => tags })
+      @wave.all({ :private_tags => tags })
     end
 
     it 'makes API request with both appended private tags and shared tags' do
       private_tag = 'first' 
       shared_tag = 'second'
       expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}&customerTag=second&userTag=first")}")
-      @wave.get_alerts('all', { :private_tags => private_tag, :shared_tags => shared_tag })
+      @wave.all({ :private_tags => private_tag, :shared_tags => shared_tag })
     end
   end
 
