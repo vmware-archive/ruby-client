@@ -22,7 +22,7 @@ require 'wavefront/client/version'
 Gem::Specification.new do |spec|
   spec.name          = "wavefront-client"
   spec.version       = Wavefront::Client::VERSION
-  spec.authors       = ["Sam Pointer", "Louis McCormack", "Joshua McGhee", "Conor Beverland", "Salil Deshmukh"]
+  spec.authors       = ["Sam Pointer", "Louis McCormack", "Joshua McGhee", "Conor Beverland", "Salil Deshmukh", "Rob Fisher"]
   spec.email         = ["support@wavefront.com"]
   spec.description   = %q{A simple abstraction for talking to wavefront in ruby}
   spec.summary       = %q{A simple abstraction for talking to wavefront in ruby}
