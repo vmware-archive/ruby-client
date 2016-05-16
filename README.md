@@ -204,6 +204,13 @@ $ wavefront ts "ts(my.metric.path.host.cpu-0.percent-idle)" -t SECRET -m -f ruby
    :prefix_length=>1,
 
    ...
+
+$ wavefront alerts snoozed -t TOKEN -f json --shared ops
+[
+  {
+    "customerTagsWithCounts": {
+
+   ...
 ```
 
 
