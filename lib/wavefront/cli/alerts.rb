@@ -15,6 +15,8 @@
 
 require 'wavefront/alerting'
 require 'wavefront/cli'
+require 'json'
+require 'pp'
 
 class Wavefront::Cli::Alerts < Wavefront::Cli
 
@@ -22,16 +24,37 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
 
   def run
     alerts = Wavefront::Alerting.new(@options[:token])
-    queries = alerts.public_methods(false).delete(:token)
+    queries = alerts.public_methods(false).sort
+    queries.delete(:token)
     query = arguments[0].to_sym
 
+    # This isn't especially nice, but if require to
+    # avoiding breaking the Alerting interface :(
+    options = Hash.new
+    options[:host] = @options[:endpoint]
+
+    if @options[:shared]
+      options[:shared_tags] = @options[:shared].delete(' ').split(',')
+    end
+    if @options[:private]
+      options[:private_tags] = @options[:private].delete(' ').split(',')
+    end
+
     if queries.include?(query)
-      result = alerts.send(query)
+      result = alerts.send(query, options)
     else
-      puts "Your query should be one of #{ queries.each {|q| q.to_s}.join(', ') }"
+      puts "Your query should be one of: #{ queries.each {|q| q.to_s}.join(', ') }"
       exit 1
     end
 
-    puts result
+    case @options[:format].to_sym
+    when :ruby
+      pp result
+    when :json
+      puts JSON.pretty_generate(JSON.parse(result))
+    else
+      puts "Invalid output format, See --help for more detail."
+      exit 1
+    end
   end
 end

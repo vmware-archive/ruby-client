@@ -46,9 +46,10 @@ options = Slop.parse(strict: true) do
   command 'alerts' do
     description "Query alerts"
     on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
+    on 'f', 'format=', 'Output format (ruby, json)', default: 'ruby'
     on 'h', 'help', 'Display this message'
-    on 'p', 'private', 'Retrieve private tags'
-    on 's', 'shared', 'Retrieve shared tags'
+    on 'p', 'private=', 'Retrieve only alerts with named private tags, comma delimeted.'
+    on 's', 'shared=', 'Retrieve only alerts with named private tags, comma delimeted.'
     on 't', 'token=', 'Wavefront authentication token'
     run do |options, arguments|
       require 'wavefront/cli/alerts'
