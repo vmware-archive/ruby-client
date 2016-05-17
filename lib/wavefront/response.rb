@@ -120,20 +120,19 @@ module Wavefront
 
       def initialize(response, options={})
         super
+
         if self.respond_to?(:timeseries)
           out = ['%-20s%s' % ['query', self.query]]
 
           self.timeseries.each_with_index do |ts, i|
             out.<< '%-20s%s' % ['timeseries', i]
-            out += ts.map do |k, v|
-              next if k == 'data'
+            out += ts.select{|k,v| k != 'data' }.map do |k, v|
               if k == 'tags'
                 v.map { |tk, tv| 'tag.%-16s%s' % [tk, tv] }
               else
                 '%-20s%s' % [k, v]
               end
             end
-
             out += ts['data'].map do |t, v|
               [Time.at(t).strftime('%F %T'), v].join(' ')
             end
