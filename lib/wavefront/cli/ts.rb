@@ -24,13 +24,14 @@ class Wavefront::Cli::Ts < Wavefront::Cli
 
   def run
     query = @arguments[0]
-    if @options.minutes?
+
+    if @options[:minutes]
       granularity = 'm'
-    elsif @options.hours?
+    elsif @options[:hours]
       granularity = 'h'
-    elsif @options.seconds?
+    elsif @options[:seconds]
       granularity = 's'
-    elsif @options.days?
+    elsif @options[:days]
       granularity = 'd'
     else
       puts "You must specify a granularity of either --seconds, --minutes --hours or --days. See --help for more information."
