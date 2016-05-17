@@ -12,10 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 #    limitations under the License.
-
-require 'wavefront/client'
+$LOAD_PATH.unshift('/home/rob/work/ruby-client/lib')
+$LOAD_PATH.unshift('/home/rob/work/ruby-client')
+require  'lib/wavefront/client'
 require 'slop'
 
+begin
 options = Slop.parse(strict: true) do
   banner 'Usage: wavefront COMMAND QUERY (OPTIONS)'
     on 'h', 'help', 'Display this message'
@@ -58,6 +60,10 @@ options = Slop.parse(strict: true) do
     end
   end
 
+end
+rescue Slop::InvalidOptionError => e
+  puts e
+  exit 1
 end
 
 puts options
