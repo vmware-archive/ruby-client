@@ -65,7 +65,7 @@ module Wavefront
       begin
         response = RestClient.get @base_uri.to_s, args
       rescue
-        puts "ERROR: failed to make connection to endpoint (#{base_uri})"
+        puts "ERROR: failed to make connection to endpoint.\n  (#{base_uri})"
         exit 3
       end
 
