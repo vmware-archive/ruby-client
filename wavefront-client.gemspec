@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rest-client", ">= 1.6.7", "<= 1.8"
   spec.add_dependency "slop", ">= 3.4.7", "<= 3.6"
+  spec.add_dependency 'inifile',  '3.0.0'
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
 
 end
