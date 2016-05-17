@@ -23,6 +23,7 @@ class Wavefront::Cli::Ts < Wavefront::Cli
   attr_accessor :options, :arguments
 
   def run
+    raise 'Please supply a query.' if @arguments.empty?
     query = @arguments[0]
 
     if @options[:minutes]
@@ -34,13 +35,11 @@ class Wavefront::Cli::Ts < Wavefront::Cli
     elsif @options[:days]
       granularity = 'd'
     else
-      puts "You must specify a granularity of either --seconds, --minutes --hours or --days. See --help for more information."
-      exit 1
+      raise "You must specify a granularity of either --seconds, --minutes --hours or --days. See --help for more information."
     end
 
     unless Wavefront::Client::FORMATS.include?(@options[:format].to_sym)
-      puts "The output format must be on of #{Wavefront::Client::FORMATS.join(', ')}"
-      exit 1
+      raise "The output format must be one of: #{Wavefront::Client::FORMATS.join(', ')}."
     end
 
     options = Hash.new
