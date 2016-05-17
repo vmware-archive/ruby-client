@@ -141,7 +141,7 @@ module Wavefront
           out = self.warnings
         end
 
-        @human = out
+        @human = out.join("\n")
       end
     end
   end
