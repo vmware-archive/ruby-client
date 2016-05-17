@@ -12,10 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 #    limitations under the License.
-$LOAD_PATH.unshift('/home/rob/work/ruby-client/lib')
-$LOAD_PATH.unshift('/home/rob/work/ruby-client')
-require  'lib/wavefront/client'
+require 'wavefront/client'
 require 'slop'
+require 'pathname'
+require 'wavefront/cli'
 
 begin
 options = Slop.parse(strict: true) do
@@ -24,24 +24,34 @@ options = Slop.parse(strict: true) do
 
   command 'ts' do
     description "Query the timeseries"
-    on 'd', 'days', 'Query granularity of days'
+    on 'c', 'config=', 'path to configuration file', default:
+                      Pathname.new(ENV['HOME']) + '.wavefront'
+    on 'P', 'profile=', 'profile in configuration file', default: 'default'
     on 'D', 'debug', 'Enable debug mode'
+    on 'S', 'seconds', 'Query granularity of seconds'
     on 'm', 'minutes', 'Query granularity of minutes'
     on 'H', 'hours', 'Query granularity of hours'
-    on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
-    on 'S', 'seconds', 'Query granularity of seconds'
-    on 's', 'start=', 'Time in UNIX epoch seconds to begin the query from'
+    on 'd', 'days', 'Query granularity of days'
+    on 's', 'start=', 'start of query window in epoch seconds or parseable format'
+    on 'e', 'end=', 'end of query window in epoch seconds or parseable format'
     on 't', 'token=', 'Wavefront authentication token'
-    on 'e', 'end=', 'Time in UNIX epoch seconds to query to'
+    on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
     on 'f', 'format=', "Output format (#{Wavefront::Client::FORMATS.join(', ')})", default: Wavefront::Client::DEFAULT_FORMAT.to_s
     on 'p', 'prefixlength=', 'The number of path elements to treat as a prefix when doing schema manipulations', default: Wavefront::Client::DEFAULT_PREFIX_LENGTH
     on 'X', 'strict=','Flag to not return points outside the query window [q;s) ', default: Wavefront::Client::DEFAULT_STRICT
     on 'O', 'includeObsoleteMetrics=', 'Flag to include metrics that have not been reporting for more than 4 weeks,defaults to false', default: Wavefront::Client::DEFAULT_OBSOLETE_METRICS
     on 'h', 'help', 'Display this message'
     run do |options, arguments|
+      pf_opts = Wavefront::Cli.new(options, arguments).load_profile || {}
       require 'wavefront/cli/ts'
-      cli = Wavefront::Cli::Ts.new(options, arguments)
-      cli.run
+      cli = Wavefront::Cli::Ts.new(options.to_hash.merge(pf_opts), arguments)
+      begin
+        cli.run
+      rescue => e
+        puts 'Query failed.'
+        puts e
+        exit 1
+      end
     end
   end
 
