@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ module Wavefront
     DEFAULT_PREFIX_LENGTH = 1
     DEFAULT_STRICT = true
     DEFAULT_OBSOLETE_METRICS = false
-    FORMATS = [ :raw, :ruby, :graphite, :highcharts ]
+    FORMATS = [ :raw, :ruby, :graphite, :highcharts, :human ]
     GRANULARITIES = %w( s m h d )
   end
 end

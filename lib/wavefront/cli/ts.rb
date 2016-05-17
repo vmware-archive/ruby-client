@@ -61,6 +61,8 @@ class Wavefront::Cli::Ts < Wavefront::Cli
       puts wave.query(query, granularity, options)
     when :graphite
       puts wave.query(query, granularity, options).graphite.to_json
+    when :human
+      puts wave.query(query, granularity, options).human
     else
       pp wave.query(query, granularity, options)
     end
