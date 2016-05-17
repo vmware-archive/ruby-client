@@ -62,7 +62,12 @@ module Wavefront
         args[:params].merge!(options[:passthru])
       end
 
-      response = RestClient.get @base_uri.to_s, args
+      begin
+        response = RestClient.get @base_uri.to_s, args
+      rescue
+        puts "ERROR: failed to make connection to endpoint (#{base_uri})"
+        exit 3
+      end
 
       klass = Object.const_get('Wavefront').const_get('Response').const_get(options[:response_format].to_s.capitalize)
       return klass.new(response, options)
@@ -76,6 +81,5 @@ module Wavefront
         RestClient.log = 'stdout'
       end
     end
-
   end
 end
