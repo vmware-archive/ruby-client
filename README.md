@@ -180,16 +180,18 @@ See `<command> --help` for more information on a specific command.
 
 $ wavefront ts --help
 Usage: wavefront COMMAND QUERY (OPTIONS)
-    -d, --days                        Query granularity of days
+    -c, --config                      path to configuration file (default: ${HOME}/.wavefront)
+    -P, --profile                     profile in configuration file (default: default)
     -D, --debug                       Enable debug mode
+    -S, --seconds                     Query granularity of seconds
     -m, --minutes                     Query granularity of minutes
     -H, --hours                       Query granularity of hours
-    -E, --endpoint                    Connect to alternative cluster endpoint (default: metrics.wavefront.com)
-    -S, --seconds                     Query granularity of seconds
-    -s, --start                       Time in UNIX epoch seconds to begin the query from
+    -d, --days                        Query granularity of days
+    -s, --start                       start of query window in epoch seconds or parseable format
+    -e, --end                         end of query window in epoch seconds or parseable format
     -t, --token                       Wavefront authentication token
-    -e, --end                         Time in UNIX epoch seconds to query to
-    -f, --format                      Output format (raw, ruby, graphite, highcharts) (default: raw)
+    -E, --endpoint                    Connect to alternative cluster endpoint (default: metrics.wavefront.com)
+    -f, --format                      Output format (raw, ruby, graphite, highcharts, human) (default: raw)
     -p, --prefixlength                The number of path elements to treat as a prefix when doing schema manipulations (default: 1)
     -X, --strict                      Flag to not return points outside the query window [q;s)  (default: true)
     -O, --includeObsoleteMetrics      Flag to include metrics that have not been reporting for more than 4 weeks,defaults to false
@@ -213,6 +215,55 @@ $ wavefront alerts snoozed -t TOKEN -f json --shared ops
    ...
 ```
 
+#### Notes on Options
+
+##### Times
+
+The query window can be defined by using Unix epoch times (as shown
+by `date "%+s"`) or by entering any Ruby `strptime`-parseable string.
+For instance:
+
+```bash
+$ wavefront --start 12:15 --end 12:20 ...
+```
+
+will request data points between 12:15 and 12:20pm today. If you ran
+that in the morning, the time would be invalid, and you would get a
+400 error from Wavefront, so something of the form
+`2016-04-17T12:25:00` would remove all ambiguity.
+
+There is no need to include a timezone in your parseable string: the
+`wavefront` CLI will automatically use your local timezone when it
+parses the string.
+
+#### Default Configuration
+
+Passing tokens and endpoints into the `wavefront` command can become
+tiresome, so you can put such data into an `ini`-style configuration
+file. By default this file should be located at `${HOME}/.wavefront`,
+though you can override the location with the `-c` flag.
+
+You can switch between Wavefront accounts using profile stanzas,
+selected with the `-P` option.  If `-P` is not supplied, the
+`default` profile will be used. Not having a useable configuration
+file will not cause an error.
+
+A configuration file looks like this:
+
+```
+[default]
+token = abcdefab-1234-abcd-1234-abcdefabcdef
+endpoint = companya.wavefront.com
+format = human
+
+[companyb]
+token = 12345678-abcd-0123-abcd-123456789abc
+endpoint = metrics.wavefront.com
+```
+
+The key for each key-value pair can match any long option show in the
+command `help`, so you can set, for instance, a default output
+format, as shown above.
 
 ## Building and installing
 
