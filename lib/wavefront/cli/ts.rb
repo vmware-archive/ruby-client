@@ -17,10 +17,20 @@ require 'wavefront/client'
 require 'wavefront/cli'
 require 'pp'
 require 'json'
+require 'date'
 
 class Wavefront::Cli::Ts < Wavefront::Cli
 
   attr_accessor :options, :arguments
+
+  def parse_time(t)
+    return Time.at(t.to_i) if t.match(/^\d+$/)
+    begin
+      return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
+    rescue
+      raise "cannot parse timestamp '#{t}'."
+    end
+  end
 
   def run
     raise 'Please supply a query.' if @arguments.empty?
@@ -47,11 +57,11 @@ class Wavefront::Cli::Ts < Wavefront::Cli
     options[:prefix_length] = @options[:prefixlength].to_i
 
     if @options[:start]
-      options[:start_time] = Time.at(@options[:start].to_i)
+      options[:start_time] = parse_time(@options[:start])
     end
 
     if @options[:end]
-      options[:end_time] = Time.at(@options[:end].to_i)
+      options[:end_time] = parse_time(@options[:end])
     end
 
     wave = Wavefront::Client.new(@options[:token], @options[:endpoint], @options[:debug])
