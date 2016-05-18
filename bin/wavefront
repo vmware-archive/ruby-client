@@ -23,6 +23,14 @@ options = Slop.parse(strict: true) do
   banner 'Usage: wavefront COMMAND QUERY (OPTIONS)'
     on 'h', 'help', 'Display this message'
 
+  command :version do
+    description 'Display the client version and exit'
+    run do
+      puts Wavefront::Client::VERSION
+      exit 0
+    end
+  end
+
   command 'ts' do
     description "Query the timeseries"
     on 'c', 'config=', 'path to configuration file', default:
@@ -83,6 +91,8 @@ options = Slop.parse(strict: true) do
       end
     end
   end
+
+
 end
 rescue Slop::InvalidOptionError => e
   puts 'invalid option error: '+ e.to_s
