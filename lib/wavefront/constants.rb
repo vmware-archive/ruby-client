@@ -23,6 +23,8 @@ module Wavefront
     DEFAULT_STRICT = true
     DEFAULT_OBSOLETE_METRICS = false
     FORMATS = [ :raw, :ruby, :graphite, :highcharts, :human ]
+    ALERT_FORMATS = [:ruby, :json, :human]
+    DEFAULT_ALERT_FORMAT = :human
     GRANULARITIES = %w( s m h d )
   end
 end
