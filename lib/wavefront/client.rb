@@ -38,7 +38,7 @@ module Wavefront
 
     def query(query, granularity='m', options={})
 
-      options[:end_time] ||= Time.now
+      options[:end_time] ||= Time.now.utc
       options[:start_time] ||= options[:end_time] - DEFAULT_PERIOD_SECONDS
       options[:response_format] ||= DEFAULT_FORMAT
       options[:prefix_length] ||= DEFAULT_PREFIX_LENGTH
@@ -76,6 +76,5 @@ module Wavefront
         RestClient.log = 'stdout'
       end
     end
-
   end
 end

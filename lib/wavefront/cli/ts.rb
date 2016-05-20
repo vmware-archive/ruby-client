@@ -17,29 +17,39 @@ require 'wavefront/client'
 require 'wavefront/cli'
 require 'pp'
 require 'json'
+require 'date'
 
 class Wavefront::Cli::Ts < Wavefront::Cli
 
   attr_accessor :options, :arguments
 
+  def parse_time(t)
+    return Time.at(t.to_i) if t.match(/^\d+$/)
+    begin
+      return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
+    rescue
+      raise "cannot parse timestamp '#{t}'."
+    end
+  end
+
   def run
+    raise 'Please supply a query.' if @arguments.empty?
     query = @arguments[0]
-    if @options.minutes?
+
+    if @options[:minutes]
       granularity = 'm'
-    elsif @options.hours?
+    elsif @options[:hours]
       granularity = 'h'
-    elsif @options.seconds?
+    elsif @options[:seconds]
       granularity = 's'
-    elsif @options.days?
+    elsif @options[:days]
       granularity = 'd'
     else
-      puts "You must specify a granularity of either --seconds, --minutes --hours or --days. See --help for more information."
-      exit 1
+      raise "You must specify a granularity of either --seconds, --minutes --hours or --days. See --help for more information."
     end
 
     unless Wavefront::Client::FORMATS.include?(@options[:format].to_sym)
-      puts "The output format must be on of #{Wavefront::Client::FORMATS.join(', ')}"
-      exit 1
+      raise "The output format must be one of: #{Wavefront::Client::FORMATS.join(', ')}."
     end
 
     options = Hash.new
@@ -47,11 +57,11 @@ class Wavefront::Cli::Ts < Wavefront::Cli
     options[:prefix_length] = @options[:prefixlength].to_i
 
     if @options[:start]
-      options[:start_time] = Time.at(@options[:start].to_i)
+      options[:start_time] = parse_time(@options[:start])
     end
 
     if @options[:end]
-      options[:end_time] = Time.at(@options[:end].to_i)
+      options[:end_time] = parse_time(@options[:end])
     end
 
     wave = Wavefront::Client.new(@options[:token], @options[:endpoint], @options[:debug])
@@ -60,6 +70,8 @@ class Wavefront::Cli::Ts < Wavefront::Cli
       puts wave.query(query, granularity, options)
     when :graphite
       puts wave.query(query, granularity, options).graphite.to_json
+    when :human
+      puts wave.query(query, granularity, options).human
     else
       pp wave.query(query, granularity, options)
     end

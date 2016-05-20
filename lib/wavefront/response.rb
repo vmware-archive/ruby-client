@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ module Wavefront
     class Ruby
       include JSON
       attr_reader :response, :options
-      
+
       def initialize(response, options={})
         @response = response
         @options = options
@@ -59,7 +59,7 @@ module Wavefront
       def initialize(response, options={})
         super
         options[:prefix_length] ||= Wavefront::Client::DEFAULT_PREFIX_LENGTH
-        
+
         @graphite = Array.new
         self.timeseries.each do |ts|
 
@@ -72,7 +72,7 @@ module Wavefront
           end
 
           output_timeseries['datapoints'] = datapoints
-          @graphite << output_timeseries 
+          @graphite << output_timeseries
 
         end
       end
@@ -111,5 +111,38 @@ module Wavefront
       end
     end
 
+    class Human < Wavefront::Response::Ruby
+      #
+      # Print "human-readable" (but also easily machine-pareseable)
+      # values.
+      #
+      attr_reader :response, :options, :human
+
+      def initialize(response, options={})
+        super
+
+        if self.respond_to?(:timeseries)
+          out = ['%-20s%s' % ['query', self.query]]
+
+          self.timeseries.each_with_index do |ts, i|
+            out.<< '%-20s%s' % ['timeseries', i]
+            out += ts.select{|k,v| k != 'data' }.map do |k, v|
+              if k == 'tags'
+                v.map { |tk, tv| 'tag.%-16s%s' % [tk, tv] }
+              else
+                '%-20s%s' % [k, v]
+              end
+            end
+            out += ts['data'].map do |t, v|
+              [Time.at(t).strftime('%F %T'), v].join(' ')
+            end
+          end
+        else
+          out = self.warnings
+        end
+
+        @human = out.join("\n")
+      end
+    end
   end
 end
