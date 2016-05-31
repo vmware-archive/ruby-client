@@ -1,6 +1,5 @@
-Wavefront
+Wavefront [![Build Status](https://travis-ci.org/wavefrontHQ/ruby-client.svg?branch=master)](https://travis-ci.org/wavefrontHQ/ruby-client) [![Gem Version](https://badge.fury.io/rb/wavefront-client.svg)](https://badge.fury.io/rb/wavefront-client) ![](http://ruby-gem-downloads-badge.herokuapp.com/wavefront-client?type=total)
 ==========
-[![Build Status](https://travis-ci.org/wavefrontHQ/ruby-client.svg?branch=v0.5.2)](https://travis-ci.org/wavefrontHQ/ruby-client)
 
 This is a ruby gem for speaking to the [Wavefront][1] monitoring and graphing system.
 
