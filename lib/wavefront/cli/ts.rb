@@ -20,17 +20,8 @@ require 'json'
 require 'date'
 
 class Wavefront::Cli::Ts < Wavefront::Cli
-
+  include Wavefront::Mixins
   attr_accessor :options, :arguments
-
-  def parse_time(t)
-    return Time.at(t.to_i) if t.match(/^\d+$/)
-    begin
-      return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
-    rescue
-      raise "cannot parse timestamp '#{t}'."
-    end
-  end
 
   def run
     raise 'Please supply a query.' if @arguments.empty?
