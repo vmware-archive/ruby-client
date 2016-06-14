@@ -1,0 +1,123 @@
+#!/usr/bin/env ruby
+
+# A rewrite of the CLI parsing with docopt. (http://docopt.org)
+
+require 'pathname'
+require 'docopt'
+
+ME = Pathname.new(__FILE__).basename
+
+# The global_opts are available in every command.
+#
+global_opts = %Q(
+Global options:
+  -c, --config=FILE    path to configuration file [default: ~/.wavefront]
+  -P, --profile=NAME   profile in configuration file [default: default]
+  -E, --endpoint=URI   cluster endpoint [default: metrics.wavefront.com]
+  -t, --token=TOKEN    Wavefront authentication token
+  -D, --debug          enable debug mode
+  -h, --help           show this message
+)
+
+# The following hash contains the docopt strings defining all the
+# commands we offer. They must include the global_opts.
+#
+usage = {
+ts: %Q(
+Usage:
+  #{ME} ts [-c file] [-P profile] [-E endpoint] [-t token] [-OD]
+            [-s | -m | -h | -d] [-s time] [-e time] [-f format] [-p num]
+            [-X bool] <query>
+#{global_opts}
+Options:
+  -S, --seconds                 query granularity of seconds
+  -m, --minutes                 query granularity of minutes
+  -H, --hours                   query granularity of hours
+  -d, --days                    query granularity of days
+  -s, --start=TIME              start of query window in epoch seconds or
+                                strptime parseable format
+  -e, --end=TIME                end of query window in epoch seconds or
+                                strptime parseable format
+  -f, --format=STRING           output format. (raw, ruby, graphite,
+                                highcharts, human) [default: raw]
+  -p, --prefixlength=NUM        number of path elements to treat as prefix
+                                in schema manipulation. [default: 1]
+  -X, --strict=BOOL             Do not return points outside the query
+                                window. [default: true]
+  -O, --includeObsoleteMetrics  include metrics unreported for > 4 weeks
+),
+
+alerts: %Q(
+Usage:
+  #{ME} alerts [-c file] [-P profile] [-E endpoint] [-t token]
+            [-f format] [-p tag] [ -s tag] <state>
+#{global_opts}
+Options:
+  -f, --format=STRING  output format (ruby, json, human) [default: human]
+  -p, --private=TAG    retrieve only alerts with named private tags,
+                       comma delimited.
+  -s, --shared=TAG     retrieve only alerts with named shared tags, comma
+                       delimited.
+),
+
+event: %Q(
+Usage:
+  #{ME} event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
+           [-s time] [-i | -e time] [-l level] [-t type] [-h host] <event>
+  #{ME} event close [-V] [event] [time]
+  #{ME} event --help
+#{global_opts}
+Options:
+  -i, --instant        create an instantaneous event
+  -V, --verbose        be verbose
+  -s, --start=TIME     time at which event begins
+  -e, --end=TIME       time at which event ends
+  -l, --level=LEVEL    level of event
+  -T, --type=TYPE      type of event
+  -d, --decs=STRING    description of event
+  -H, --host=STRING    list of hosts to tag with even (comma separated)
+),
+default: %Q(
+Wavefront CLI
+
+Usage:
+  #{ME} [options] command [options]
+  #{ME} --version
+  #{ME} --help
+
+Commands:
+  ts          view timeseries data
+  alerts      view alerts
+  event       open and close events
+
+Use '#{ME} <command> --help' for further information.)
+}
+
+
+# Parse the input
+#
+begin
+  args = Docopt::docopt(usage[:default], version: '3.2.0')
+  puts "global args"
+  puts args
+rescue Docopt::Exit => e
+  cmd = ARGV.first.to_sym
+
+  if usage.keys.include?(cmd)
+    begin
+      args = Docopt::docopt(usage[cmd])
+    rescue Docopt::Exit => e
+      puts e.message
+    end
+  else
+    puts e.message
+  end
+end
+
+# show stuff worked
+
+if args
+  require 'pp'
+  puts "information for #{cmd} command\n"
+  pp args
+end
