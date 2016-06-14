@@ -10,6 +10,7 @@ $LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib' + 'wavefron
 require 'wavefront/client'
 require 'wavefront/cli'
 require 'docopt'
+include Wavefront::Constants
 
 def sanitize_keys(hash)
   hash.each_with_object({}) do |(k, v), aggr|
@@ -26,7 +27,7 @@ global_opts = %Q(
 Global options:
   -c, --config=FILE    path to configuration file [default: #{DEF_CF}]
   -P, --profile=NAME   profile in configuration file [default: default]
-  -E, --endpoint=URI   cluster endpoint [default: metrics.wavefront.com]
+  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
   -t, --token=TOKEN    Wavefront authentication token
   -D, --debug          enable debug mode
   -h, --help           show this message
@@ -51,12 +52,12 @@ Options:
                                 strptime parseable format
   -e, --end=TIME                end of query window in epoch seconds or
                                 strptime parseable format
-  -f, --format=STRING           output format. (raw, ruby, graphite,
-                                highcharts, human) [default: raw]
+  -f, --format=STRING           output format (#{FORMATS.join(', ')})
+                                [default: #{DEFAULT_FORMAT}]
   -p, --prefixlength=NUM        number of path elements to treat as prefix
-                                in schema manipulation. [default: 1]
+                                in schema manipulation. [default: #{DEFAULT_PREFIX_LENGTH}]
   -X, --strict=BOOL             Do not return points outside the query
-                                window. [default: true]
+                                window. [default: #{DEFAULT_STRICT}]
   -O, --includeObsoleteMetrics  include metrics unreported for > 4 weeks
 ),
 
@@ -66,7 +67,8 @@ Usage:
             [-f format] [-p tag] [ -s tag] <state>
 #{global_opts}
 Options:
-  -f, --format=STRING  output format (ruby, json, human) [default: human]
+  -f, --format=STRING  output format (#{ALERT_FORMATS.join(', ')})
+                       [default: #{DEFAULT_ALERT_FORMAT}]
   -p, --private=TAG    retrieve only alerts with named private tags,
                        comma delimited.
   -s, --shared=TAG     retrieve only alerts with named shared tags, comma
@@ -85,7 +87,7 @@ Options:
   -V, --verbose        be verbose
   -s, --start=TIME     time at which event begins
   -e, --end=TIME       time at which event ends
-  -l, --level=LEVEL    level of event
+  -l, --level=LEVEL    level of event (#{EVENT_LEVELS.join(', ')})
   -T, --type=TYPE      type of event
   -d, --decs=STRING    description of event
   -H, --host=STRING    list of hosts to tag with even (comma separated)
@@ -106,7 +108,8 @@ Commands:
 Use '#{ME} <command> --help' for further information.)
 }
 
-# Parse the input
+# Parse the input. We have to do this twice because of the nested
+# help/option parser generation.
 #
 begin
   opts = Docopt::docopt(usage[:default], version: '3.2.0')
