@@ -101,7 +101,7 @@ begin
   puts "global args"
   puts args
 rescue Docopt::Exit => e
-  cmd = ARGV.first.to_sym
+  cmd = ARGV.length > 0 ? ARGV.first.to_sym : nil
 
   if usage.keys.include?(cmd)
     begin
