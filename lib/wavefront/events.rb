@@ -34,7 +34,7 @@ module Wavefront
       uri = URI::HTTPS.build(
         host:  options[:host],
         path:  options[:path],
-        query: "t=#{@token}"
+        query: 't=' + token
       )
 
       RestClient.post(uri.to_s, payload)
@@ -52,7 +52,7 @@ module Wavefront
         host:  options[:host],
         path:  options[:path] + 'close',
         query: URI.escape(
-          payload.map { |k, v| [k, v].join('=') }.join('&') + '&t=' + @token
+          payload.map { |k, v| [k, v].join('=') }.join('&') + '&t=' + token
         )
       )
       puts uri.to_s
