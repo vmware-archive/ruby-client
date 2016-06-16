@@ -78,8 +78,11 @@ Options:
 event: %Q(
 Usage:
   #{ME} event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
-           [-s time] [-i | -e time] [-l level] [-t type] [-h host] <event>
-  #{ME} event close [-V] [event] [time]
+           [-d description] [-s time] [-i | -e time] [-l level] [-t type]
+           [-H host] [-N] <event>
+  #{ME} event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
+           [<event>] [<timestamp>]
+  #{ME} event show
   #{ME} event --help
 #{global_opts}
 Options:
@@ -89,8 +92,11 @@ Options:
   -e, --end=TIME       time at which event ends
   -l, --level=LEVEL    level of event (#{EVENT_LEVELS.join(', ')})
   -T, --type=TYPE      type of event
-  -d, --decs=STRING    description of event
+  -d, --desc=STRING    description of event
   -H, --host=STRING    list of hosts to tag with even (comma separated)
+  -n, --nostate        do not create a local file recording the event
+
+View events in detail using the 'ts' command with the 'events()' function.
 ),
 default: %Q(
 Wavefront CLI
@@ -137,7 +143,8 @@ when :ts
   require 'wavefront/cli/ts'
   cli = Wavefront::Cli::Ts.new(opts, [opts[:'<query>']])
 when :event
-  puts 'doing event stuff'
+  require 'wavefront/cli/events'
+  cli = Wavefront::Cli::Events.new(opts, [opts[:'<query>']])
 when :alerts
   require 'wavefront/cli/alerts'
   cli = Wavefront::Cli::Alerts.new(opts, [opts[:'<state>']])
