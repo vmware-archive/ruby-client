@@ -34,5 +34,12 @@ module Wavefront
         raise "cannot parse timestamp '#{t}'."
       end
     end
+
+    def time_to_ms(t)
+      #
+      # Return the time as milliseconds since the epoch
+      #
+      (t.to_f * 1000).round
+    end
   end
 end
