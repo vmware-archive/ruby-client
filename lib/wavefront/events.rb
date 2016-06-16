@@ -21,10 +21,12 @@ module Wavefront
     include Wavefront::Constants
     DEFAULT_PATH = '/api/events/'
 
-    attr_reader :token
+    attr_reader :headers
 
     def initialize(token)
-      @token = token
+      @headers = {
+        'X-AUTH-TOKEN': token,
+      }
     end
 
     def create(payload = {}, options = {})
@@ -34,10 +36,16 @@ module Wavefront
       uri = URI::HTTPS.build(
         host:  options[:host],
         path:  options[:path],
-        query: 't=' + token
       )
 
-      RestClient.post(uri.to_s, payload)
+      # It seems that posting the hash means the 'host' data is
+      # lost. Making a query string works though, so let's do that.
+      #
+      hosts = payload[:h]
+      payload.delete(:h)
+      query = mk_qs(payload)
+      hosts.each { |host| query.<< "&h=#{host}" }
+      RestClient.post(uri.to_s, query, headers)
     end
 
     def close(payload = {}, options = {})
@@ -51,16 +59,17 @@ module Wavefront
       uri = URI::HTTPS.build(
         host:  options[:host],
         path:  options[:path] + 'close',
-        query: URI.escape(
-          payload.map { |k, v| [k, v].join('=') }.join('&') + '&t=' + token
-        )
-      )
-      puts uri.to_s
 
-      RestClient.post(uri.to_s, payload)
+      )
+
+      RestClient.post(uri.to_s, mk_qs(payload), headers)
     end
 
     private
+
+    def mk_qs(payload)
+      URI.escape(payload.map { |k, v| [k, v].join('=') }.join('&'))
+    end
 
     def debug(enabled)
       RestClient.log = 'stdout' if enabled
