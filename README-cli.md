@@ -18,12 +18,12 @@ The following options are valid in almost all contexts.
 -h, --help           show help for command
 ```
 
-## `ts` Mode -- Retrieving Timeseries Data
+## `ts` Mode: Retrieving Timeseries Data
 
-The `ts` command lets you submit a standard timeseries query to
-Wavefront, just like you would in the UI's query box. It can output
-the timeseries data in a number of formats. You must specify a query
-granularity, and you can timebox your query.
+The `ts` command is used to submit a standard timeseries query to
+Wavefront. It can output the timeseries data in a number of formats.
+You must specify a query granularity, and you can timebox your
+query.
 
 ```
 Usage:
@@ -79,6 +79,22 @@ host                shark
 ...
 ```
 
+Show all events between 6pm and 8pm today:
+
+```
+$ ./wavefront  ts -f human -m --start=18:00 --end=20:00 'events()'
+2016-06-27 16:55:59 -> 2016-06-27 16:56:40 (41s)                             new event                 [shark,box]
+2016-06-27 18:41:57 -> 2016-06-27 18:41:57 (inst)    info    alert-updated   Alert Edited: Point Rate
+2016-06-27 18:42:03 -> 2016-06-27 18:44:09 (2m 6s)   severe  alert           Point Rate                []
+2016-06-27 18:44:09 -> 2016-06-27 18:44:09 (inst)    info    alert-updated   Alert Edited: Point Rate
+2016-06-27 18:46:33 -> 2016-06-27 18:46:33 (inst)                            instantaneous_event       [box]
+2016-06-27 18:47:53 -> 2016-06-27 18:47:53 (inst)                            instantaneous_event       [box] something important just happened
+2016-06-27 19:25:16 -> 2016-06-27 19:26:32 (1m 15s)  info                    puppet_run                [box] Puppet run
+```
+
+Output is different for event queries.  The columns are: start time -> end
+time, (duration), severity, event type, [source(s)], details.
+
 ## `alerts` Mode -- Retrieving Alert Data
 
 The `alerts` command lets you view alerts. It does not currently
@@ -103,7 +119,7 @@ Options:
 
 ### Examples
 
-List all events in human-readable format. Events are separated by a
+List all alerts in human-readable format. Alerts are separated by a
 single blank line.
 
 ```
