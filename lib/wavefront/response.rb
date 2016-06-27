@@ -158,12 +158,25 @@ module Wavefront
         sorted = self.events.sort_by { |k| k['start'] }
 
         sorted.each_with_object([]) do |e, out|
+          hosts = e['hosts'] ? '[' + e['hosts'].join(',') + ']' : ''
+
+          if e['tags']
+            severity = e['tags']['severity']
+            type = e['tags']['type']
+            details = e['tags']['details']
+          else
+            severity = type = details = ''
+          end
+
           t = [format_event_time(e['start']), '->',
                format_event_time(e['end']),
                '%-9s' % ('(' + format_event_duration(e['start'],
                                                      e['end']) + ')'),
+               '%-7s' % severity,
+               '%-15s' % type,
                '%-25s' % e['name'],
-               e['hosts'].join(','),
+               hosts,
+               details,
               ].join(' ')
 
           out.<< t
