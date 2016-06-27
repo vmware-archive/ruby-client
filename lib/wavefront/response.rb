@@ -121,21 +121,11 @@ module Wavefront
       def initialize(response, options={})
         super
 
-        if self.respond_to?(:timeseries)
-          out = ['%-20s%s' % ['query', self.query]]
-
-          self.timeseries.each_with_index do |ts, i|
-            out.<< '%-20s%s' % ['timeseries', i]
-            out += ts.select{|k,v| k != 'data' }.map do |k, v|
-              if k == 'tags'
-                v.map { |tk, tv| 'tag.%-16s%s' % [tk, tv] }
-              else
-                '%-20s%s' % [k, v]
-              end
-            end
-            out += ts['data'].map do |t, v|
-              [Time.at(t).strftime('%F %T'), v].join(' ')
-            end
+        if self.response
+          if self.respond_to?(:timeseries)
+            out = process_timeseries
+          elsif self.respond_to?(:events)
+            out = process_events
           end
         else
           out = self.warnings
@@ -143,6 +133,64 @@ module Wavefront
 
         @human = out.join("\n")
       end
+
+      def process_timeseries
+        out = ['%-20s%s' % ['query', self.query]]
+
+        self.timeseries.each_with_index do |ts, i|
+          out.<< '%-20s%s' % ['timeseries', i]
+          out += ts.select{|k,v| k != 'data' }.map do |k, v|
+            if k == 'tags'
+              v.map { |tk, tv| 'tag.%-16s%s' % [tk, tv] }
+            else
+              '%-20s%s' % [k, v]
+            end
+          end
+          out += ts['data'].map do |t, v|
+            [Time.at(t).strftime('%F %T'), v].join(' ')
+          end
+        end
+
+        out
+      end
+
+      def process_events
+        sorted = self.events.sort_by { |k| k['start'] }
+
+        sorted.each_with_object([]) do |e, out|
+          t = [format_event_time(e['start']), '->',
+               format_event_time(e['end']),
+               '%-9s' % ('(' + format_event_duration(e['start'],
+                                                     e['end']) + ')'),
+               '%-25s' % e['name'],
+               e['hosts'].join(','),
+              ].join(' ')
+
+          out.<< t
+        end
+      end
+
+      def format_event_time(tms)
+        Time.at(tms / 1000).strftime('%F %T')
+      end
+
+      def format_event_duration(ts, te)
+        #
+        # turn an event start and end into a human-readable,
+        # approximate, time.  Truncates after the first two parts in
+        # the interests of space.
+        #
+        dur = (te - ts) / 1000
+
+        return 'inst' if dur == 0
+
+        {s: 60, m: 60, h: 24, d: 1000 }.map do |sfx, val|
+          next unless dur > 0
+          dur, n = dur.divmod(val)
+          n.to_s + sfx.to_s
+        end.compact.reverse[0..1].join(' ')
+      end
+
     end
   end
 end
