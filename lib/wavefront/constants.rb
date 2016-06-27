@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 
 =end
 
+require 'pathname'
+
 module Wavefront
   module Constants
     DEFAULT_HOST = 'metrics.wavefront.com'
