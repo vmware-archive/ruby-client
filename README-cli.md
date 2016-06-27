@@ -95,7 +95,7 @@ $ ./wavefront  ts -f human -m --start=18:00 --end=20:00 'events()'
 Output is different for event queries.  The columns are: start time -> end
 time, (duration), severity, event type, [source(s)], details.
 
-## `alerts` Mode -- Retrieving Alert Data
+## `alerts` Mode: Retrieving Alert Data
 
 The `alerts` command lets you view alerts. It does not currently
 allow creation and removal of alerts. Alert data can be presented in
@@ -152,7 +152,7 @@ $ wavefront alerts -P sysdef --format ruby active
 "[{\"customerTagsWithCounts\":{},\"userTagsWithCounts\":{},\"created\":1459508340708,\"name\":\"Point Rate\",\"conditionQBEnabled\":false,\"displayExpressionQBEnabled\":false,\"condition\":\"sum(deriv(ts(~collector.points.valid))) > 50000\",\"displayExpression\":\"sum(deriv(ts(~collector.points.valid)))\",\"minutes\":5,\"target\":\"alerts@company.com,\",\"event\":{\"name\":\"Point Rate\",\"startTime\":1467049323203,\"annotations\":{\"severity\":\"severe\",\"type\":\"alert\",\"created\":\"1459508340708\",\"target\":\"alerts@company.com,\"},\"hosts\":[\"\"],\"table\":\"sysdef\"},\"failingHostLabelPairs\":[{\"label\":\"\",\"observed\":5,\"firing\":5}],\"updated\":1467049317802,\"severity\":\"SEVERE\",\"additionalInformation\":\"We have exceeded our agreed point rate.\",\"activeMaintenanceWindows\":[],\"inMaintenanceHostLabelPairs\":[],\"prefiringHostLabelPairs\":[],\"alertStates\":[\"ACTIVE\"],\"inTrash\":false,\"numMetricsUsed\":1,\"numHostsUsed\":1}]"
 ```
 
-## `event` Mode -- Opening and Closing Events
+## `event` Mode: Opening and Closing Events
 
 The `event` command is used to open and close Wavefront events.
 
