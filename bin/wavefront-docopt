@@ -79,7 +79,7 @@ event: %Q(
 Usage:
   #{ME} event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
            [-d description] [-s time] [-i | -e time] [-l level] [-t type]
-           [-H host] [-N] <event>
+           [-H host] [-n] <event>
   #{ME} event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
            [<event>] [<timestamp>]
   #{ME} event show
