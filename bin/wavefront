@@ -13,93 +13,153 @@
 # See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-require 'wavefront/client'
-require 'slop'
+
 require 'pathname'
+require 'wavefront/client'
 require 'wavefront/cli'
+require 'docopt'
+include Wavefront::Constants
+
+def sanitize_keys(hash)
+  hash.each_with_object({}) do |(k, v), aggr|
+    aggr[k.gsub(/-/, '').to_sym] = v
+  end
+end
+
+ME = Pathname.new(__FILE__).basename
+DEF_CF = Pathname.new(ENV['HOME']) + '.wavefront'
+
+# The global_opts are available in every command.
+#
+global_opts = %Q(
+Global options:
+  -c, --config=FILE    path to configuration file [default: #{DEF_CF}]
+  -P, --profile=NAME   profile in configuration file [default: default]
+  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
+  -t, --token=TOKEN    Wavefront authentication token
+  -D, --debug          enable debug mode
+  -h, --help           show this message
+)
+
+# The following hash contains the docopt strings defining all the
+# commands we offer. They must include the global_opts.
+#
+usage = {
+ts: %Q(
+Usage:
+  #{ME} ts [-c file] [-P profile] [-E endpoint] [-t token] [-OD]
+            [-S | -m | -H | -d] [-s time] [-e time] [-f format] [-p num]
+            [-X bool] <query>
+#{global_opts}
+Options:
+  -S, --seconds                 query granularity of seconds
+  -m, --minutes                 query granularity of minutes
+  -H, --hours                   query granularity of hours
+  -d, --days                    query granularity of days
+  -s, --start=TIME              start of query window in epoch seconds or
+                                strptime parseable format
+  -e, --end=TIME                end of query window in epoch seconds or
+                                strptime parseable format
+  -f, --format=STRING           output format (#{FORMATS.join(', ')})
+                                [default: #{DEFAULT_FORMAT}]
+  -p, --prefixlength=NUM        number of path elements to treat as prefix
+                                in schema manipulation. [default: #{DEFAULT_PREFIX_LENGTH}]
+  -X, --strict=BOOL             Do not return points outside the query
+                                window. [default: #{DEFAULT_STRICT}]
+  -O, --includeObsoleteMetrics  include metrics unreported for > 4 weeks
+),
+
+alerts: %Q(
+Usage:
+  #{ME} alerts [-c file] [-P profile] [-E endpoint] [-t token]
+            [-f format] [-p tag] [ -s tag] <state>
+#{global_opts}
+Options:
+  -f, --format=STRING  output format (#{ALERT_FORMATS.join(', ')})
+                       [default: #{DEFAULT_ALERT_FORMAT}]
+  -p, --private=TAG    retrieve only alerts with named private tags,
+                       comma delimited.
+  -s, --shared=TAG     retrieve only alerts with named shared tags, comma
+                       delimited.
+),
+
+event: %Q(
+Usage:
+  #{ME} event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
+           [-d description] [-s time] [-i | -e time] [-l level] [-t type]
+           [-H host] [-n] <event>
+  #{ME} event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
+           [<event>] [<timestamp>]
+  #{ME} event show
+  #{ME} event --help
+#{global_opts}
+Options:
+  -i, --instant        create an instantaneous event
+  -V, --verbose        be verbose
+  -s, --start=TIME     time at which event begins
+  -e, --end=TIME       time at which event ends
+  -l, --level=LEVEL    level of event (#{EVENT_LEVELS.join(', ')})
+  -T, --type=TYPE      type of event
+  -d, --desc=STRING    description of event
+  -H, --host=STRING    list of hosts to tag with even (comma separated)
+  -n, --nostate        do not create a local file recording the event
+
+View events in detail using the 'ts' command with the 'events()' function.
+),
+default: %Q(
+Wavefront CLI
+
+Usage:
+  #{ME} [options] command [options]
+  #{ME} --version
+  #{ME} --help
+
+Commands:
+  ts          view timeseries data
+  alerts      view alerts
+  event       open and close events
+
+Use '#{ME} <command> --help' for further information.)
+}
+
+# Parse the input. We have to do this twice because of the nested
+# help/option parser generation.
+#
+begin
+  opts = Docopt::docopt(usage[:default], version: '3.2.0')
+rescue Docopt::Exit => e
+  cmd = ARGV.length > 0 ? ARGV.first.to_sym : nil
+
+  if usage.keys.include?(cmd)
+    begin
+      opts = sanitize_keys(Docopt::docopt(usage[cmd]))
+    rescue Docopt::Exit => e
+      abort e.message
+    end
+  else
+    abort e.message
+  end
+end
+
+# Load the config file. Values in there take priority. Probably
+# should be the other way round.
+#
+opts.merge!(Wavefront::Cli.new(opts, nil).load_profile || {})
+
+case cmd
+when :ts
+  require 'wavefront/cli/ts'
+  cli = Wavefront::Cli::Ts.new(opts, [opts[:'<query>']])
+when :event
+  require 'wavefront/cli/events'
+  cli = Wavefront::Cli::Events.new(opts, [opts[:'<query>']])
+when :alerts
+  require 'wavefront/cli/alerts'
+  cli = Wavefront::Cli::Alerts.new(opts, [opts[:'<state>']])
+end
 
 begin
-options = Slop.parse(strict: true) do
-  banner 'Usage: wavefront COMMAND QUERY (OPTIONS)'
-    on 'h', 'help', 'Display this message'
-
-  command :version do
-    description 'Display the client version and exit'
-    run do
-      puts Wavefront::Client::VERSION
-      exit 0
-    end
-  end
-
-  command 'ts' do
-    description "Query the timeseries"
-    on 'c', 'config=', 'path to configuration file', default:
-                      Pathname.new(ENV['HOME']) + '.wavefront'
-    on 'P', 'profile=', 'profile in configuration file', default: 'default'
-    on 'D', 'debug', 'Enable debug mode'
-    on 'S', 'seconds', 'Query granularity of seconds'
-    on 'm', 'minutes', 'Query granularity of minutes'
-    on 'H', 'hours', 'Query granularity of hours'
-    on 'd', 'days', 'Query granularity of days'
-    on 's', 'start=', 'start of query window in epoch seconds or parseable format'
-    on 'e', 'end=', 'end of query window in epoch seconds or parseable format'
-    on 't', 'token=', 'Wavefront authentication token'
-    on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
-    on 'f', 'format=', "Output format (#{Wavefront::Client::FORMATS.join(', ')})", default: Wavefront::Client::DEFAULT_FORMAT.to_s
-    on 'p', 'prefixlength=', 'Number of path elements to treat as a prefix in schema manipulation', default: Wavefront::Client::DEFAULT_PREFIX_LENGTH
-    on 'X', 'strict=','Flag to not return points outside the query window [q;s) ', default: Wavefront::Client::DEFAULT_STRICT
-    on 'O', 'includeObsoleteMetrics=', 'Include metrics which have not reported for > 4 weeks', default: Wavefront::Client::DEFAULT_OBSOLETE_METRICS
-    on 'h', 'help', 'Display this message'
-    run do |options, arguments|
-      pf_opts = Wavefront::Cli.new(options, arguments).load_profile || {}
-      require 'wavefront/cli/ts'
-      cli = Wavefront::Cli::Ts.new(options.to_hash.merge(pf_opts), arguments)
-      begin
-        cli.run
-      rescue => e
-        puts 'Timeseries query failed.'
-        puts e
-        exit 1
-      end
-    end
-  end
-
-  command 'alerts' do
-    banner 'Usage: wavefront alerts (OPTIONS) ALERT_STATE'
-    description "Query alerts"
-    on 'c', 'config=', 'path to configuration file', default:
-                      Pathname.new(ENV['HOME']) + '.wavefront'
-    on 'P', 'profile=', 'profile in configuration file', default: 'default'
-    on 'E', 'endpoint=', 'Connect to alternative cluster endpoint', default: Wavefront::Client::DEFAULT_HOST.to_s
-    on 'f', 'format=', 'Output format (ruby, json)', default: 'ruby'
-    on 'f', 'format=', "Output format (#{Wavefront::Client::ALERT_FORMATS.join(', ')})", default: Wavefront::Client::DEFAULT_ALERT_FORMAT.to_s
-    on 'h', 'help', 'Display this message'
-    on 'p', 'private=', 'Retrieve only alerts with named private tags, comma delimited.'
-    on 's', 'shared=', 'Retrieve only alerts with named shared tags, comma delimited.'
-    on 't', 'token=', 'Wavefront authentication token'
-    run do |options, arguments|
-      pf_opts = Wavefront::Cli.new(options, arguments).load_profile || {}
-      require 'wavefront/cli/alerts'
-      cli = Wavefront::Cli::Alerts.new(options.to_hash.merge(pf_opts),
-                                       arguments)
-      begin
-        cli.run
-      rescue => e
-        puts 'Alert query failed.'
-        puts e
-        exit 1
-      end
-    end
-  end
-
-
+  cli.run
+rescue => e
+  abort "#{cmd} query failed. #{e}"
 end
-rescue Slop::InvalidOptionError => e
-  puts 'invalid option error: '+ e.to_s
-  exit 1
-rescue Slop::MissingArgumentError => e
-  puts 'option parsing error: '+ e.to_s
-  exit 1
-end
-
-puts options

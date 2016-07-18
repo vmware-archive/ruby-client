@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,22 @@ module Wavefront
       interpolated << label_parts
       interpolated.flatten!
       return interpolated.join('.')
+    end
+
+    def parse_time(t)
+      return Time.at(t.to_i) if t.match(/^\d+$/)
+      begin
+        return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
+      rescue
+        raise "cannot parse timestamp '#{t}'."
+      end
+    end
+
+    def time_to_ms(t)
+      #
+      # Return the time as milliseconds since the epoch
+      #
+      (t.to_f * 1000).round
     end
   end
 end

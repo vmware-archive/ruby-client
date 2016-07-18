@@ -123,6 +123,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     #
     # Put each host on its own line, indented.
     #
+    return k unless v
     v.sort!
     [human_line(k, v.shift)] + v.map {|el| human_line('', el)}
   end

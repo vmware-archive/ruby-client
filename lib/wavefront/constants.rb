@@ -26,5 +26,7 @@ module Wavefront
     ALERT_FORMATS = [:ruby, :json, :human]
     DEFAULT_ALERT_FORMAT = :human
     GRANULARITIES = %w( s m h d )
+    EVENT_STATE_DIR = Pathname.new('/var/tmp/wavefront/events')
+    EVENT_LEVELS = %w(info smoke warn severe)
   end
 end
