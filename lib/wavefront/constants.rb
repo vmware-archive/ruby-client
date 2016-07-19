@@ -30,5 +30,7 @@ module Wavefront
     GRANULARITIES = %w( s m h d )
     EVENT_STATE_DIR = Pathname.new('/var/tmp/wavefront/events')
     EVENT_LEVELS = %w(info smoke warn severe)
+    DEFAULT_PROXY = 'wavefront'
+    DEFAULT_PROXY_PORT = 2878
   end
 end
