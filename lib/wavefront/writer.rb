@@ -57,8 +57,14 @@ module Wavefront
         append = "host=#{options[:host_name]} #{tags}"
       end
 
-      @socket.puts [metric_name, metric_value, options[:timestamp].to_i,
+      str = [metric_name, metric_value, options[:timestamp].to_i,
                     append].join(' ')
+
+      if options[:noop]
+        puts "metric to send: #{str}"
+      else
+        @socket.puts(str)
+      end
     end
 
     private
@@ -66,6 +72,5 @@ module Wavefront
     def get_socket(host, port)
       TCPSocket.new(host, port)
     end
-
   end
 end
