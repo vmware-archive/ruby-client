@@ -15,9 +15,13 @@
 #
 
 require 'pathname'
+$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
+$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib' + 'wavefront'
+
 require 'wavefront/client'
 require 'wavefront/cli'
 require 'docopt'
+require 'socket'
 include Wavefront::Constants
 
 def sanitize_keys(hash)
@@ -35,8 +39,6 @@ global_opts = %Q(
 Global options:
   -c, --config=FILE    path to configuration file [default: #{DEF_CF}]
   -P, --profile=NAME   profile in configuration file [default: default]
-  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
-  -t, --token=TOKEN    Wavefront authentication token
   -D, --debug          enable debug mode
   -h, --help           show this message
 )
@@ -52,6 +54,8 @@ Usage:
             [-X bool] <query>
 #{global_opts}
 Options:
+  -E, --endpoint=URI            cluster endpoint [default: #{DEFAULT_HOST}]
+  -t, --token=TOKEN             Wavefront authentication token
   -S, --seconds                 query granularity of seconds
   -m, --minutes                 query granularity of minutes
   -H, --hours                   query granularity of hours
@@ -75,6 +79,8 @@ Usage:
             [-f format] [-p tag] [ -s tag] <state>
 #{global_opts}
 Options:
+  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
+  -t, --token=TOKEN    Wavefront authentication token
   -f, --format=STRING  output format (#{ALERT_FORMATS.join(', ')})
                        [default: #{DEFAULT_ALERT_FORMAT}]
   -p, --private=TAG    retrieve only alerts with named private tags,
@@ -86,7 +92,7 @@ Options:
 event: %Q(
 Usage:
   #{ME} event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
-           [-d description] [-s time] [-i | -e time] [-l level] [-t type]
+           [-d description] [-s time] [-i | -e time] [-l level] [-T type]
            [-H host] [-n] <event>
   #{ME} event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
            [<event>] [<timestamp>]
@@ -106,6 +112,29 @@ Options:
 
 View events in detail using the 'ts' command with the 'events()' function.
 ),
+
+write: %Q(
+Usage:
+  #{ME} write [-V] [-c file] [-P profile] [-E endpoint] [-t time] [-p port]
+           [-H host] [-n] [-T tag]... <metric> <value>
+  #{ME} write file [-V] [-c file] [-P profile] [-E endpoint] [-H host]
+           [-p port] [-n] [-T tag]... [-F format] <file>
+  #{ME} write --help
+#{global_opts}
+Options:
+  -E, --proxy=URI      proxy endpoint [default: #{DEFAULT_PROXY}]
+  -t, --time=TIME      time of data point (omit to use current time)
+  -H, --host=STRING    source host [default: #{Socket.gethostname}]
+  -p, --port=INT       Wavefront proxy port [default: #{DEFAULT_PROXY_PORT}]
+  -T, --tag=TAG        point tag in key=value form
+  -F, --format=STRING  format of input file or stdin
+  -n, --noop           show the metric without sending it
+  -V, --verbose        be verbose
+
+Files are whitespace separated, and fields can be defined with the -F
+option.  Use 't' for timestamp; 's' for metric suffix; 'v' for value. Any
+additional fields will be treated as point tags.
+),
 default: %Q(
 Wavefront CLI
 
@@ -118,6 +147,7 @@ Commands:
   ts          view timeseries data
   alerts      view alerts
   event       open and close events
+  write       send data points to a Wavefront proxy
 
 Use '#{ME} <command> --help' for further information.)
 }
@@ -156,6 +186,9 @@ when :event
 when :alerts
   require 'wavefront/cli/alerts'
   cli = Wavefront::Cli::Alerts.new(opts, [opts[:'<state>']])
+when :write
+  require 'wavefront/cli/write'
+  cli = Wavefront::Cli::Write.new(opts, [opts[:'<state>']])
 end
 
 begin
