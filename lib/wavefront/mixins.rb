@@ -27,8 +27,8 @@ module Wavefront
     end
 
     def parse_time(t)
-      return Time.at(t.to_i) if t.match(/^\d+$/)
       begin
+        return Time.at(t.to_i) if t.match(/^\d+$/)
         return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
       rescue
         raise "cannot parse timestamp '#{t}'."
