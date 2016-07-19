@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,5 +24,8 @@ module Wavefront
     class EmptyMetricName < ::Exception; end
     class NotImplemented < ::Exception; end
     class InvalidPrefixLength < ::Exception; end
+    class InvalidMetricName < ::Exception; end
+    class InvalidMetricValue < ::Exception; end
+    class InvalidHostname < ::Exception; end
   end
 end
