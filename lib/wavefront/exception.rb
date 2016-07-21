@@ -27,5 +27,6 @@ module Wavefront
     class InvalidMetricName < ::Exception; end
     class InvalidMetricValue < ::Exception; end
     class InvalidHostname < ::Exception; end
+    class InvalidEndpoint < ::Exception; end
   end
 end
