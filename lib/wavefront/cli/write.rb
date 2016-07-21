@@ -2,7 +2,11 @@ require 'wavefront/writer'
 require 'wavefront/cli'
 require 'socket'
 #
-# Push datapoints into Wavefront, via a proxy.
+# Push datapoints into Wavefront, via a proxy. This class deals in
+# single points. It cannot batch, or deal with files or streams of
+# data. This is because it depends on the very simple 'writer'
+# class, which cannot be significantly changed, so as to maintain
+# backward compatibility.
 #
 class Wavefront::Cli::Write < Wavefront::Cli
 
@@ -31,11 +35,6 @@ class Wavefront::Cli::Write < Wavefront::Cli
     }
 
     write_metric(options[:'<value>'].to_i, options[:'<metric>'], write_opts)
-  end
-
-  def prep_tags(tags)
-    return [] unless tags.is_a?(Array)
-    tags.map { |t| t.split('=') }
   end
 
   def write_metric(value, name, opts)

@@ -28,6 +28,8 @@ module Wavefront
 
     def parse_time(t)
       begin
+        return t if t.is_a?(Integer)
+        return t.to_i if t.is_a?(Time)
         return Time.at(t.to_i) if t.match(/^\d+$/)
         return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
       rescue
@@ -40,6 +42,11 @@ module Wavefront
       # Return the time as milliseconds since the epoch
       #
       (t.to_f * 1000).round
+    end
+
+    def prep_tags(tags)
+      return [] unless tags.is_a?(Array)
+      tags.map { |t| t.split('=') }
     end
   end
 end
