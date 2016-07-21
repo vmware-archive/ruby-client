@@ -115,10 +115,10 @@ View events in detail using the 'ts' command with the 'events()' function.
 
 write: %Q(
 Usage:
-  #{ME} write [-V] [-c file] [-P profile] [-E endpoint] [-t time] [-p port]
-           [-H host] [-n] [-T tag]... <metric> <value>
+  #{ME} write point [-V] [-c file] [-P profile] [-E endpoint] [-t time]
+           [-p port] [-H host] [-n] [-T tag...] <metric> <value>
   #{ME} write file [-V] [-c file] [-P profile] [-E endpoint] [-H host]
-           [-p port] [-n] [-T tag]... [-F format] <file>
+           [-p port] [-n] [-F format] [-m metric] [-T tag...] <file>
   #{ME} write --help
 #{global_opts}
 Options:
@@ -127,13 +127,16 @@ Options:
   -H, --host=STRING    source host [default: #{Socket.gethostname}]
   -p, --port=INT       Wavefront proxy port [default: #{DEFAULT_PROXY_PORT}]
   -T, --tag=TAG        point tag in key=value form
-  -F, --format=STRING  format of input file or stdin
+  -F, --format=STRING  format of input file or stdin [default: tmv]
   -n, --noop           show the metric without sending it
+  -m, --metric=STRING  the metric path to which contents of a file will be
+                       assigned. If the file contains a metric name, the two
+                       will be concatenated
   -V, --verbose        be verbose
 
 Files are whitespace separated, and fields can be defined with the -F
-option.  Use 't' for timestamp; 's' for metric suffix; 'v' for value. Any
-additional fields will be treated as point tags.
+option.  Use 't' for timestamp; 'm' for metric name; 'v' for value
+and 'T' for tags. Put 'T' last.
 ),
 default: %Q(
 Wavefront CLI
@@ -187,8 +190,13 @@ when :alerts
   require 'wavefront/cli/alerts'
   cli = Wavefront::Cli::Alerts.new(opts, [opts[:'<state>']])
 when :write
-  require 'wavefront/cli/write'
-  cli = Wavefront::Cli::Write.new(opts, [opts[:'<state>']])
+  if opts[:file]
+    require 'wavefront/cli/batch_write'
+    cli = Wavefront::Cli::BatchWrite.new(opts, [opts[:'<state>']])
+  else
+    require 'wavefront/cli/write'
+    cli = Wavefront::Cli::Write.new(opts, [opts[:'<state>']])
+  end
 end
 
 begin
