@@ -19,7 +19,6 @@ class Wavefront::Cli::BatchWrite < Wavefront::Cli
 
     @opts = {
       prefix:   options[:metric] || '',
-      ts:       Time.now,
       source:   options[:host] || Socket.gethostname,
       tags:     prep_tags(options[:tag]),
       endpoint: options[:proxy],
@@ -89,9 +88,9 @@ class Wavefront::Cli::BatchWrite < Wavefront::Cli
       # be, we'll use the current time.
       #
       ts = begin
-        chunks[fmt.index('t')]
+        parse_time(chunks[fmt.index('t')])
       rescue TypeError
-        parse_time(opts[:ts])
+        Time.now.utc.to_i
       end
 
       raise "invalid timestamp '#{ts}'" unless valid_timestamp?(ts)
