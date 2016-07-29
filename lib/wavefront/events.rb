@@ -30,44 +30,67 @@ module Wavefront
     end
 
     def create(payload = {}, options = {})
-      options[:host] ||= DEFAULT_HOST
-      options[:path] ||= DEFAULT_PATH
-
-      uri = URI::HTTPS.build(
-        host:  options[:host],
-        path:  options[:path],
-      )
-
-      # It seems that posting the hash means the 'host' data is
-      # lost. Making a query string works though, so let's do that.
-      #
-      hosts = payload[:h]
-      payload.delete(:h)
-      query = mk_qs(payload)
-      hosts.each { |host| query.<< "&h=#{host}" }
-      RestClient.post(uri.to_s, query, headers)
+      make_call(create_uri(options), create_qs(payload))
     end
 
     def close(payload = {}, options = {})
+      make_call(close_uri(options), hash_to_qs(payload))
+    end
+
+    def create_uri(options = {})
+      #
+      # Build the URI we use to send a 'create' request.
+      #
       options[:host] ||= DEFAULT_HOST
       options[:path] ||= DEFAULT_PATH
 
-      # This request seems to need the data as a query string. I was
-      # getting a 500 when I posted a hash. A map will do the
-      # needful.
-
-      uri = URI::HTTPS.build(
+      URI::HTTPS.build(
         host:  options[:host],
-        path:  options[:path] + 'close',
-
+        path:  options[:path],
       )
-
-      RestClient.post(uri.to_s, mk_qs(payload), headers)
     end
 
-    private
+    def create_qs(payload = {})
+      #
+      # It seems that posting the hash means the 'host' data is
+      # lost. Making a query string works though, so let's do that.
+      #
+      if payload[:h].is_a?(Array)
+        hosts = payload[:h]
+      elsif payload[:h].is_a?(String)
+        hosts = [payload[:h]]
+      else
+        hosts = []
+      end
 
-    def mk_qs(payload)
+      payload.delete(:h)
+      query = hash_to_qs(payload)
+      hosts.each { |host| query.<< "&h=#{host}" }
+      query
+    end
+
+    def close_uri(options = {})
+      #
+      # Build the URI we use to send a 'close' request
+      #
+      options[:host] ||= DEFAULT_HOST
+      options[:path] ||= DEFAULT_PATH
+
+      URI::HTTPS.build(
+        host:  options[:host],
+        path:  options[:path] + 'close',
+      )
+    end
+
+    def make_call(uri, query)
+      RestClient.post(uri.to_s, query, headers)
+    end
+
+    def hash_to_qs(payload)
+      #
+      # Make a properly escaped query string out of a key: value
+      # hash.
+      #
       URI.escape(payload.map { |k, v| [k, v].join('=') }.join('&'))
     end
 
