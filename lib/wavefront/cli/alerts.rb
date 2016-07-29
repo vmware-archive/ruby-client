@@ -24,27 +24,14 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
   attr_accessor :options, :arguments
 
   def run
-    alerts = Wavefront::Alerting.new(@options[:token])
-    queries = alerts.public_methods(false).sort
-    queries.delete(:token)
-
+    raise 'Missing token.' if ! @options[:token] || @options[:token].empty?
     raise 'Missing query.' if arguments.empty?
     query = arguments[0].to_sym
 
-    unless queries.include?(query)
-      raise 'State must be one of: ' + queries.each {|q| q.to_s}.join(', ')
-    end
-
-    unless Wavefront::Client::ALERT_FORMATS.include?(
-                                            @options[:format].to_sym)
-      raise 'Output format must be one of: ' +
-            Wavefront::Client::ALERT_FORMATS.join(', ')
-    end
-
-    # This isn't especially nice, but if require to
-    # avoiding breaking the Alerting interface :(
-    options = Hash.new
-    options[:host] = @options[:endpoint]
+    wfa = Wavefront::Alerting.new(@options[:token])
+    valid_state?(wfa, query)
+    valid_format?(@options[:format].to_sym)
+    options = { host: @options[:endpoint] }
 
     if @options[:shared]
       options[:shared_tags] = @options[:shared].delete(' ').split(',')
@@ -54,9 +41,22 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
       options[:private_tags] = @options[:private].delete(' ').split(',')
     end
 
-    result = alerts.send(query, options)
+    begin
+      result = wfa.send(query, options)
+    rescue
+      raise 'Unable to execute query.'
+    end
 
-    case @options[:format].to_sym
+    format_result(result, @options[:format].to_sym)
+    exit
+  end
+
+  def format_result(result, format)
+    #
+    # Call a suitable method to display the output of the API call,
+    # which is JSON.
+    #
+    case format
     when :ruby
       pp result
     when :json
@@ -64,11 +64,32 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     when :human
       puts humanize(JSON.parse(result))
     else
-      puts "Invalid output format, See --help for more detail."
-      exit 1
+      raise "Invalid output format '#{format}'. See --help for more detail."
     end
+  end
 
-    exit 0
+  def valid_format?(fmt)
+    fmt = fmt.to_sym if fmt.is_a?(String)
+
+    unless Wavefront::Client::ALERT_FORMATS.include?(fmt)
+      raise 'Output format must be one of: ' +
+        Wavefront::Client::ALERT_FORMATS.join(', ') + '.'
+    end
+    true
+  end
+
+  def valid_state?(wfa, state)
+    #
+    # Check the alert type we've been given is valid. There needs to
+    # be a public method in the 'alerting' class for every one.
+    #
+    s = wfa.public_methods(false).sort
+    s.delete(:token)
+    unless s.include?(state)
+      raise 'State must be one of: ' + s.each { |q| q.to_s }.join(', ') +
+        '.'
+    end
+    true
   end
 
   def humanize(alerts)
@@ -104,7 +125,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
   end
 
   def human_line(k, v)
-    '%-22s%s' % [k, v]
+    ('%-22s%s' % [k, v]).rstrip
   end
 
   def human_line_created(k, v)
@@ -121,9 +142,10 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
 
   def human_line_hostsUsed(k, v)
     #
-    # Put each host on its own line, indented.
+    # Put each host on its own line, indented. Does this by
+    # returning an array.
     #
-    return k unless v
+    return k unless v && v.is_a?(Array) && ! v.empty?
     v.sort!
     [human_line(k, v.shift)] + v.map {|el| human_line('', el)}
   end
@@ -144,6 +166,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     #
     # hanging indent long lines to fit in an 80-column terminal
     #
-    line.gsub(/(.{1,#{cols - offset}})(\s+|\Z)/, "\\1\n#{' ' * offset}")
+    line.gsub(/(.{1,#{cols - offset}})(\s+|\Z)/, "\\1\n#{' ' *
+              offset}").rstrip
   end
 end
