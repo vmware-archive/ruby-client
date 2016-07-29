@@ -19,7 +19,7 @@ class Wavefront::Cli::Write < Wavefront::Cli
 
     valid_value?(options[:'<value>'])
     valid_metric?(options[:'<metric>'])
-    ts = options[:time] ? parse_time(options[:time]).to_i : false
+    ts = options[:time] ? parse_time(options[:time]) : false
 
     [:proxy, :host].each do |h|
       raise Wavefront::Exception::InvalidHostname unless valid_host?(h)

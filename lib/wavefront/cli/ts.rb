@@ -48,11 +48,11 @@ class Wavefront::Cli::Ts < Wavefront::Cli
     options[:prefix_length] = @options[:prefixlength].to_i
 
     if @options[:start]
-      options[:start_time] = parse_time(@options[:start])
+      options[:start_time] = Time.at(parse_time(@options[:start]))
     end
 
     if @options[:end]
-      options[:end_time] = parse_time(@options[:end])
+      options[:end_time] = Time.at(parse_time(@options[:end]))
     end
 
     wave = Wavefront::Client.new(@options[:token], @options[:endpoint], @options[:debug])
