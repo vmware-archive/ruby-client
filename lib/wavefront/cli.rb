@@ -25,8 +25,8 @@ module Wavefront
       @options   = options
       @arguments = arguments
 
-      if @options[:help]
-        puts @options
+      if options.include?(:help) && options[:help]
+        puts options
         exit 0
       end
     end
@@ -51,8 +51,9 @@ module Wavefront
       puts "using #{pf} profile from #{cf}" if options[:debug]
 
       profile.each_with_object({}) do |(k, v), memo|
+        puts k
         k = k.to_sym
-        memo[k] = (options.include?(k)) ? options[k] : v
+        memo[k] = (options.include?(k) && options[k]) ? options[k] : v
       end
     end
   end
