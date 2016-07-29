@@ -51,7 +51,6 @@ module Wavefront
       puts "using #{pf} profile from #{cf}" if options[:debug]
 
       profile.each_with_object({}) do |(k, v), memo|
-        puts k
         k = k.to_sym
         memo[k] = (options.include?(k) && options[k]) ? options[k] : v
       end
