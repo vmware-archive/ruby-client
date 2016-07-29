@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ require 'wavefront/client'
 require 'wavefront/writer'
 require 'wavefront/metadata'
 require 'wavefront/alerting'
+require 'wavefront/cli'
+require 'wavefront/events'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
