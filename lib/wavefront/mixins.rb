@@ -27,11 +27,15 @@ module Wavefront
     end
 
     def parse_time(t)
+      #
+      # Return a time as an integer, however it might come in.
+      #
       begin
         return t if t.is_a?(Integer)
         return t.to_i if t.is_a?(Time)
-        return Time.at(t.to_i) if t.match(/^\d+$/)
-        return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
+        return t.to_i if t.is_a?(String) && t.match(/^\d+$/)
+        return DateTime.parse("#{t} #{Time.now.getlocal.zone}").
+          to_time.utc.to_i
       rescue
         raise "cannot parse timestamp '#{t}'."
       end
@@ -41,12 +45,19 @@ module Wavefront
       #
       # Return the time as milliseconds since the epoch
       #
+      return false unless t.is_a?(Integer)
       (t.to_f * 1000).round
     end
 
     def prep_tags(tags)
+      #
+      # Takes an array of key=value tags (as produced by docopt) and
+      # turns it into an array of [key, value] arrays (as required
+      # by various of our ownr methods). Anything not of the form
+      # key=val is dropped.
+      #
       return [] unless tags.is_a?(Array)
-      tags.map { |t| t.split('=') }
+      tags.map { |t| t.split('=') }.select { |e| e.length == 2 }
     end
   end
 end
