@@ -21,6 +21,45 @@ require 'wavefront/metadata'
 require 'wavefront/alerting'
 require 'wavefront/cli'
 require 'wavefront/events'
+require 'wavefront/cli/alerts'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
+
+# The following RSpec matcher is used to test things which `puts`
+# (or related), which RSpec can't do by default. It works with RSpec
+# 3, and was lifted wholesale from
+# http://stackoverflow.com/questions/6372763/rspec-how-do-i-write-a-test-that-expects-certain-output-but-doesnt-care-about/28258747#28258747
+
+RSpec::Matchers.define :match_stdout do |check|
+
+  @capture = nil
+
+  match do |block|
+
+    begin
+      stdout_saved = $stdout
+      $stdout      = StringIO.new
+      block.call
+    ensure
+      @capture     = $stdout
+      $stdout      = stdout_saved
+    end
+
+    @capture.string.match check
+  end
+
+  failure_message do
+    "expected to #{description}"
+  end
+  failure_message_when_negated do
+    "expected not to #{description}"
+  end
+  description do
+    "match [#{check}] on stdout [#{@capture.string}]"
+  end
+
+  def supports_block_expectations?
+    true
+  end
+end
