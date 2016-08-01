@@ -60,7 +60,7 @@ class Wavefront::Cli::Events < Wavefront::Cli
     options[t] ? time_to_ms(parse_time(options[t])) : false
   end
 
-  def prep_hosts(hosts)
+  def prep_hosts(hosts = false)
     #
     # We allow the user to associate an event with multiple hosts,
     # or to pass in some identifer other than the hostname. If they
