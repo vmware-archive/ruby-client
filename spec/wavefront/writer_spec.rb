@@ -15,14 +15,7 @@ See the License for the specific language governing permissions and
 =end
 
 require 'spec_helper'
-require 'pathname'
 require 'socket'
-
-class Mocket
-  def puts(str)
-    return true
-  end
-end
 
 describe Wavefront::Writer do
 

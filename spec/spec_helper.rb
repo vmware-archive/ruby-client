@@ -21,7 +21,9 @@ require 'wavefront/metadata'
 require 'wavefront/alerting'
 require 'wavefront/cli'
 require 'wavefront/events'
+require 'wavefront/batch_writer'
 require 'wavefront/cli/alerts'
+require 'wavefront/cli/events'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
@@ -61,5 +63,11 @@ RSpec::Matchers.define :match_stdout do |check|
 
   def supports_block_expectations?
     true
+  end
+end
+
+class Mocket
+  def puts(str)
+    return true
   end
 end
