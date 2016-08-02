@@ -48,16 +48,5 @@ module Wavefront
       return false unless t.is_a?(Integer)
       (t.to_f * 1000).round
     end
-
-    def prep_tags(tags)
-      #
-      # Takes an array of key=value tags (as produced by docopt) and
-      # turns it into an array of [key, value] arrays (as required
-      # by various of our ownr methods). Anything not of the form
-      # key=val is dropped.
-      #
-      return [] unless tags.is_a?(Array)
-      tags.map { |t| t.split('=') }.select { |e| e.length == 2 }
-    end
   end
 end

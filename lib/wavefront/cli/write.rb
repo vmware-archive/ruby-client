@@ -72,4 +72,15 @@ class Wavefront::Cli::Write < Wavefront::Cli
       fail Wavefront::Exception::InvalidMetricName
     end
   end
+
+  def prep_tags(tags)
+    #
+    # Takes an array of key=value tags (as produced by docopt) and
+    # turns it into an array of [key, value] arrays (as required
+    # by various of our own methods). Anything not of the form
+    # key=val is dropped.
+    #
+    return [] unless tags.is_a?(Array)
+    tags.map { |t| t.split('=') }.select { |e| e.length == 2 }
+  end
 end
