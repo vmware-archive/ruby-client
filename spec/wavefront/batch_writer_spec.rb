@@ -21,6 +21,32 @@ opts = {}
 
 describe Wavefront::BatchWriter do
 
+  describe '#initialize' do
+    it 'sets @opts correctly' do
+      k = Wavefront::BatchWriter.new({noop: true, endpoint: 'localendpoint'})
+      expect(k.instance_variable_get(:@opts)).to eq({
+                                                tags:       false,
+                                                endpoint:   'localendpoint',
+                                                port:       2878,
+                                                noop:       true,
+                                                novalidate: false,
+                                                verbose:    false,
+                                                debug:      false,
+                                              })
+    end
+
+    it 'allows unset @global_tags' do
+      k = Wavefront::BatchWriter.new
+      expect(k.instance_variable_get(:@global_tags)).to be nil
+    end
+
+    it 'sets @global_tags' do
+      k = Wavefront::BatchWriter.new(tags: { t1: 'v1', t2: 'v2' })
+      expect(k.instance_variable_get(:@global_tags)).to eq({t1: 'v1', t2: 'v2'})
+    end
+
+  end
+
   describe '#write' do
 
     # end-to-end test
@@ -42,9 +68,9 @@ describe Wavefront::BatchWriter do
           source: 'testhost',
           tags:   { t1: 'v1', t2: 'v2' },
         )).to be(true)
-        expect(k.instance_variable_get(:@points_sent)).to eq(1)
-        expect(k.instance_variable_get(:@points_unsent)).to eq(0)
-        expect(k.instance_variable_get(:@points_rejected)).to eq(0)
+        expect(k.summary[:sent]).to eq(1)
+        expect(k.summary[:unsent]).to eq(0)
+        expect(k.summary[:rejected]).to eq(0)
       end
 
       it 'should write multiple metrics to a socket' do
@@ -69,9 +95,9 @@ describe Wavefront::BatchWriter do
             source: 'testhost',
           }
         ])).to be(true)
-        expect(k.instance_variable_get(:@points_sent)).to eq(2)
-        expect(k.instance_variable_get(:@points_unsent)).to eq(0)
-        expect(k.instance_variable_get(:@points_rejected)).to eq(0)
+        expect(k.summary[:sent]).to eq(2)
+        expect(k.summary[:unsent]).to eq(0)
+        expect(k.summary[:rejected]).to eq(0)
       end
 
       it 'should let good points through and drop bad points' do
@@ -98,9 +124,9 @@ describe Wavefront::BatchWriter do
             source: 'testhost',
           }
         ])).to be(false)
-        expect(k.instance_variable_get(:@points_sent)).to eq(2)
-        expect(k.instance_variable_get(:@points_unsent)).to eq(0)
-        expect(k.instance_variable_get(:@points_rejected)).to eq(1)
+        expect(k.summary[:sent]).to eq(2)
+        expect(k.summary[:unsent]).to eq(0)
+        expect(k.summary[:rejected]).to eq(1)
       end
     end
 
@@ -119,10 +145,40 @@ describe Wavefront::BatchWriter do
           source: 'testhost',
           tags:   { t1: 'v1', t2: 'v2' },
         )
-        expect(k.instance_variable_get(:@points_sent)).to eq(0)
-        expect(k.instance_variable_get(:@points_unsent)).to eq(0)
-        expect(k.instance_variable_get(:@points_rejected)).to eq(0)
+        expect(k.summary[:sent]).to eq(0)
+        expect(k.summary[:unsent]).to eq(0)
+        expect(k.summary[:rejected]).to eq(0)
       end
+    end
+  end
+
+  describe '#setup_options' do
+    defaults = {
+      tags:       false,
+      endpoint:   'wavefront',
+      port:       2878,
+      noop:       false,
+      novalidate: false,
+      verbose:    false,
+      debug:      false,
+    }
+
+    it 'falls back to all defaults' do
+      k = Wavefront::BatchWriter.new
+      expect(k.setup_options({}, defaults)).to eq(defaults)
+    end
+
+    it 'allows overriding of defaults' do
+      k = Wavefront::BatchWriter.new
+      expect(k.setup_options({noop: true, endpoint: 'localendpoint'},
+                             defaults)).to eq({ tags:       false,
+                                                endpoint:   'localendpoint',
+                                                port:       2878,
+                                                noop:       true,
+                                                novalidate: false,
+                                                verbose:    false,
+                                                debug:      false,
+                                              })
     end
   end
 
@@ -324,14 +380,14 @@ describe Wavefront::BatchWriter do
         expect(TCPSocket).to receive(:new).with('wfp', 2878)
         allow_any_instance_of(Wavefront::BatchWriter).to receive(:new)
         k = Wavefront::BatchWriter.new
-        k.instance_variable_set(:@options, endpoint: 'wfp', port: 2878)
+        k.instance_variable_set(:@opts, endpoint: 'wfp', port: 2878)
         k.open_socket
       end
 
       it 'raises an exception on an invalid endpoint' do
         allow_any_instance_of(Wavefront::BatchWriter).to receive(:new)
         k = Wavefront::BatchWriter.new
-        k.instance_variable_set(:@options, endpoint: 'wfp', port: 2879)
+        k.instance_variable_set(:@opts, endpoint: 'wfp', port: 2879)
         expect{k.open_socket}.to raise_exception(
           Wavefront::Exception::InvalidEndpoint)
       end
@@ -341,7 +397,7 @@ describe Wavefront::BatchWriter do
       it 'prints a message but does not open a socket' do
         allow_any_instance_of(Wavefront::BatchWriter).to receive(:new)
         k = Wavefront::BatchWriter.new
-        k.instance_variable_set(:@options, endpoint: 'wfp', port:
+        k.instance_variable_set(:@opts, endpoint: 'wfp', port:
                                 2878, noop: true)
         expect(k.open_socket).to be(true)
         expect{k.open_socket}.to match_stdout(
