@@ -4,10 +4,15 @@ require 'wavefront/constants'
 require 'uri'
 require 'socket'
 
+HOSTNAME = Socket.gethostname
+
 module Wavefront
   #
   # This class exists to facilitate sending of multiple data points
-  # to a Wavefront proxy. When initializing the instance you can
+  # to a Wavefront proxy. It sends points in native Wavefront
+  # format.
+  #
+  # When initializing the instance you can
   # define point tags which will apply to all points sent via that
   # instance.
   #
@@ -16,22 +21,62 @@ module Wavefront
   # are sent by calling the write() method.
   #
   # The class keeps a count of the points the current instance has
-  # sent in @points_sent. The socket is accessed through the
-  # instance variable @sock.
+  # sent, dropped, and failed to send, in @summary. The socket is accessed
+  # through the instance variable @sock.
   #
   class BatchWriter
-    attr_reader :sock, :options
+    attr_reader :sock, :opts, :summary
+    include Wavefront::Constants
 
     def initialize(options = {})
-      @points_sent = 0
-      @points_rejected = 0
-      @points_unsent = 0
-      @options = options
+      #
+      # options is of the form:
+      #
+      # {
+      #   tags:       a key-value hash of tags which will be applied to
+      #               every  point
+      #   proxy:      the address of the Wavefront proxy
+      #   port:       the port of the Wavefront proxy
+      #   noop:       if this is true, no proxy connection will be made,
+      #               and instead of sending the points, they will
+      #               be printed in Wavefront wire format.
+      #   novalidate: if this is true, points will not be validated.
+      #               This might make things go marginally quicker
+      #               if you have done point validation higher up in
+      #               the chain.
+      #   verbose:    if this is true, many of the methods will report
+      #               their progress.
+      #   debug:      if this is true, debugging output will be
+      #               printed.
+      # }
+      #
+      defaults = {
+        tags:       false,
+        proxy:      DEFAULT_PROXY,
+        port:       DEFAULT_PROXY_PORT,
+        noop:       false,
+        novalidate: false,
+        verbose:    false,
+        debug:      false,
+      }
 
-      if options[:tags]
-        valid_tags?(options[:tags])
-        @global_tags = options[:tags]
+      @summary = { sent:     0,
+                   rejected: 0,
+                   unsent:   0,
+                 }
+      @opts = setup_options(options, defaults)
+
+      if opts[:tags]
+        valid_tags?(opts[:tags])
+        @global_tags = opts[:tags]
       end
+    end
+
+    def setup_options(user, defaults)
+      #
+      # Fill in some defaults, if the user hasn't supplied them
+      #
+      defaults.merge(user)
     end
 
     def write(points = [], options = {})
@@ -57,16 +102,16 @@ module Wavefront
                Wavefront::Exception::InvalidMetricValue,
                Wavefront::Exception::InvalidTimestamp,
                Wavefront::Exception::InvalidSource,
-               Wavefront::Exception::InvalidTag
-          puts 'Invalid point, skipping.' if options[:verbose]
-          puts "Invalid point: #{p}" if options[:debug]
-          @points_rejected += 1
+               Wavefront::Exception::InvalidTag => e
+          puts 'Invalid point, skipping.' if opts[:verbose]
+          puts "Invalid point: #{p}. (#{e})" if opts[:debug]
+          summary[:rejected] += 1
           next
         end
 
         send_point(hash_to_wf(p))
       end
-      return @points_rejected == 0 ? true : false
+      return summary[:rejected] == 0 ? true : false
     end
 
     def valid_point?(point)
@@ -74,7 +119,7 @@ module Wavefront
       # Validate a point so it conforms to the standard described in
       # https://community.wavefront.com/docs/DOC-1031
       #
-      return true if options.key?(:novalidate) && options[:novalidate]
+      return true if opts.key?(:novalidate) && opts[:novalidate]
       valid_path?(point[:path])
       valid_value?(point[:value])
       valid_ts?(point[:ts]) if point[:ts]
@@ -131,7 +176,7 @@ module Wavefront
       m.<< p[:ts].to_i.to_s if p.key?(:ts) && p[:ts]
       m.<< 'source=' + p[:source]
       m.<< tag_hash_to_str(p[:tags]) if p.key?(:tags) && p[:tags]
-      m.<< tag_hash_to_str(options[:tags]) if options[:tags]
+      m.<< tag_hash_to_str(opts[:tags]) if opts[:tags]
       m.join(' ')
     end
 
@@ -150,19 +195,19 @@ module Wavefront
       # Send a point, which should already be in Wavefront wire
       # format.
       #
-      if options[:noop]
+      if opts[:noop]
         puts "Would send: #{point}"
         return
       end
 
-      puts "Sending: #{point}" if options[:verbose]
+      puts "Sending: #{point}" if opts[:verbose] || opts[:debug]
 
       begin
         sock.puts(point)
-        @points_sent += 1
+        summary[:sent] += 1
         return true
       rescue
-        @points_unsent += 1
+        summary[:unsent] += 1
         puts 'WARNING: failed to send point.'
         return false
       end
@@ -173,24 +218,23 @@ module Wavefront
       # Open a socket to a Wavefront proxy, putting the descriptor
       # in instance variable @sock.
       #
-      if options[:noop]
+      if opts[:noop]
         puts 'No-op requested. Not opening connection to proxy.'
         return true
       end
 
-      puts "Connecting to #{options[:endpoint]}:#{options[:port]}." \
-        if options[:verbose]
+      puts "Connecting to #{opts[:proxy]}:#{opts[:port]}." if opts[:verbose]
 
       begin
-        @sock = TCPSocket.new(options[:endpoint], options[:port])
+        @sock = TCPSocket.new(opts[:proxy], opts[:port])
       rescue
         raise Wavefront::Exception::InvalidEndpoint
       end
     end
 
     def close_socket
-      return if options[:noop]
-      puts 'Closing connection to proxy.' if options[:verbose]
+      return if opts[:noop]
+      puts 'Closing connection to proxy.' if opts[:verbose]
       sock.close
     end
   end
