@@ -24,6 +24,7 @@ require 'wavefront/events'
 require 'wavefront/batch_writer'
 require 'wavefront/cli/alerts'
 require 'wavefront/cli/events'
+require 'wavefront/cli/batch_write'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
