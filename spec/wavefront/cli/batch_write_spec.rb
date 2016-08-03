@@ -165,7 +165,7 @@ describe '#process_line' do
       k.setup_fmt('mtvT')
       expect(k.process_line('test_metric 1470176262 1234 t1="v1"')).to eq(
         { path:   'test_metric',
-          ts:     1470176262,
+          ts:     Time.at(1470176262),
           source: HOSTNAME,
           value:  1234,
           tags:   { t1: 'v1' }
@@ -177,7 +177,7 @@ describe '#process_line' do
       expect(k.process_line('test_metric 1470176262 3.14 t1=v1 t2=v2 t3=v3')
             ).to eq(
         { path:   'test_metric',
-          ts:     1470176262,
+          ts:     Time.at(1470176262),
           source: HOSTNAME,
           value:  3.14,
           tags:   { t1: 'v1', t2: 'v2', t3: 'v3' }
@@ -199,7 +199,7 @@ describe '#process_line' do
       k.setup_fmt('mtvT')
       expect(k.process_line('test_metric 1470176262 3.14 bad_tag')).to eq(
         { path:   'test_metric',
-          ts:     1470176262,
+          ts:     Time.at(1470176262),
           source: HOSTNAME,
           value:  3.14,
           tags:   {}
@@ -230,7 +230,7 @@ describe '#process_line' do
       expect(k.process_line('1470176262 3.14')
             ).to eq(
         { path:   'test_metric_3',
-          ts:     1470176262,
+          ts:     Time.at(1470176262),
           source: HOSTNAME,
           value:  3.14,
       })
@@ -241,7 +241,7 @@ describe '#process_line' do
       expect(k.process_line('1470176262 3.14 t1="value 1" t2="value 2"')
             ).to eq(
         { path:   'test_metric_3',
-          ts:     1470176262,
+          ts:     Time.at(1470176262),
           source: HOSTNAME,
           value:  3.14,
           tags:   { t1: 'value 1', t2: 'value 2' }
