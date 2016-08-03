@@ -1,11 +1,13 @@
-require 'wavefront/cli'
 require 'socket'
 require 'pathname'
+require 'wavefront/cli'
+require 'wavefront/batch_writer'
 #
-# Push datapoints into Wavefront, via a proxy
+# Push datapoints into Wavefront, via a proxy. Uses the
+# 'batch_writer' class.
 #
 class Wavefront::Cli::BatchWrite < Wavefront::Cli
-  attr_reader :data, :opts, :sock, :fmt
+  attr_reader :opts, :sock, :fmt, :wf
 
   include Wavefront::Constants
   include Wavefront::Mixins
@@ -14,124 +16,83 @@ class Wavefront::Cli::BatchWrite < Wavefront::Cli
     raise 'Invalid format string.' unless valid_format?(options[:format])
 
     file = options[:'<file>']
-    @fmt = options[:format].split('')
-    @points_sent = 0
+    setup_opts(options)
 
-    @opts = {
-      prefix:   options[:metric] || '',
-      source:   options[:host] || Socket.gethostname,
-      tags:     prep_tags(options[:tag]),
-      endpoint: options[:proxy],
-      port:     options[:port],
-      verbose:  options[:verbose],
-      noop:     options[:noop],
-    }
+    if options.key?(:format)
+      setup_fmt(options[:format])
+    else
+      setup_fmt
+    end
+
+    @wf = Wavefront::BatchWriter.new(options)
 
     begin
-      open_socket
+      wf.open_socket
     rescue
       raise 'unable to connect to proxy'
     end
 
     begin
       if file == '-'
-        STDIN.each_line { |l| process_line(l.strip) }
+        STDIN.each_line { |l| wf.write(process_line(l.strip)) }
       else
-        file = Pathname.new(file)
-        load_data(file)
-        process_filedata
+        process_filedata(load_data(Pathname.new(file)))
       end
     ensure
-      close_socket
+      wf.close_socket
     end
 
-    puts "Sent #{@points_sent} point(s) to Wavefront."
+    puts "Point summary: " + (%w(sent unsent rejected).map do |p|
+      [wf.summary[p.to_sym], p].join(' ')
+    end.join(', ')) + '.'
+  end
+
+  def setup_fmt(fmt = 'mtv')
+    @fmt = fmt.split('')
+  end
+
+  def setup_opts(options)
+    @opts = {
+      prefix:   options[:metric] || '',
+      source:   options[:host] || Socket.gethostname,
+      tags:     tags_to_hash(options[:tag]),
+      endpoint: options[:proxy],
+      port:     options[:port],
+      verbose:  options[:verbose],
+      noop:     options[:noop],
+    }
+  end
+
+  def tags_to_hash(tags)
+    #
+    # Turn a docopt array of key=value tags into a hash for the
+    # batch_writer class. If key or value are quoted, we remove the
+    # quotes.
+    #
+    tags = [tags] if tags.is_a?(String)
+    tags = {} unless tags.is_a?(Array)
+
+    tags.each_with_object({}) do |t, m|
+      k, v = t.split('=', 2)
+      m[k.gsub(/^["']|["']$/, '').to_sym] =
+        v.to_s.gsub(/^["']|["']$/, '') if v
+    end
   end
 
   def load_data(file)
-    raise "Cannot open file '#{file}'." unless file.exist?
-    @data = IO.read(file)
+    begin
+      IO.read(file)
+    rescue
+      raise "Cannot open file '#{file}'." unless file.exist?
+    end
   end
 
-  def process_filedata
+  def process_filedata(data)
     #
     # we know what order the fields are in from the format string,
     # which contains 't', 'm', and 'v' in some order
     #
-    @data.split("\n").each { |l| process_line(l) }
-  end
-
-  def process_line(l)
-    #
-    # Process a line of input, as described by the format string
-    # held in opts[:fmt].
-    #
-    # We let the user define most of the fields, but anything beyond
-    # what they define is always assumed to be point tags. This is
-    # because you can have arbitrarily many of those for each point.
-    #
-    m_prefix = opts[:prefix]
-    chunks = l.split(/\s+/, fmt.length)
-
-    begin
-      raise 'wrong number of fields' unless valid_line?(l)
-
-      begin
-        value = chunks[fmt.index('v')]
-      rescue TypeError
-        raise "no value in '#{l}'"
-      end
-
-      raise "invalid value '#{value}'" unless valid_value?(value)
-
-      # The user can supply a time. If they have told us they won't
-      # be, we'll use the current time.
-      #
-      ts = begin
-        parse_time(chunks[fmt.index('t')])
-      rescue TypeError
-        Time.now.utc.to_i
-      end
-
-      raise "invalid timestamp '#{ts}'" unless valid_timestamp?(ts)
-
-      # The source is normally the local hostname, but the user can
-      # override that.
-
-      source = begin
-        chunks[fmt.index('s')]
-      rescue TypeError
-        opts[:source]
-      end
-
-      # The metric path can be in the data, or passed as an option, or
-      # both. If the latter, then we assume the option is a prefix,
-      # and concatenate the value in the data.
-      #
-      begin
-        m = chunks[fmt.index('m')]
-        metric = m_prefix.empty? ? m : [m_prefix, m].join('.')
-      rescue TypeError
-        if m_prefix
-          metric = m_prefix
-        else
-          raise "metric path in '#{l}'"
-        end
-      end
-    rescue => e
-      puts "WARNING: #{e}. Skipping."
-      return false
-    end
-
-    # Now we can assemble the metric, adding on any point tags we
-    # might have. Tags can come from the data, the command-line
-    # options, or both.
-    #
-    metric = [metric, value, ts.to_i, "source=#{source}"].join(' ')
-
-    metric.<< ' ' + chunks[3] if chunks[3]
-    opts[:tags].each { |t| metric.<< ' ' + t.join('="') + '"' }
-    send_metric(metric)
+    data.split("\n").each { |l| wf.write(process_line(l)) }
   end
 
   def valid_format?(fmt)
@@ -177,46 +138,90 @@ class Wavefront::Cli::BatchWrite < Wavefront::Cli
   end
 
   def valid_value?(val)
-    val.is_a?(Fixnum) || val.is_a?(Float) || val.match(/^[\d\.e]+$/)
+    val.is_a?(Numeric) || (val.match(/^-?[\d\.e]+$/) && val.count('.') < 2)
   end
 
-  def open_socket
-    if opts[:noop]
-      puts "No-op requested. Not opening connection to proxy."
-      return
-    end
-
-    if opts[:verbose]
-      puts "Connecting to proxy at #{opts[:endpoint]}:#{opts[:port]}."
-    end
+  def process_line(l)
+    #
+    # Process a line of input, as described by the format string
+    # held in opts[:fmt]. Produces a hash suitable for batch_writer
+    # to send on.
+    #
+    # We let the user define most of the fields, but anything beyond
+    # what they define is always assumed to be point tags. This is
+    # because you can have arbitrarily many of those for each point.
+    #
+    return true if l.empty?
+    m_prefix = opts[:prefix]
+    chunks = l.split(/\s+/, fmt.length)
 
     begin
-      @sock = TCPSocket.new(opts[:endpoint], opts[:port])
-    rescue
-      raise Wavefront::Exception::InvalidEndpoint
-    end
-  end
+      raise 'wrong number of fields' unless valid_line?(l)
 
-  def send_metric(metric)
-    if opts[:noop]
-      puts "would send: #{metric}"
-      return
+      begin
+        v = chunks[fmt.index('v')]
+
+        if valid_value?(v)
+          point = { value: v.to_f }
+        else
+          raise "invalid value '#{v}'"
+        end
+
+      rescue TypeError
+        raise "no value in '#{l}'"
+      end
+
+
+      # The user can supply a time. If they have told us they won't
+      # be, we'll use the current time.
+      #
+
+      point[:ts] = begin
+        ts = chunks[fmt.index('t')]
+
+        if valid_timestamp?(ts)
+          Time.at(parse_time(ts))
+        else
+          raise "invalid timestamp '#{ts}'"
+        end
+
+      rescue TypeError
+        Time.now.utc.to_i
+      end
+
+      # The source is normally the local hostname, but the user can
+      # override that.
+
+      point[:source] = begin
+        chunks[fmt.index('s')]
+      rescue TypeError
+        opts[:source]
+      end
+
+      # The metric path can be in the data, or passed as an option, or
+      # both. If the latter, then we assume the option is a prefix,
+      # and concatenate the value in the data.
+      #
+      begin
+        m = chunks[fmt.index('m')]
+        point[:path] = m_prefix.empty? ? m : [m_prefix, m].join('.')
+      rescue TypeError
+        if m_prefix
+          point[:path] = m_prefix
+        else
+          raise "metric path in '#{l}'"
+        end
+      end
+    rescue => e
+      puts "WARNING: #{e}. Skipping."
+      return false
     end
 
-    puts "Sending: #{metric}" if opts[:verbose]
-
-    begin
-      sock.puts(metric)
-      @points_sent += 1
-    rescue
-      puts 'WARNING: failed to send metric.'
+    if fmt.last == 'T'
+      point[:tags] =
+        tags_to_hash(chunks.last.split(/\s(?=(?:[^"]|"[^"]*")*$)/))
     end
-  end
 
-  def close_socket
-    unless opts[:noop]
-      puts 'Closing connection to proxy.' if opts[:verbose]
-      sock.close
-    end
+    point
   end
 end
