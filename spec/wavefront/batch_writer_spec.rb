@@ -23,10 +23,10 @@ describe Wavefront::BatchWriter do
 
   describe '#initialize' do
     it 'sets @opts correctly' do
-      k = Wavefront::BatchWriter.new({noop: true, endpoint: 'localendpoint'})
+      k = Wavefront::BatchWriter.new({noop: true, proxy: 'myproxy'})
       expect(k.instance_variable_get(:@opts)).to eq({
                                                 tags:       false,
-                                                endpoint:   'localendpoint',
+                                                proxy:     'myproxy',
                                                 port:       2878,
                                                 noop:       true,
                                                 novalidate: false,
@@ -155,7 +155,7 @@ describe Wavefront::BatchWriter do
   describe '#setup_options' do
     defaults = {
       tags:       false,
-      endpoint:   'wavefront',
+      proxy:      'wavefront',
       port:       2878,
       noop:       false,
       novalidate: false,
@@ -170,9 +170,9 @@ describe Wavefront::BatchWriter do
 
     it 'allows overriding of defaults' do
       k = Wavefront::BatchWriter.new
-      expect(k.setup_options({noop: true, endpoint: 'localendpoint'},
+      expect(k.setup_options({noop: true, proxy: 'myproxy'},
                              defaults)).to eq({ tags:       false,
-                                                endpoint:   'localendpoint',
+                                                proxy:      'myproxy',
                                                 port:       2878,
                                                 noop:       true,
                                                 novalidate: false,
@@ -380,14 +380,14 @@ describe Wavefront::BatchWriter do
         expect(TCPSocket).to receive(:new).with('wfp', 2878)
         allow_any_instance_of(Wavefront::BatchWriter).to receive(:new)
         k = Wavefront::BatchWriter.new
-        k.instance_variable_set(:@opts, endpoint: 'wfp', port: 2878)
+        k.instance_variable_set(:@opts, proxy: 'wfp', port: 2878)
         k.open_socket
       end
 
       it 'raises an exception on an invalid endpoint' do
         allow_any_instance_of(Wavefront::BatchWriter).to receive(:new)
         k = Wavefront::BatchWriter.new
-        k.instance_variable_set(:@opts, endpoint: 'wfp', port: 2879)
+        k.instance_variable_set(:@opts, proxy: 'wfp', port: 2879)
         expect{k.open_socket}.to raise_exception(
           Wavefront::Exception::InvalidEndpoint)
       end
@@ -397,7 +397,7 @@ describe Wavefront::BatchWriter do
       it 'prints a message but does not open a socket' do
         allow_any_instance_of(Wavefront::BatchWriter).to receive(:new)
         k = Wavefront::BatchWriter.new
-        k.instance_variable_set(:@opts, endpoint: 'wfp', port:
+        k.instance_variable_set(:@opts, proxy: 'wfp', port:
                                 2878, noop: true)
         expect(k.open_socket).to be(true)
         expect{k.open_socket}.to match_stdout(
