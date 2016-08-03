@@ -93,6 +93,11 @@ module Wavefront
       #
       # Send multiple points by using an array of the above hashes.
       #
+      unless points.is_a?(Hash) || points.is_a?(Array)
+        summary[:rejected] += 1
+        return false
+      end
+
       points = [points] if points.is_a?(Hash)
 
       points.each do |p|
