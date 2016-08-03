@@ -115,9 +115,9 @@ View events in detail using the 'ts' command with the 'events()' function.
 
 write: %Q(
 Usage:
-  #{ME} write point [-V] [-c file] [-P profile] [-E proxy] [-t time]
+  #{ME} write point [-DV] [-c file] [-P profile] [-E proxy] [-t time]
            [-p port] [-H host] [-n] [-T tag...] <metric> <value>
-  #{ME} write file [-V] [-c file] [-P profile] [-E proxy] [-H host]
+  #{ME} write file [-DV] [-c file] [-P profile] [-E proxy] [-H host]
            [-p port] [-n] [-F format] [-m metric] [-T tag...] <file>
   #{ME} write --help
 #{global_opts}
