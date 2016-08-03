@@ -47,7 +47,7 @@ class Wavefront::Cli::BatchWrite < Wavefront::Cli
     end.join(', ')) + '.'
   end
 
-  def setup_fmt(fmt = 'mtv')
+  def setup_fmt(fmt = DEFAULT_INFILE_FORMAT)
     @fmt = fmt.split('')
   end
 

@@ -127,7 +127,7 @@ Options:
   -H, --host=STRING    source host [default: #{Socket.gethostname}]
   -p, --port=INT       Wavefront proxy port [default: #{DEFAULT_PROXY_PORT}]
   -T, --tag=TAG        point tag in key=value form
-  -F, --format=STRING  format of input file or stdin [default: tmv]
+  -F, --format=STRING  format of input file or stdin [default: #{DEFAULT_INFILE_FORMAT}]
   -n, --noop           show the metric without sending it
   -m, --metric=STRING  the metric path to which contents of a file will be
                        assigned. If the file contains a metric name, the two

@@ -32,5 +32,6 @@ module Wavefront
     EVENT_LEVELS = %w(info smoke warn severe)
     DEFAULT_PROXY = 'wavefront'
     DEFAULT_PROXY_PORT = 2878
+    DEFAULT_INFILE_FORMAT = 'tmv'
   end
 end
