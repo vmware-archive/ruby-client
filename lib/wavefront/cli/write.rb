@@ -14,9 +14,6 @@ class Wavefront::Cli::Write < Wavefront::Cli
   include Wavefront::Mixins
 
   def run
-    #require 'pp'
-    #pp options
-
     valid_value?(options[:'<value>'])
     valid_metric?(options[:'<metric>'])
     ts = options[:time] ? parse_time(options[:time]) : false
@@ -46,7 +43,7 @@ class Wavefront::Cli::Write < Wavefront::Cli
     #
     # quickly make sure a hostname looks vaguely sensible
     #
-    hostname.match(/^[\w\.\-]+$/)
+    hostname.match(/^[\w\.\-]+$/) && hostname.length < 1024
   end
 
   def valid_value?(value)
@@ -55,7 +52,11 @@ class Wavefront::Cli::Write < Wavefront::Cli
     # cast them to numbers. I don't think there's any reasonable way
     # to allow exponential notation.
     #
-  raise Wavefront::Exception::InvalidMetricValue unless value.to_i.to_s == value
+    unless value.is_a?(Numeric) || value.match(/^-?\d*\.?\d*$/) ||
+           value.match(/^-?\d*\.?\d*e\d+$/)
+      raise Wavefront::Exception::InvalidMetricValue
+    end
+    true
   end
 
   def valid_metric?(metric)
@@ -65,12 +66,14 @@ class Wavefront::Cli::Write < Wavefront::Cli
     # through odd characters or whitespace.
     #
     begin
-      raise unless metric.is_a?(String)
-      raise unless metric.split('.').size > 1
-      raise unless metric.match(/^[\w\.\-_]+$/)
+      raise unless metric.is_a?(String) &&
+                   metric.split('.').length > 1 &&
+                   metric.match(/^[\w\-\._]+$/) &&
+                   metric.length < 1024
     rescue
       fail Wavefront::Exception::InvalidMetricName
     end
+    true
   end
 
   def prep_tags(tags)

@@ -19,12 +19,13 @@ require 'wavefront/client'
 require 'wavefront/writer'
 require 'wavefront/metadata'
 require 'wavefront/alerting'
-require 'wavefront/cli'
 require 'wavefront/events'
 require 'wavefront/batch_writer'
+require 'wavefront/cli'
 require 'wavefront/cli/alerts'
 require 'wavefront/cli/events'
 require 'wavefront/cli/batch_write'
+require 'wavefront/cli/write'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
