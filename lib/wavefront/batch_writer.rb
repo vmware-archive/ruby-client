@@ -101,6 +101,7 @@ module Wavefront
       points = [points] if points.is_a?(Hash)
 
       points.each do |p|
+        p[:ts] = Time.at(p[:ts]) if p[:ts].is_a?(Integer)
         begin
           valid_point?(p)
         rescue Wavefront::Exception::InvalidMetricName,
