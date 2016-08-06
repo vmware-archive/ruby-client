@@ -23,7 +23,7 @@ include Wavefront::Constants
 
 def sanitize_keys(hash)
   hash.each_with_object({}) do |(k, v), aggr|
-    aggr[k.gsub(/-/, '').to_sym] = v
+    aggr[k.delete('-').to_sym] = v
   end
 end
 
@@ -32,7 +32,7 @@ DEF_CF = Pathname.new(ENV['HOME']) + '.wavefront'
 
 # The global_opts are available in every command.
 #
-global_opts = %Q(
+global_opts = %(
 Global options:
   -c, --config=FILE    path to configuration file [default: #{DEF_CF}]
   -P, --profile=NAME   profile in configuration file [default: default]
@@ -44,7 +44,7 @@ Global options:
 # commands we offer. They must include the global_opts.
 #
 usage = {
-ts: %Q(
+ts: %(
 Usage:
   #{ME} ts [-c file] [-P profile] [-E endpoint] [-t token] [-OD]
             [-S | -m | -H | -d] [-s time] [-e time] [-f format] [-p num]
@@ -70,7 +70,7 @@ Options:
   -O, --includeObsoleteMetrics  include metrics unreported for > 4 weeks
 ),
 
-alerts: %Q(
+alerts: %(
 Usage:
   #{ME} alerts [-c file] [-P profile] [-E endpoint] [-t token]
             [-f format] [-p tag] [ -s tag] <state>
@@ -86,7 +86,7 @@ Options:
                        delimited.
 ),
 
-event: %Q(
+event: %(
 Usage:
   #{ME} event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
            [-d description] [-s time] [-i | -e time] [-l level] [-T type]
@@ -110,7 +110,7 @@ Options:
 View events in detail using the 'ts' command with the 'events()' function.
 ),
 
-write: %Q(
+write: %(
 Usage:
   #{ME} write point [-DV] [-c file] [-P profile] [-E proxy] [-t time]
            [-p port] [-H host] [-n] [-T tag...] <metric> <value>
@@ -135,7 +135,7 @@ Files are whitespace separated, and fields can be defined with the -F
 option.  Use 't' for timestamp; 'm' for metric name; 'v' for value
 and 'T' for tags. Put 'T' last.
 ),
-default: %Q(
+default: %(
 Wavefront CLI
 
 Usage:
@@ -156,13 +156,13 @@ Use '#{ME} <command> --help' for further information.)
 # help/option parser generation.
 #
 begin
-  opts = Docopt::docopt(usage[:default], version: '3.2.0')
+  opts = Docopt.docopt(usage[:default], version: '3.2.0')
 rescue Docopt::Exit => e
   cmd = ARGV.length > 0 ? ARGV.first.to_sym : nil
 
   if usage.keys.include?(cmd)
     begin
-      opts = sanitize_keys(Docopt::docopt(usage[cmd]))
+      opts = sanitize_keys(Docopt.docopt(usage[cmd]))
     rescue Docopt::Exit => e
       abort e.message
     end
