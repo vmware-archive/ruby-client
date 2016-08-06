@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'pathname'
 require 'json'
+require 'erb'
 
 # Valid alert states as defined in alerting.rb
 #
@@ -91,8 +92,8 @@ describe Wavefront::Cli::Alerts do
     # straightforward as I expected.
     #
     it 'reconstructs human output' do
-      out = IO.read(Pathname.new(__FILE__).dirname + 'resources' +
-                    'alert.human')
+      out = ERB.new(IO.read(Pathname.new(__FILE__).dirname +
+                            'resources' + 'alert.human.erb')).result
       expect(k.humanize(JSON.parse(src)).join("\n") + "\n").to eq(out)
     end
   end
@@ -108,7 +109,7 @@ describe Wavefront::Cli::Alerts do
     k = Wavefront::Cli::Alerts.new(opts, ['all'])
     it 'prints in the correct format' do
       expect(k.human_line_created('time', 1469804504000)).to eq(
-        'time                  2016-07-29 16:01:44 +0100')
+        "time                  #{Time.at(1469804504)}")
     end
   end
 

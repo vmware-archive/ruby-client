@@ -1,11 +1,11 @@
 name                  Test Alert
-created               2016-07-29 16:54:22 +0100
+created               <%= Time.at(1469807662271 / 1000) %>
 severity              WARN
 condition             ts("dev.cli.test_metric") > 0
 displayExpression     ts("dev.cli.test_metric")
 minutes               5
 resolveAfterMinutes
-updated               2016-07-29 16:55:35 +0100
+updated               <%= Time.at(1469807735018 / 1000) %>
 alertStates           CHECKING
 metricsUsed
 hostsUsed
