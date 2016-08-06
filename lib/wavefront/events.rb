@@ -24,9 +24,7 @@ module Wavefront
     attr_reader :headers
 
     def initialize(token)
-      @headers = {
-        'X-AUTH-TOKEN': token,
-      }
+      @headers = { :'X-AUTH-TOKEN' => token }
     end
 
     def create(payload = {}, options = {})

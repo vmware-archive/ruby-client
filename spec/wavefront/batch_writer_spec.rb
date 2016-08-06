@@ -269,7 +269,7 @@ describe Wavefront::BatchWriter do
           value:  123456,
           ts:     Time.now,
           source: 'testhost',
-          tags:   { tag1: 'value 1', 'invalid tag': 'value 2' },
+          tags:   { :tag1 => 'value 1', :'invalid tag' => 'value 2' },
         )}.to raise_exception(Wavefront::Exception::InvalidTag)
       end
     end

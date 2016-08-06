@@ -21,7 +21,7 @@ describe Wavefront::Events do
   describe "#initialize" do
     it 'puts the token in a suitable header' do
       k = Wavefront::Events.new(TEST_TOKEN)
-      expect(k.headers).to eq('X-AUTH-TOKEN': TEST_TOKEN)
+      expect(k.headers).to eq({ :'X-AUTH-TOKEN' =>  TEST_TOKEN })
     end
   end
 
