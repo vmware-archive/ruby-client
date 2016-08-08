@@ -27,9 +27,15 @@ module Wavefront
     end
 
     def parse_time(t)
-      return Time.at(t.to_i) if t.match(/^\d+$/)
+      #
+      # Return a time as an integer, however it might come in.
+      #
       begin
-        return DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc
+        return t if t.is_a?(Integer)
+        return t.to_i if t.is_a?(Time)
+        return t.to_i if t.is_a?(String) && t.match(/^\d+$/)
+        return DateTime.parse("#{t} #{Time.now.getlocal.zone}").
+          to_time.utc.to_i
       rescue
         raise "cannot parse timestamp '#{t}'."
       end
@@ -39,6 +45,7 @@ module Wavefront
       #
       # Return the time as milliseconds since the epoch
       #
+      return false unless t.is_a?(Integer)
       (t.to_f * 1000).round
     end
   end

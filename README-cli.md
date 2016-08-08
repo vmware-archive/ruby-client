@@ -12,7 +12,6 @@ The following options are valid in almost all contexts.
 ```
 -c, --config=FILE    path to configuration file [default: ~/.wavefront]
 -P, --profile=NAME   profile in configuration file [default: default]
--E, --endpoint=URI   cluster endpoint [default: metrics.wavefront.com]
 -t, --token=TOKEN    Wavefront authentication token
 -D, --debug          enable debug mode
 -h, --help           show help for command
@@ -32,6 +31,8 @@ Usage:
             [-X bool] <query>
 
 Options:
+  -E, --endpoint=URI            cluster endpoint [default:
+                                metrics.wavefront.com]
   -S, --seconds                 query granularity of seconds
   -m, --minutes                 query granularity of minutes
   -H, --hours                   query granularity of hours
@@ -109,6 +110,7 @@ Usage:
             [-f format] [-p tag] [ -s tag] <state>
 
 Options:
+  -E, --endpoint=URI   cluster endpoint [default: metrics.wavefront.com]
   -f, --format=STRING  output format (ruby, json, human)
                        [default: human]
   -p, --private=TAG    retrieve only alerts with named private tags,
@@ -167,6 +169,7 @@ Usage:
   wavefront event --help
 
 Options:
+  -E, --endpoint=URI   cluster endpoint [default: metrics.wavefront.com]
   -i, --instant        create an instantaneous event
   -V, --verbose        be verbose
   -s, --start=TIME     time at which event begins
@@ -236,6 +239,110 @@ The run has finished, close the event.
 $ wavefront event close puppet_run
 Closing event 'puppet_run'. [2016-06-27 19:25:16 +0100]
 Removing state file /var/tmp/wavefront/events/rob/1467051916712::puppet_run.
+```
+
+## `write` Mode: Sending Points to Wavefront
+
+The `write` command is used to put data points into Wavefront. It is
+different from other commands in that it communicates with a
+**proxy** rather than with the Wavefront API. This means it does
+not require any credentials.
+
+```
+Usage:
+  wavefront write point [-DV] [-c file] [-P profile] [-E proxy] [-t time]
+           [-p port] [-H host] [-n] [-T tag...] <metric> <value>
+  wavefront write file [-DV] [-c file] [-P profile] [-E proxy] [-H host]
+           [-p port] [-n] [-F format] [-m metric] [-T tag...] <file>
+
+Options:
+  -E, --proxy=URI      proxy endpoint [default: wavefront]
+  -t, --time=TIME      time of data point (omit to use current time)
+  -H, --host=STRING    source host [default: box]
+  -p, --port=INT       Wavefront proxy port [default: 2878]
+  -T, --tag=TAG        point tag in key=value form
+  -F, --format=STRING  format of input file or stdin [default: tmv]
+  -n, --noop           show the metric without sending it
+  -m, --metric=STRING  the metric path to which contents of a file will be
+                       assigned. If the file contains a metric name, the two
+                       will be concatenated
+  -V, --verbose        be verbose
+```
+
+`write` has two sub-commands: `write point` and `write file`. Both
+allow you to specify the proxy address and port either with
+command-line switches, or by the `proxy` and `port` values in your
+`.wavefront` file.
+
+### `write point`
+
+This provides a very quick method of putting a point into Wavefront.
+It takes two mandatory arguments: the metric path, and the metric
+value.
+
+You can optionally add point tags with multiple uses of `-T
+key=val`, and specify a timestamp with the `-t` option.
+
+### `write file`
+
+`write file` takes a whitespace-separated file, and turns it into a
+series of points, which it sends to a Wavefront proxy. Each line
+will be mapped to a single point.
+
+Each line in the file must be of the same format, and must contain a
+value. It can optionally contain metric path, a timestamp, and point
+tags. The format of the file is passed in with the `-F` option, and
+it must contain only the letters `t` (timestamp), `m` (metric path),
+`v` (value) and `T` (point tags). If `T` is used, it must come
+last: this allows you to have as many point tags as you like, and
+you do not have to have the same number for each point.
+
+The metric can also be, to some extent, described by options. If you
+do not have a metric path in the file, you can use `-m` to supply a
+path to which every point will be assigned. If you use `-m` *and* a
+field in the file, the two will be concatenated, with `-m` used as a
+global prefix.
+
+Similarly, a global timestamp can be supplied with `-t` (timestamps
+in files must be in epoch seconds, but `-t` can be any `strptime()`
+parseable string), and global point tags with one or more `-T
+key=val`s. If you supply tags with `-T` and in the file, the points
+will get both.
+
+The input file does not have to be on disk: following the Unix
+convention, you can use `-` as the filename, and `wavefront` will
+read from standard in, converting lines to points as it receives
+them. All the same rules apply as with standard files.
+
+`wavefront write file` takes some efforts to protect the user from
+sending bad data. It will not allow metrics with less than two
+components, and it will not permit timestamps prior to 2000-01-01,
+or more than a year in the future. It also checks that every
+potential data point conforms to the limits described in the
+Wavefront wire format documentation.
+
+### Examples
+
+Tell Wavefront that the value of `dev.myvalue` at this moment is
+123.
+
+```
+$ wavefront write point dev.myvalue 123
+```
+
+Write a file of retrospective data, whwere the fields are, in order,
+a timestamp, the metric path, and the value. Tag all points with
+`mytag` set to `my value`.
+
+```
+$ wavefront write file -F tmvT -T mytag="my value" datafile
+```
+
+The command `parabola.rb` prints a timestamp and a 'y' value every
+second. Plot the parabola in Wavefront.
+
+```
+$ parabola.rb | wavefront write file -F tv -m cli.demo.parabola -
 ```
 
 ## Notes on Options
