@@ -29,7 +29,16 @@ def sanitize_keys(hash)
 end
 
 ME = Pathname.new(__FILE__).basename
-DEF_CF = Pathname.new(ENV['HOME']) + '.wavefront'
+
+# If we are a normal user, look for wavefront config in our home
+# directory; if not, look in /etc
+#
+DEF_CF = if ENV['HOME']
+           Pathname.new(ENV['HOME']) + '.wavefront'
+         else
+           Pathname.new('/etc/wavefront/client.conf')
+         end
+
 
 # The global_opts are available in every command.
 #
