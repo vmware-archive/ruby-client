@@ -16,6 +16,7 @@
 
 require 'pathname'
 require 'wavefront/client'
+require 'wavefront/client/version'
 require 'wavefront/cli'
 require 'docopt'
 require 'socket'
@@ -156,7 +157,7 @@ Use '#{ME} <command> --help' for further information.)
 # help/option parser generation.
 #
 begin
-  opts = Docopt.docopt(usage[:default], version: '3.2.0')
+  opts = Docopt.docopt(usage[:default], version: Wavefront::Client::VERSION)
 rescue Docopt::Exit => e
   cmd = ARGV.length > 0 ? ARGV.first.to_sym : nil
 
