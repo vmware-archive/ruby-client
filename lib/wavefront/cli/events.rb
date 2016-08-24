@@ -33,7 +33,12 @@ class Wavefront::Cli::Events < Wavefront::Cli
   include Wavefront::Mixins
 
   def run
-    @state_dir = EVENT_STATE_DIR + Etc.getlogin
+    begin
+      @state_dir = EVENT_STATE_DIR + Etc.getlogin
+    rescue
+      @state_dir = EVENT_STATE_DIR + 'notty'
+    end
+
     @hostname = Socket.gethostname
     @hosts = prep_hosts(options[:host])
     @t_start = prep_time(:start)
