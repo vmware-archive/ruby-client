@@ -98,14 +98,4 @@ describe Wavefront::Events do
         'key1=val1&key2=val2&h=host1&h=host2&h=host3')
     end
   end
-
-  describe '#hash_to_qs' do
-    it 'makes a proper query string' do
-      k = Wavefront::Events.new(TEST_TOKEN)
-        expect(k.hash_to_qs({
-        key1: 'val1',
-        key2: 'value 2'
-      })).to eq('key1=val1&key2=value%202')
-    end
-  end
 end

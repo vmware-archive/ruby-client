@@ -4,6 +4,7 @@ require 'rest_client'
 require 'uri'
 require 'logger'
 require 'wavefront/constants'
+require 'wavefront/mixins'
 #
 # Add basic support to cover Wavefront's events API. I have followed
 # the standards and conventions established in the files already in
@@ -19,6 +20,7 @@ module Wavefront
   #
   class Events
     include Wavefront::Constants
+    include Wavefront::Mixins
     DEFAULT_PATH = '/api/events/'
 
     attr_reader :headers
