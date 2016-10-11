@@ -84,14 +84,6 @@ module Wavefront
       RestClient.post(uri.to_s, query, headers)
     end
 
-    def hash_to_qs(payload)
-      #
-      # Make a properly escaped query string out of a key: value
-      # hash.
-      #
-      URI.escape(payload.map { |k, v| [k, v].join('=') }.join('&'))
-    end
-
     def debug(enabled)
       RestClient.log = 'stdout' if enabled
     end
