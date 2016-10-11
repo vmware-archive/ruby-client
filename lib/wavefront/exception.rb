@@ -31,5 +31,6 @@ module Wavefront
     class InvalidHostname < ::Exception; end
     class InvalidEndpoint < ::Exception; end
     class InvalidSource < ::Exception; end
+    class InvalidString < ::Exception; end
   end
 end
