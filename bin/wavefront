@@ -15,6 +15,8 @@
 #
 
 require 'pathname'
+$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
+$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib' + 'wavefront'
 require 'wavefront/client'
 require 'wavefront/client/version'
 require 'wavefront/cli'
@@ -103,6 +105,7 @@ Usage:
            [-H host] [-n] <event>
   #{ME} event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
            [<event>] [<timestamp>]
+  #{ME} event delete [-V] <timestamp> <event>
   #{ME} event show
   #{ME} event --help
 #{global_opts}

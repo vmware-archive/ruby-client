@@ -35,6 +35,17 @@ module Wavefront
       make_call(close_uri(options), hash_to_qs(payload))
     end
 
+    def delete(payload = {}, options = {})
+      unless payload.has_key?(:startTime)  && payload.has_key?(:name)
+        raise 'invalid payload'
+      end
+
+      uri = create_uri(path: [DEFAULT_PATH, payload[:startTime],
+                       payload[:name]].join('/').squeeze('/'))
+
+      RestClient.delete(uri.to_s, headers)
+    end
+
     def create_uri(options = {})
       #
       # Build the URI we use to send a 'create' request.
