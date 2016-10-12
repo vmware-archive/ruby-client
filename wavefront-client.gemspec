@@ -24,8 +24,8 @@ Gem::Specification.new do |spec|
   spec.version       = Wavefront::Client::VERSION
   spec.authors       = ["Sam Pointer", "Louis McCormack", "Joshua McGhee", "Conor Beverland", "Salil Deshmukh", "Rob Fisher"]
   spec.email         = ["support@wavefront.com"]
-  spec.description   = %q{A simple abstraction for talking to wavefront in ruby}
-  spec.summary       = %q{A simple abstraction for talking to wavefront in ruby}
+  spec.description   = %q{A simple abstraction for talking to Wavefront in Ruby. Includes a command-line interface.}
+  spec.summary       = %q{A simple abstraction for talking to Wavefront in Ruby}
   spec.homepage      = "https://github.com/wavefrontHQ/ruby-client"
   spec.license       = "Apache License 2.0"
 
@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "~> 3.5.0"
 
-  spec.add_dependency "rest-client", ">= 1.6.7", "<= 1.8"
+  spec.add_dependency "rest-client", ">= 1.6.7", "< 1.8"
   spec.add_dependency "docopt", "~> 0.5.0"
   spec.add_dependency 'inifile',  '3.0.0'
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
