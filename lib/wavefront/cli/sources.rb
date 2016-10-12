@@ -4,11 +4,11 @@ require 'json'
 require 'pp'
 
 class Wavefront::Cli::Sources < Wavefront::Cli
-  attr_accessor :wf, :format, :show_hidden, :show_tags
+  attr_accessor :wf, :out_format, :show_hidden, :show_tags
 
   def run
     @wf = Wavefront::Sources.new(options[:token])
-    @format = options[:format]
+    @out_format = options[:format]
     @show_hidden = options[:all]
     @show_tags = options[:tags]
 
@@ -28,7 +28,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     elsif options[:untag]
       untag_handler(options[:'<host>'])
     else
-      fail 'undefined sources error'
+      raise 'undefined sources error'
     end
   end
 
@@ -40,10 +40,10 @@ class Wavefront::Cli::Sources < Wavefront::Cli
       lastEntityId: start,
       desc:         desc,
       limit:        limit,
-      pattern:      pattern,
+      pattern:      pattern
     }
 
-    display_data(JSON.load(wf.show_sources(q)), 'list_source')
+    display_data(JSON.parse(wf.show_sources(q)), 'list_source')
   end
 
   def describe_handler(hosts, desc)
@@ -102,7 +102,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   def show_source_handler(sources)
     sources.each do |s|
       begin
-        result = JSON.load(wf.show_source(s))
+        result = JSON.parse(wf.show_source(s))
       rescue RestClient::ResourceNotFound
         puts "Source '#{s}' not found."
         next
@@ -113,9 +113,9 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   end
 
   def display_data(result, method)
-    if format == 'human'
-      puts self.public_send('humanize_' + method, result)
-    elsif format == 'json'
+    if out_format == 'human'
+      puts public_send('humanize_' + method, result)
+    elsif out_format == 'json'
       puts result.to_json
     else
       pp result
@@ -123,8 +123,9 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   end
 
   def humanize_list_source(result)
-    hdr = ['%-25s %-30s %s' % %w(HOSTNAME DESCRIPTION TAGS)]
-    ret = result['sources'].each_with_object(hdr) do |s, ret|
+    hdr = format('%-25s %-30s %s', 'HOSTNAME', 'DESCRIPTION', 'TAGS')
+
+    ret = result['sources'].each_with_object([hdr]) do |s, aggr|
       if s.include?('userTags') && s['userTags'].include?('hidden') && !
         show_hidden
         next
@@ -132,27 +133,21 @@ class Wavefront::Cli::Sources < Wavefront::Cli
 
       if s['description']
         desc = s['description']
-        if desc.length > 30
-          desc = desc[0..27] + '...'
-        end
+        desc = desc[0..27] + '...' if desc.length > 30
       else
         desc = ''
       end
 
-      if s['userTags']
-        tags = s['userTags'].join(', ')
-      else
-        tags = ''
-      end
+      tags = s['userTags'] ? s['userTags'].join(', ') : ''
 
-      ret.<< ['%-25s %-30s %s' % [s['hostname'], desc, tags]]
+      aggr.<< format('%-25s %-30s %s', s['hostname'], desc, tags)
     end
 
     if show_tags
-      ret.<< ['', '%-25s%s' % %w(TAG COUNT)]
+      ret.<< ['', format('%-25s%s', 'TAG', 'COUNT')]
 
       result['counts'].each do |tag, count|
-        ret.<< ['%-25s%s' % [tag, count]]
+        ret.<< format('%-25s%s', tag, count)
       end
     end
 
@@ -163,12 +158,12 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     ret = [data['hostname']]
 
     if data['description']
-      ret.<< [('  %-15s%s' % ['description', data['description']])]
+      ret.<< format('  %-15s%s', 'description', data['description'])
     end
 
     if data['userTags']
-      ret.<< [('  %-15s%s' % ['tags', data['userTags'].shift])]
-      data['userTags'].each { |t| ret.<< [('  %-15s%s' % ['', t])] }
+      ret.<< format('  %-15s%s', 'tags', data['userTags'].shift)
+      data['userTags'].each { |t| ret.<< format('  %-15s%s', '', t) }
     end
 
     ret.join("\n")

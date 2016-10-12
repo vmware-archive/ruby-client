@@ -5,22 +5,23 @@ require 'wavefront/mixins'
 require 'wavefront/constants'
 require 'wavefront/exception'
 
-# Because of the way the 'manage' API is laid out, this class doesn't reflect it
-# as clearly as, say the 'alerts' class.
-#
-# Note that the following methods do not do any exception handling. It is up to
-# your client code to decide how to deal with, for example, a
-# RestClient::ResourceNotFound exception.
-#
 module Wavefront
+  #
+  # Because of the way the 'manage' API is laid out, this class doesn't
+  # reflect it as clearly as, say the 'alerts' class.
+  #
+  # Note that the following methods do not do any exception handling. It
+  # is up to your client code to decide how to deal with, for example, a
+  # RestClient::ResourceNotFound exception.
+  #
   class Sources
-    DEFAULT_PATH = '/api/manage/source/'
+    DEFAULT_PATH = '/api/manage/source/'.freeze
     include Wavefront::Constants
     include Wavefront::Mixins
 
     attr_reader :headers
 
-    def initialize(token, debug=false)
+    def initialize(token, debug = false)
       @headers = { :'X-AUTH-TOKEN' => token }
       debug(debug)
     end
@@ -41,13 +42,13 @@ module Wavefront
       call_delete(build_uri(uri_concat(source, 'tags', tag)))
     end
 
-    def show_sources(params={})
+    def show_sources(params = {})
       #
       # return a list of sources. Maps to
       # GET /api/manage/source
       # call it with a hash as described in the Wavefront API docs
       #
-      call_get(build_uri(nil, {query: hash_to_qs(params)}))
+      call_get(build_uri(nil, query: hash_to_qs(params)))
     end
 
     def show_source(source)
@@ -63,7 +64,7 @@ module Wavefront
       # set the description field for a source. Maps to
       # POST /api/manage/source/{source}/description
       #
-      fail Wavefront::Exception::InvalidString unless valid_string?(desc)
+      raise Wavefront::Exception::InvalidString unless valid_string?(desc)
       call_post(build_uri(uri_concat(source, 'description')), desc)
     end
 
@@ -72,7 +73,7 @@ module Wavefront
       # set a tag on a source. Maps to
       # POST /api/manage/source/{source}/tags/{tag}
       #
-      fail Wavefront::Exception::InvalidString unless valid_string?(tag)
+      raise Wavefront::Exception::InvalidString unless valid_string?(tag)
       call_post(build_uri(uri_concat(source, 'tags', tag)))
     end
 
@@ -87,14 +88,14 @@ module Wavefront
       string.match(/^[\-\w \.,]*$/)
     end
 
-    def build_uri(path_ext = '', options={})
+    def build_uri(path_ext = '', options = {})
       options[:host] ||= DEFAULT_HOST
       options[:path] ||= DEFAULT_PATH
 
-      uri = URI::HTTPS.build(
+      URI::HTTPS.build(
         host:  options[:host],
         path:  uri_concat(options[:path], path_ext),
-        query: options[:query],
+        query: options[:query]
       )
     end
 
@@ -110,7 +111,7 @@ module Wavefront
       h = headers
 
       RestClient.post(uri.to_s, query, h.merge(
-        {:'Content-Type' => 'text/plain', :'Accept' => 'application/json' }
+        :'Content-Type' => 'text/plain', :Accept => 'application/json'
       ))
     end
 
