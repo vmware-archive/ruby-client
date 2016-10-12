@@ -62,10 +62,8 @@ module Wavefront
       #
       # set the description field for a source. Maps to
       # POST /api/manage/source/{source}/description
-      # Only allows PCRE "word" characters, spaces, full-stops and commas in the
-      # description
       #
-      fail Wavefront::Exception::InvalidString unless desc.match(/^[\w \.,]*$/)
+      fail Wavefront::Exception::InvalidString unless valid_string?(desc)
       call_post(build_uri(uri_concat(source, 'description')), desc)
     end
 
@@ -74,11 +72,20 @@ module Wavefront
       # set a tag on a source. Maps to
       # POST /api/manage/source/{source}/tags/{tag}
       #
-      fail Wavefront::Exception::InvalidString unless tag.match(/^[\w \.,]*$/)
+      fail Wavefront::Exception::InvalidString unless valid_string?(tag)
       call_post(build_uri(uri_concat(source, 'tags', tag)))
     end
 
     private
+
+    def valid_string?(string)
+      #
+      # Only allows PCRE "word" characters, spaces, full-stops and
+      # commas in tags and descriptions. This might be too restrictive,
+      # but if it is, this is the only place we need to change it.
+      #
+      string.match(/^[\-\w \.,]*$/)
+    end
 
     def build_uri(path_ext = '', options={})
       options[:host] ||= DEFAULT_HOST

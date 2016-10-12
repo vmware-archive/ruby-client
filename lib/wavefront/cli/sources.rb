@@ -1,16 +1,21 @@
-require 'wavefront/sources'
 require 'wavefront/cli'
+require 'wavefront/sources'
 require 'json'
 require 'pp'
 
 class Wavefront::Cli::Sources < Wavefront::Cli
-  attr_accessor :wf, :format
+  attr_accessor :wf, :format, :show_hidden, :show_tags
 
   def run
     @wf = Wavefront::Sources.new(options[:token])
     @format = options[:format]
+    @show_hidden = options[:all]
+    @show_tags = options[:tags]
 
-    if options[:show]
+    if options[:list]
+      list_source_handler(options[:'<pattern>'], options[:start],
+                          options[:limit], options[:reverse])
+    elsif options[:show]
       show_source_handler(options[:'<host>'])
     elsif options[:tag] && options[:add]
       add_tag_handler(options[:host], options[:'<tag>'])
@@ -27,6 +32,20 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     end
   end
 
+  def list_source_handler(pattern, start, limit, desc)
+    start ||= 0
+    limit ||= 100
+
+    q = {
+      lastEntityId: start,
+      desc:         desc,
+      limit:        limit,
+      pattern:      pattern,
+    }
+
+    display_data(JSON.load(wf.show_sources(q)), 'list_source')
+  end
+
   def describe_handler(hosts, desc)
     hosts = [Socket.gethostname] if hosts.empty?
 
@@ -37,7 +56,11 @@ class Wavefront::Cli::Sources < Wavefront::Cli
         puts "setting '#{h}' description to '#{desc}'"
       end
 
-      wf.set_description(h, desc)
+      begin
+        wf.set_description(h, desc)
+      rescue Wavefront::Exception::InvalidString
+        puts 'ERROR: description contains invalid characters.'
+      end
     end
   end
 
@@ -56,7 +79,11 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     hosts.each do |h|
       tags.each do |t|
         puts "Tagging '#{h}' with '#{t}'"
-        wf.set_tag(h, t)
+        begin
+          wf.set_tag(h, t)
+        rescue Wavefront::Exception::InvalidString
+          puts 'ERROR: tag contains invalid characters.'
+        end
       end
     end
   end
@@ -75,23 +102,64 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   def show_source_handler(sources)
     sources.each do |s|
       begin
-        data = JSON.load(wf.show_source(s))
+        result = JSON.load(wf.show_source(s))
       rescue RestClient::ResourceNotFound
         puts "Source '#{s}' not found."
         next
       end
 
-      if format == 'human'
-        puts humanize_source(data) + "\n"
-      elsif format == 'json'
-        puts data.to_json
-      else
-        pp data
-      end
+      display_data(result, 'show_source')
     end
   end
 
-  def humanize_source(data)
+  def display_data(result, method)
+    if format == 'human'
+      puts self.public_send('humanize_' + method, result)
+    elsif format == 'json'
+      puts result.to_json
+    else
+      pp result
+    end
+  end
+
+  def humanize_list_source(result)
+    hdr = ['%-25s %-30s %s' % %w(HOSTNAME DESCRIPTION TAGS)]
+    ret = result['sources'].each_with_object(hdr) do |s, ret|
+      if s.include?('userTags') && s['userTags'].include?('hidden') && !
+        show_hidden
+        next
+      end
+
+      if s['description']
+        desc = s['description']
+        if desc.length > 30
+          desc = desc[0..27] + '...'
+        end
+      else
+        desc = ''
+      end
+
+      if s['userTags']
+        tags = s['userTags'].join(', ')
+      else
+        tags = ''
+      end
+
+      ret.<< ['%-25s %-30s %s' % [s['hostname'], desc, tags]]
+    end
+
+    if show_tags
+      ret.<< ['', '%-25s%s' % %w(TAG COUNT)]
+
+      result['counts'].each do |tag, count|
+        ret.<< ['%-25s%s' % [tag, count]]
+      end
+    end
+
+    ret.join("\n")
+  end
+
+  def humanize_show_source(data)
     ret = [data['hostname']]
 
     if data['description']
@@ -105,125 +173,4 @@ class Wavefront::Cli::Sources < Wavefront::Cli
 
     ret.join("\n")
   end
-
-=begin
-  def format_result(result, format)
-    #
-    # Call a suitable method to display the output of the API call,
-    # which is JSON.
-    #
-    case format
-    when :ruby
-      pp result
-    when :json
-      puts JSON.pretty_generate(JSON.parse(result))
-    when :human
-      puts humanize(JSON.parse(result))
-    else
-      raise "Invalid output format '#{format}'. See --help for more detail."
-    end
-  end
-
-  def valid_format?(fmt)
-    fmt = fmt.to_sym if fmt.is_a?(String)
-
-    unless Wavefront::Client::ALERT_FORMATS.include?(fmt)
-      raise 'Output format must be one of: ' +
-        Wavefront::Client::ALERT_FORMATS.join(', ') + '.'
-    end
-    true
-  end
-
-  def valid_state?(wfa, state)
-    #
-    # Check the alert type we've been given is valid. There needs to
-    # be a public method in the 'alerting' class for every one.
-    #
-    s = wfa.public_methods(false).sort
-    s.delete(:token)
-    unless s.include?(state)
-      raise 'State must be one of: ' + s.each { |q| q.to_s }.join(', ') +
-        '.'
-    end
-    true
-  end
-
-  def humanize(alerts)
-    #
-    # Selectively display alert information in an easily
-    # human-readable format. I have chosen not to display certain
-    # fields which I don't think are useful in this context. I also
-    # wish to put the fields in order. Here are the fields I want, in
-    # the order I want them.
-    #
-    row_order = %w(name created severity condition displayExpression
-                   minutes resolveAfterMinutes updated alertStates
-                   metricsUsed hostsUsed additionalInformation)
-
-    # build up an array of lines then turn it into a string and
-    # return it
-    #
-    # Most things get printed with the human_line() method, but some
-    # data needs special handling. To do that, just add a method
-    # called human_line_key() where key is something in row_order,
-    # and it will be found.
-    #
-    x = alerts.map do |alert|
-      row_order.map do |key|
-        lm = "human_line_#{key}"
-        if self.respond_to?(lm)
-          self.method(lm.to_sym).call(key, alert[key])
-        else
-          human_line(key, alert[key])
-        end
-      end
-    end
-  end
-
-  def human_line(k, v)
-    ('%-22s%s' % [k, v]).rstrip
-  end
-
-  def human_line_created(k, v)
-    #
-    # The 'created' and 'updated' timestamps are in epoch
-    # milliseconds
-    #
-    human_line(k, Time.at(v / 1000))
-  end
-
-  def human_line_updated(k, v)
-    human_line_created(k, v)
-  end
-
-  def human_line_hostsUsed(k, v)
-    #
-    # Put each host on its own line, indented. Does this by
-    # returning an array.
-    #
-    return k unless v && v.is_a?(Array) && ! v.empty?
-    v.sort!
-    [human_line(k, v.shift)] + v.map {|el| human_line('', el)}
-  end
-
-  def human_line_metricsUsed(k, v)
-    human_line_hostsUsed(k, v)
-  end
-
-  def human_line_alertStates(k, v)
-    human_line(k, v.join(','))
-  end
-
-  def human_line_additionalInformation(k, v)
-    human_line(k, indent_wrap(v))
-  end
-
-  def indent_wrap(line, cols=78, offset=22)
-    #
-    # hanging indent long lines to fit in an 80-column terminal
-    #
-    line.gsub(/(.{1,#{cols - offset}})(\s+|\Z)/, "\\1\n#{' ' *
-              offset}").rstrip
-  end
-=end
 end
