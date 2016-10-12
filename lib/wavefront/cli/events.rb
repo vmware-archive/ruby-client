@@ -52,9 +52,33 @@ class Wavefront::Cli::Events < Wavefront::Cli
       close_event_handler
     elsif options[:show]
       show_open_events
+    elsif options[:delete]
+      delete_event
     else
       fail 'undefined event error.'
     end
+  end
+
+  def delete_event
+    unless options[:'<timestamp>'] && options[:'<event>']
+      fail 'To delete an event you must supply its start time and name.'
+    end
+
+    begin
+      response = wf_event.delete({
+        startTime: options[:'<timestamp>'],
+        name: options[:'<event>'],
+      })
+    rescue RestClient::Unauthorized
+      raise 'Cannot connect to Wavefront API.'
+    rescue RestClient::ResourceNotFound
+      raise 'Cannot find that event.'
+    rescue => e
+      puts e
+      raise 'Cannot delete event.'
+    end
+
+    puts "Deleted event."
   end
 
   def prep_time(t)
@@ -166,7 +190,11 @@ class Wavefront::Cli::Events < Wavefront::Cli
     # Everything we need to know about an event is in the name of
     # its state file.
     #
-    events = state_dir.children
+    begin
+      events = state_dir.children
+    rescue Errno::ENOENT
+      raise 'There is no event state directory on this host.'
+    end
 
     if events.length == 0
       puts 'No open events.'
