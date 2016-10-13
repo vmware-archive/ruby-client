@@ -153,14 +153,6 @@ module Wavefront
       true
     end
 
-    def valid_source?(path)
-      unless path.is_a?(String) && path.match(/^[a-z0-9\-_\.]+$/) &&
-             path.length < 1024
-        fail Wavefront::Exception::InvalidSource
-      end
-      true
-    end
-
     def valid_tags?(tags)
       tags.each do |k, v|
         fail Wavefront::Exception::InvalidTag unless (k.length +

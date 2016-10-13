@@ -60,5 +60,13 @@ module Wavefront
     def uri_concat(*args)
       args.join('/').squeeze('/')
     end
+
+    def valid_source?(path)
+      unless path.is_a?(String) && path.match(/^[a-z0-9\-_\.]+$/) &&
+             path.length < 1024
+        fail Wavefront::Exception::InvalidSource
+      end
+      true
+    end
   end
 end
