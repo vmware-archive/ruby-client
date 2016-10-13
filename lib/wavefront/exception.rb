@@ -32,5 +32,6 @@ module Wavefront
     class InvalidEndpoint < ::Exception; end
     class InvalidSource < ::Exception; end
     class InvalidString < ::Exception; end
+    class ValueOutOfRange < ::Exception; end
   end
 end

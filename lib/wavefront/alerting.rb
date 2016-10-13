@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 require "wavefront/client/version"
 require "wavefront/exception"
 require "wavefront/constants"
+require 'wavefront/validators'
 require 'rest_client'
 require 'uri'
 require 'logger'
@@ -24,6 +25,7 @@ require 'logger'
 module Wavefront
   class Alerting
     include Wavefront::Constants
+    include Wavefront::Validators
     DEFAULT_PATH = '/api/alert/'
 
     attr_reader :token

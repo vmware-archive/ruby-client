@@ -1,6 +1,7 @@
 require 'wavefront/client/version'
 require 'wavefront/exception'
 require 'wavefront/constants'
+require 'wavefront/validators'
 require 'uri'
 require 'socket'
 
@@ -27,6 +28,7 @@ module Wavefront
   class BatchWriter
     attr_reader :sock, :opts, :summary
     include Wavefront::Constants
+    include Wavefront::Validators
 
     def initialize(options = {})
       #
@@ -131,33 +133,6 @@ module Wavefront
       valid_ts?(point[:ts]) if point[:ts]
       valid_source?(point[:source])
       valid_tags?(point[:tags]) if point[:tags] && point[:tags].length > 0
-      true
-    end
-
-    def valid_path?(path)
-      fail Wavefront::Exception::InvalidMetricName unless \
-        path.is_a?(String) && path.match(/^[a-z0-9\-_\.]+$/) &&
-        path.length < 1024
-      true
-    end
-
-    def valid_value?(value)
-      fail Wavefront::Exception::InvalidMetricValue unless value.is_a?(Numeric)
-      true
-    end
-
-    def valid_ts?(ts)
-      unless ts.is_a?(Time) || ts.is_a?(Date)
-        fail Wavefront::Exception::InvalidTimestamp
-      end
-      true
-    end
-
-    def valid_tags?(tags)
-      tags.each do |k, v|
-        fail Wavefront::Exception::InvalidTag unless (k.length +
-             v.length < 254) && k.match(/^[a-z0-9\-_\.]+$/)
-      end
       true
     end
 

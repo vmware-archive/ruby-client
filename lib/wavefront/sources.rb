@@ -2,6 +2,7 @@ require 'rest_client'
 require 'uri'
 require 'wavefront/client/version'
 require 'wavefront/mixins'
+require 'wavefront/validators'
 require 'wavefront/constants'
 require 'wavefront/exception'
 
@@ -18,6 +19,7 @@ module Wavefront
     DEFAULT_PATH = '/api/manage/source/'.freeze
     include Wavefront::Constants
     include Wavefront::Mixins
+    include Wavefront::Validators
 
     attr_reader :headers
 
@@ -31,6 +33,7 @@ module Wavefront
       # Delete all tags from a source. Maps to
       # DELETE /api/manage/source/{source}/tags
       #
+      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
       call_delete(build_uri(uri_concat(source, 'tags')))
     end
 
@@ -39,6 +42,8 @@ module Wavefront
       # Delete a given tag from a source. Maps to
       # DELETE /api/manage/source/{source}/tags/{tag}
       #
+      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
+      raise Wavefront::Exception::InvalidString unless valid_string?(tag)
       call_delete(build_uri(uri_concat(source, 'tags', tag)))
     end
 
@@ -46,8 +51,38 @@ module Wavefront
       #
       # return a list of sources. Maps to
       # GET /api/manage/source
-      # call it with a hash as described in the Wavefront API docs
+      # call it with a hash as described in the Wavefront API docs.
       #
+      # At the time of writing, supported paramaters are:
+      #   lastEntityId (string)
+      #   desc         (bool)
+      #   limit        (int)
+      #   pattern      (string)
+      #
+      # Hash keys should be symbols.
+      #
+
+      if params.has_key?(:lastEntityId) &&
+         !params[:lastEntityId].is_a?(String)
+        raise TypeError
+      end
+
+      if params.has_key?(:pattern) && !params[:pattern].is_a?(String)
+        raise TypeError
+      end
+
+      if params.has_key?(:desc) && ! (params[:desc] == !!params[:desc])
+        raise TypeError
+      end
+
+      if params.has_key?(:limit)
+        raise TypeError unless params[:limit].is_a?(Numeric)
+
+        if params[:limit] < 0 || params[:limit] >= 10000
+          raise Wavefront::Exception::ValueOutOfRange
+        end
+      end
+
       call_get(build_uri(nil, query: hash_to_qs(params)))
     end
 
@@ -56,6 +91,7 @@ module Wavefront
       # return information about a single source. Maps to
       # GET /api/manage/source/{source}
       #
+      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
       call_get(build_uri(source))
     end
 
@@ -64,6 +100,7 @@ module Wavefront
       # set the description field for a source. Maps to
       # POST /api/manage/source/{source}/description
       #
+      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
       raise Wavefront::Exception::InvalidString unless valid_string?(desc)
       call_post(build_uri(uri_concat(source, 'description')), desc)
     end
@@ -73,20 +110,12 @@ module Wavefront
       # set a tag on a source. Maps to
       # POST /api/manage/source/{source}/tags/{tag}
       #
+      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
       raise Wavefront::Exception::InvalidString unless valid_string?(tag)
       call_post(build_uri(uri_concat(source, 'tags', tag)))
     end
 
     private
-
-    def valid_string?(string)
-      #
-      # Only allows PCRE "word" characters, spaces, full-stops and
-      # commas in tags and descriptions. This might be too restrictive,
-      # but if it is, this is the only place we need to change it.
-      #
-      string.match(/^[\-\w \.,]*$/)
-    end
 
     def build_uri(path_ext = '', options = {})
       options[:host] ||= DEFAULT_HOST
