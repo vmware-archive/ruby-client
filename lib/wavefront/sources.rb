@@ -61,7 +61,6 @@ module Wavefront
       #
       # Hash keys should be symbols.
       #
-
       if params.has_key?(:lastEntityId) &&
          !params[:lastEntityId].is_a?(String)
         raise TypeError

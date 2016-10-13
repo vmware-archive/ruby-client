@@ -1,12 +1,15 @@
 require 'spec_helper'
 
 describe Wavefront::Sources do
-  attr_reader :wf, :host, :path
+  attr_reader :wf, :host, :path, :post_headers
 
   before do
     @wf = Wavefront::Sources.new(TEST_TOKEN)
     @host = Wavefront::Sources::DEFAULT_HOST
     @path = Wavefront::Sources::DEFAULT_PATH
+    @post_headers = wf.headers.merge(
+      { :'Content-Type' => 'text/plain', :Accept => 'application/json' })
+
   end
 
   it 'has some defaults' do
@@ -30,8 +33,12 @@ describe Wavefront::Sources do
       )
       wf.delete_tags('mysource')
     end
-  end
 
+    it 'raises an exception on an invalid source' do
+      expect{wf.delete_tags('!INVALID!')}.
+        to raise_exception(Wavefront::Exception::InvalidSource)
+    end
+  end
 
   describe '#delete_tag' do
     it 'makes API request with default options' do
@@ -41,8 +48,13 @@ describe Wavefront::Sources do
       wf.delete_tag('mysource', 'mytag')
     end
 
+    it 'raises an exception on an invalid source' do
+      expect{wf.delete_tag('INVALID!', 'mytag')}.
+        to raise_exception(Wavefront::Exception::InvalidSource)
+    end
+
     it 'raises an exception on an invalid tag' do
-      expect{wf.delete_tag('mysource', '!!!!!!!!')}.
+      expect{wf.delete_tag('mysource', 'INVALID!')}.
         to raise_exception(Wavefront::Exception::InvalidString)
     end
   end
@@ -86,6 +98,63 @@ describe Wavefront::Sources do
     it 'raises an exception on an invalid pattern' do
       expect{wf.show_sources({pattern: [1, 2, 3]})}.
         to raise_exception(TypeError)
+    end
+  end
+
+  describe '#show_source' do
+    it 'makes API request with default options' do
+      expect(RestClient).to receive(:get).with(
+        concat_url(host, path, 'mysource'), wf.headers
+      )
+      wf.show_source('mysource')
+    end
+
+    it 'raises an exception on an invalid source' do
+      expect{wf.show_source('!INVALID!')}.
+        to raise_exception(Wavefront::Exception::InvalidSource)
+    end
+  end
+
+  describe '#set_description' do
+    it 'makes API request with default options' do
+      expect(RestClient).to receive(:post).with(
+        concat_url(host, path, 'mysource', 'description'),
+        'my description', post_headers)
+      wf.set_description('mysource', 'my description')
+    end
+
+    it 'raises an exception on an invalid source' do
+      expect{wf.set_description('!INVALID!', 'my description')}.
+        to raise_exception(Wavefront::Exception::InvalidSource)
+    end
+
+    it 'raises an exception on an invalid description' do
+      expect{wf.set_description('my_source', '!INVALID!')}.
+        to raise_exception(Wavefront::Exception::InvalidString)
+    end
+  end
+
+  describe '#set_tag' do
+    it 'makes API request with default options' do
+      expect(RestClient).to receive(:post).with(
+        concat_url(host, path, 'my_source', 'tags', 'my_tag'),
+        nil, post_headers)
+      wf.set_tag('my_source', 'my_tag')
+    end
+
+    it 'raises an exception on an invalid source' do
+      expect{wf.set_tag('!INVALID!', 'my_tag')}.
+        to raise_exception(Wavefront::Exception::InvalidSource)
+    end
+
+    it 'raises an exception on an invalid description' do
+      expect{wf.set_tag('my_source', '!INVALID!')}.
+        to raise_exception(Wavefront::Exception::InvalidString)
+    end
+
+    it 'raises an exception on an invalid tag' do
+      expect{wf.set_tag('my_source', '!INVALID!')}.
+        to raise_exception(Wavefront::Exception::InvalidString)
     end
   end
 end
