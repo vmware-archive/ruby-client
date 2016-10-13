@@ -6,8 +6,12 @@ require 'pp'
 class Wavefront::Cli::Sources < Wavefront::Cli
   attr_accessor :wf, :out_format, :show_hidden, :show_tags
 
-  def run
+  def setup_wf
     @wf = Wavefront::Sources.new(options[:token])
+  end
+
+  def run
+    setup_wf
     @out_format = options[:format]
     @show_hidden = options[:all]
     @show_tags = options[:tags]
@@ -32,16 +36,17 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     end
   end
 
-  def list_source_handler(pattern, start, limit, desc)
-    start ||= 0
+  def list_source_handler(pattern, start = false, limit = false,
+                          desc = false)
     limit ||= 100
 
     q = {
-      lastEntityId: start,
       desc:         desc,
       limit:        limit,
       pattern:      pattern
     }
+
+    q[:lastEntityId] = start if start
 
     display_data(JSON.parse(wf.show_sources(q)), 'list_source')
   end
