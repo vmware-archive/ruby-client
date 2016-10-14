@@ -165,6 +165,7 @@ Usage:
            [-H host] [-n] <event>
   wavefront event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
            [<event>] [<timestamp>]
+  wavefront event delete [-V] <timestamp> <event>
   wavefront event show
   wavefront event --help
 
@@ -198,6 +199,11 @@ close <name>`, which will close the last event opened and called `name`.
 
 You can also specify the open-time when closing and event, bypassing
 the local caching mechanism altogether.
+
+When deleting an event you must supply the timestamp in epoch-milliseconds.
+This level of precision is required by Wavefront's API, and it is
+troublesome for the user to supply millisecond-accurate timestamps in any
+other format.
 
 The `wavefront event show` command lists the cached events. To
 properly query events, use the `events()` command in a `ts` query.
@@ -239,6 +245,12 @@ The run has finished, close the event.
 $ wavefront event close puppet_run
 Closing event 'puppet_run'. [2016-06-27 19:25:16 +0100]
 Removing state file /var/tmp/wavefront/events/rob/1467051916712::puppet_run.
+```
+
+Delete an event created in error.
+
+```
+$ wavefront delete 1476187357169 some_event
 ```
 
 ## `write` Mode: Sending Points to Wavefront
