@@ -360,7 +360,7 @@ $ parabola.rb | wavefront write file -F tv -m cli.demo.parabola -
 ## `sources` Mode: Tagging and Describing
 
 This command is used to add tags and descriptions to Wavefront
-sources.
+sources. Note that source tags are not the same as point tags.
 
 ```
 Usage:
