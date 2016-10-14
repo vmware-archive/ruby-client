@@ -15,8 +15,6 @@
 #
 
 require 'pathname'
-$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
-$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib' + 'wavefront'
 require 'wavefront/client'
 require 'wavefront/client/version'
 require 'wavefront/cli'
@@ -149,11 +147,11 @@ and 'T' for tags. Put 'T' last.
 source: %(
 Usage:
   #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token]
-           [-f format] [-at] [-s source] [-l limit] <pattern>
+           [-f format] [-T tag ...] [-at] [-s source] [-l limit] <pattern>
   #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token]
            [-f format] <host> ...
   #{ME} source describe [-c file] [-P profile] [-E endpoint] [-t token]
-           <description> [<host>] ...
+           [-H host ... ] <description>
   #{ME} source undescribe [-c file] [-P profile] [-E endpoint] [-t token]
            [<host>] ...
   #{ME} source tag add [-c file] [-P profile] [-E endpoint] [-t token]
@@ -167,6 +165,7 @@ Usage:
 Options:
   -a, --all            including hidden sources in 'human' output
   -t, --tags           show tag counts in 'human' output
+  -T, --tagged=STRING  only list sources with this tag in 'human' output
   -s, --start=STRING   start the list after the named source
   -l, --limit=NUMBER   only list NUMBER sources
   -H, --host=STRING    source to manipulate

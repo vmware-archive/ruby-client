@@ -16,32 +16,35 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     @show_hidden = options[:all]
     @show_tags = options[:tags]
 
-    if options[:list]
-      list_source_handler(options[:'<pattern>'], options[:start],
-                          options[:limit], options[:reverse])
-    elsif options[:show]
-      show_source_handler(options[:'<host>'])
-    elsif options[:tag] && options[:add]
-      add_tag_handler(options[:host], options[:'<tag>'])
-    elsif options[:tag] && options[:delete]
-      delete_tag_handler(options[:host], options[:'<tag>'])
-    elsif options[:describe]
-      describe_handler(options[:'<host>'], options[:'<description>'])
-    elsif options[:undescribe]
-      describe_handler(options[:'<host>'], '')
-    elsif options[:untag]
-      untag_handler(options[:'<host>'])
-    else
-      raise 'undefined sources error'
+    begin
+      if options[:list]
+        list_source_handler(options[:'<pattern>'], options[:start],
+                            options[:limit])
+      elsif options[:show]
+        show_source_handler(options[:'<host>'])
+      elsif options[:tag] && options[:add]
+        add_tag_handler(options[:host], options[:'<tag>'])
+      elsif options[:tag] && options[:delete]
+        delete_tag_handler(options[:host], options[:'<tag>'])
+      elsif options[:describe]
+        describe_handler(options[:host], options[:'<description>'])
+      elsif options[:undescribe]
+        describe_handler(options[:'<host>'], '')
+      elsif options[:untag]
+        untag_handler(options[:'<host>'])
+      else
+        raise 'undefined sources error'
+      end
+    rescue Wavefront::Exception::InvalidSource
+      abort 'ERROR: invalid source name.'
     end
   end
 
-  def list_source_handler(pattern, start = false, limit = false,
-                          desc = false)
+  def list_source_handler(pattern, start = false, limit = false)
     limit ||= 100
 
     q = {
-      desc:         desc,
+      desc:         false,
       limit:        limit,
       pattern:      pattern
     }
@@ -134,6 +137,17 @@ class Wavefront::Cli::Sources < Wavefront::Cli
       if s.include?('userTags') && s['userTags'].include?('hidden') && !
         show_hidden
         next
+      end
+
+      if options[:tagged]
+        skip = false
+        options[:tagged].each do |t|
+          if ! s['userTags'].include?(t)
+            skip = true
+            break
+          end
+        end
+        next if skip
       end
 
       if s['description']
