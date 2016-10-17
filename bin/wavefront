@@ -210,8 +210,8 @@ rescue Docopt::Exit => e
   end
 end
 
-# Load the config file. Values in there take priority. Probably
-# should be the other way round.
+# Load the config file. Values in there take priority, otherwise
+# default (unset) options will win.
 #
 opts.merge!(Wavefront::Cli.new(opts, nil).load_profile || {})
 

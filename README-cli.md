@@ -503,3 +503,6 @@ endpoint = metrics.wavefront.com
 The key for each key-value pair can match any long option show in the
 command `help`, so you can set, for instance, a default output
 format, as shown above.
+
+If an option is defined by a command-line switch, and in the
+configuration file, the config file will win.
