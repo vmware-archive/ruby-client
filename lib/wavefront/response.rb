@@ -126,6 +126,8 @@ module Wavefront
             out = process_timeseries
           elsif self.respond_to?(:events)
             out = process_events
+          else
+            out = []
           end
         else
           out = self.warnings
