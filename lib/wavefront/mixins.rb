@@ -48,5 +48,17 @@ module Wavefront
       return false unless t.is_a?(Integer)
       (t.to_f * 1000).round
     end
+
+    def hash_to_qs(payload)
+      #
+      # Make a properly escaped query string out of a key: value
+      # hash.
+      #
+      URI.escape(payload.map { |k, v| [k, v].join('=') }.join('&'))
+    end
+
+    def uri_concat(*args)
+      args.join('/').squeeze('/')
+    end
   end
 end
