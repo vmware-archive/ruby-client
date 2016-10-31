@@ -1,14 +1,12 @@
-#
-# A module of mixins to validate input. The Wavefront documentation
-# lays down restrictions on types and sizes of various inputs, which
-# we will check on the user's behalf. Most of the information used
-# in this file comes from
-# https://community.wavefront.com/docs/DOC-1031
-# some comes from the Swagger API documentation.
-#
 module Wavefront
+  #
+  # A module of mixins to validate input. The Wavefront documentation
+  # lays down restrictions on types and sizes of various inputs, which
+  # we will check on the user's behalf. Most of the information used in
+  # this file comes from https://community.wavefront.com/docs/DOC-1031
+  # some comes from the Swagger API documentation.
+  #
   module Validators
-
     def valid_source?(source)
       #
       # Check a source, according to

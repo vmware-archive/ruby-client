@@ -119,7 +119,7 @@ module Wavefront
 
         send_point(hash_to_wf(p))
       end
-      return summary[:rejected] == 0 ? true : false
+      summary[:rejected] == 0 ? true : false
     end
 
     def valid_point?(point)

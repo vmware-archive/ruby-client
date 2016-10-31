@@ -3,6 +3,9 @@ require 'wavefront/metadata'
 require 'json'
 require 'pp'
 
+#
+# Turn CLI input, from the 'sources' command, into metadata API calls
+#
 class Wavefront::Cli::Sources < Wavefront::Cli
   attr_accessor :wf, :out_format, :show_hidden, :show_tags
 
@@ -33,7 +36,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
       elsif options[:untag]
         untag_handler(options[:'<host>'])
       else
-        raise 'undefined sources error'
+        fail 'undefined sources error'
       end
     rescue Wavefront::Exception::InvalidSource
       abort 'ERROR: invalid source name.'
@@ -134,15 +137,15 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     hdr = format('%-25s %-30s %s', 'HOSTNAME', 'DESCRIPTION', 'TAGS')
 
     ret = result['sources'].each_with_object([hdr]) do |s, aggr|
-      if s.include?('userTags') && s['userTags'].include?('hidden') && !
-        show_hidden
+      if s.include?('userTags') && s['userTags'].include?('hidden') &&
+         !show_hidden
         next
       end
 
       if options[:tagged]
         skip = false
         options[:tagged].each do |t|
-          if ! s['userTags'].include?(t)
+          unless s['userTags'].include?(t)
             skip = true
             break
           end

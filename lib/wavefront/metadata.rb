@@ -76,8 +76,7 @@ module Wavefront
         response = {}
       end
 
-      return response
-
+      response
     end
 
     def add_tags(hostnames, tags)
@@ -86,23 +85,17 @@ module Wavefront
       # backward-compatibility wrapper for set_tag()
       #
       hostnames.each do |hostname|
-        tags.each do |tag|
-          set_tag(hostname, tag)
-        end
+        tags.each { |tag| set_tag(hostname, tag) }
       end
-
     end
 
-    def remove_tags(hostnames, tags, options={})
+    def remove_tags(hostnames, tags, _options = {})
       #
       # A backward-compatibilty wrapper to delete_tag().
       #
       hostnames.each do |hostname|
-        tags.each do |tag|
-          delete_tag(hostname, tag)
-        end
+        tags.each { |tag| delete_tag(hostname, tag) }
       end
-
     end
 
     def delete_tags(source)
@@ -110,7 +103,7 @@ module Wavefront
       # Delete all tags from a source. Maps to
       # DELETE /api/manage/source/{source}/tags
       #
-      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
+      fail Wavefront::Exception::InvalidSource unless valid_source?(source)
       call_delete(build_uri(uri_concat(source, 'tags')))
     end
 
@@ -119,8 +112,8 @@ module Wavefront
       # Delete a given tag from a source. Maps to
       # DELETE /api/manage/source/{source}/tags/{tag}
       #
-      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
-      raise Wavefront::Exception::InvalidString unless valid_string?(tag)
+      fail Wavefront::Exception::InvalidSource unless valid_source?(source)
+      fail Wavefront::Exception::InvalidString unless valid_string?(tag)
       call_delete(build_uri(uri_concat(source, 'tags', tag)))
     end
 
@@ -138,24 +131,24 @@ module Wavefront
       #
       # Hash keys should be symbols.
       #
-      if params.has_key?(:lastEntityId) &&
+      if params.key?(:lastEntityId) &&
          !params[:lastEntityId].is_a?(String)
-        raise TypeError
+        fail TypeError
       end
 
-      if params.has_key?(:pattern) && !params[:pattern].is_a?(String)
-        raise TypeError
+      if params.key?(:pattern) && !params[:pattern].is_a?(String)
+        fail TypeError
       end
 
-      if params.has_key?(:desc) && ! (params[:desc] == !!params[:desc])
-        raise TypeError
+      if params.key?(:desc) && ! (params[:desc] == !!params[:desc])
+        fail TypeError
       end
 
-      if params.has_key?(:limit)
-        raise TypeError unless params[:limit].is_a?(Numeric)
+      if params.key?(:limit)
+        fail TypeError unless params[:limit].is_a?(Numeric)
 
         if params[:limit] < 0 || params[:limit] >= 10000
-          raise Wavefront::Exception::ValueOutOfRange
+          fail Wavefront::Exception::ValueOutOfRange
         end
       end
 
@@ -167,7 +160,7 @@ module Wavefront
       # return information about a single source. Maps to
       # GET /api/manage/source/{source}
       #
-      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
+      fail Wavefront::Exception::InvalidSource unless valid_source?(source)
       call_get(build_uri(source))
     end
 
@@ -176,8 +169,8 @@ module Wavefront
       # set the description field for a source. Maps to
       # POST /api/manage/source/{source}/description
       #
-      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
-      raise Wavefront::Exception::InvalidString unless valid_string?(desc)
+      fail Wavefront::Exception::InvalidSource unless valid_source?(source)
+      fail Wavefront::Exception::InvalidString unless valid_string?(desc)
       call_post(build_uri(uri_concat(source, 'description')), desc)
     end
 
@@ -186,8 +179,8 @@ module Wavefront
       # set a tag on a source. Maps to
       # POST /api/manage/source/{source}/tags/{tag}
       #
-      raise Wavefront::Exception::InvalidSource unless valid_source?(source)
-      raise Wavefront::Exception::InvalidString unless valid_string?(tag)
+      fail Wavefront::Exception::InvalidSource unless valid_source?(source)
+      fail Wavefront::Exception::InvalidString unless valid_string?(tag)
       call_post(build_uri(uri_concat(source, 'tags', tag)))
     end
 
@@ -215,9 +208,11 @@ module Wavefront
     def call_post(uri, query = nil)
       h = headers
 
-      RestClient.post(uri.to_s, query, h.merge(
-        :'Content-Type' => 'text/plain', :Accept => 'application/json'
-      ))
+      RestClient.post(uri.to_s, query,
+                      h.merge('Content-Type': 'text/plain',
+                              Accept:         'application/json'
+                             )
+                     )
     end
 
     def debug(enabled)
