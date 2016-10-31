@@ -1,5 +1,5 @@
 require 'wavefront/cli'
-require 'wavefront/sources'
+require 'wavefront/metadata'
 require 'json'
 require 'pp'
 
@@ -7,7 +7,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   attr_accessor :wf, :out_format, :show_hidden, :show_tags
 
   def setup_wf
-    @wf = Wavefront::Sources.new(options[:token])
+    @wf = Wavefront::Metadata.new(options[:token])
   end
 
   def run

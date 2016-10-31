@@ -164,13 +164,13 @@ response.highcharts[0]['data'].first  # [1436849460000, 517160277.3333333]
 ```
 
 ### Command-line client
-A command line client is included too. Please see [README-cli.md]
-for details.
+A command line client is included too. Please see
+[README-cli.md](README-cli.md) for details.
 
 ## Building and installing
 
 ```bash
-gem build ./wavefront-client.gemspec && gem install ./wavefront*.gem --no-rdoc --no-ri
+rake build
 ```
 
 or
