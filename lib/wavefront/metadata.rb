@@ -209,8 +209,8 @@ module Wavefront
       h = headers
 
       RestClient.post(uri.to_s, query,
-                      h.merge('Content-Type': 'text/plain',
-                              Accept:         'application/json'
+                      h.merge(:'Content-Type' => 'text/plain',
+                              :Accept         => 'application/json'
                              )
                      )
     end
