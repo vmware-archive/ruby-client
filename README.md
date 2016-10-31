@@ -4,6 +4,20 @@ Wavefront [![Build Status](https://travis-ci.org/wavefrontHQ/ruby-client.svg?bra
 This is a ruby gem for speaking to the [Wavefront][1] monitoring and graphing system.
 
 ## Usage
+
+To build API documentation with [YARD](https://github.com/lsegal/yard)
+run
+
+```
+$ rake yard
+...
+$ cd doc
+$ yard server
+```
+
+and documentation will be available at
+[http://localhost:8808](http://localhost:8808).
+
 Within your own ruby code:
 
 ### Writer
