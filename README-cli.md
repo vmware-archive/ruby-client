@@ -357,6 +357,103 @@ second. Plot the parabola in Wavefront.
 $ parabola.rb | wavefront write file -F tv -m cli.demo.parabola -
 ```
 
+## `sources` Mode: Tagging and Describing
+
+This command is used to add tags and descriptions to Wavefront
+sources. Note that source tags are not the same as point tags.
+
+```
+Usage:
+  wavefront source list [-c file] [-P profile] [-E endpoint] [-t token]
+           [-f format] [-T tag ...] [-at] [-s source] [-l limit] <pattern>
+  wavefront source show [-c file] [-P profile] [-E endpoint] [-t token]
+           [-f format] <host> ...
+  wavefront source describe [-c file] [-P profile] [-E endpoint] [-t token]
+           [-H host ... ] <description>
+  wavefront source undescribe [-c file] [-P profile] [-E endpoint] [-t token]
+           [<host>] ...
+  wavefront source tag add [-c file] [-P profile] [-E endpoint] [-t token]
+           [-H host ... ] <tag> ...
+  wavefront source tag delete [-c file] [-P profile] [-E endpoint] [-t token]
+           [-H host ... ] <tag> ...
+  wavefront source untag [-c file] [-P profile] [-E endpoint] [-t token]
+           [<host>] ...
+  wavefront source --help
+
+Global options:
+  -c, --config=FILE    path to configuration file [default: /home/rob/.wavefront]
+  -P, --profile=NAME   profile in configuration file [default: default]
+  -D, --debug          enable debug mode
+  -h, --help           show this message
+
+Options:
+  -a, --all            including hidden sources in 'human' output
+  -t, --tags           show tag counts in 'human' output
+  -T, --tagged=STRING  only list sources with this tag in 'human' output
+  -s, --start=STRING   start the list after the named source
+  -l, --limit=NUMBER   only list NUMBER sources
+  -H, --host=STRING    source to manipulate
+  -f, --format=STRING  output format (ruby, json, human)
+                       [default: human]
+```
+
+Tags and descriptions can be applied to multiple sources by repeated
+`-H` options. If no source name is supplied, `wavefront` will use
+the name of the local machine, as supplied by Ruby's
+`Socket.gethostname` method.
+
+The `<pattern>` argument in to the `source list` works as a
+substring match. So `pie` will match `pie`, `pier`, `timepieces`,
+etc. Regular expressions will not work.
+
+### Examples
+
+List, in human-readable format, all active (non-hidden) sources whose name
+contains `cassandra`, which are tagged with `prod` and `eu-west-1`.
+
+```
+$ wavefront source list -T prod -T eu-west-1 -f human cassandra
+```
+
+Tag this host with `dev` and the kernel version:
+
+```
+$ wavefront tag add dev $(uname -r)
+```
+
+Remove all the tags from `i-123456` and `i-abcdef`
+
+```
+$ wavefront source untag i-123456 i-abcdef
+```
+
+Get the description and tags for the host `build-001`, in JSON format.
+
+```
+$ wavefront source show -f json build-001 | json
+{
+  "hostname": "build-001",
+  "userTags": [
+    "JPC",
+    "SmartOS",
+    "dev"
+  ],
+  "description": "build server"
+}
+```
+
+Get a human-readable summary of all the source tags in Wavefront. This works by giving a source name pattern that won't match anything.
+
+```
+$ wavefront source list -t '^$'
+HOSTNAME                  DESCRIPTION                    TAGS
+
+TAG                      COUNT
+hidden                   339
+physical                 10
+zone                     363
+```
+
 ## Notes on Options
 
 ### Times
@@ -406,3 +503,6 @@ endpoint = metrics.wavefront.com
 The key for each key-value pair can match any long option show in the
 command `help`, so you can set, for instance, a default output
 format, as shown above.
+
+If an option is defined by a command-line switch, and in the
+configuration file, the config file will win.

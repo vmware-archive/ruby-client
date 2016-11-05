@@ -41,4 +41,11 @@ describe Wavefront::Mixins do
     expect(time_to_ms(1469711187)).to eq(1469711187000)
     expect(time_to_ms('1469711187')).to be(false)
   end
+
+  it 'makes a proper query string' do
+    expect(hash_to_qs({
+      key1: 'val1',
+      key2: 'value 2'
+    })).to eq('key1=val1&key2=value%202')
+  end
 end

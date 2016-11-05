@@ -39,7 +39,6 @@ DEF_CF = if ENV['HOME']
            Pathname.new('/etc/wavefront/client.conf')
          end
 
-
 # The global_opts are available in every command.
 #
 global_opts = %(
@@ -146,6 +145,34 @@ Files are whitespace separated, and fields can be defined with the -F
 option.  Use 't' for timestamp; 'm' for metric name; 'v' for value
 and 'T' for tags. Put 'T' last.
 ),
+source: %(
+Usage:
+  #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token]
+           [-f format] [-T tag ...] [-at] [-s source] [-l limit] <pattern>
+  #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token]
+           [-f format] <host> ...
+  #{ME} source describe [-c file] [-P profile] [-E endpoint] [-t token]
+           [-H host ... ] <description>
+  #{ME} source undescribe [-c file] [-P profile] [-E endpoint] [-t token]
+           [<host>] ...
+  #{ME} source tag add [-c file] [-P profile] [-E endpoint] [-t token]
+           [-H host ... ] <tag> ...
+  #{ME} source tag delete [-c file] [-P profile] [-E endpoint] [-t token]
+           [-H host ... ] <tag> ...
+  #{ME} source untag [-c file] [-P profile] [-E endpoint] [-t token]
+           [<host>] ...
+  #{ME} source --help
+#{global_opts}
+Options:
+  -a, --all            including hidden sources in 'human' output
+  -t, --tags           show tag counts in 'human' output
+  -T, --tagged=STRING  only list sources with this tag in 'human' output
+  -s, --start=STRING   start the list after the named source
+  -l, --limit=NUMBER   only list NUMBER sources
+  -H, --host=STRING    source to manipulate
+  -f, --format=STRING  output format (#{ALERT_FORMATS.join(', ')})
+                       [default: #{DEFAULT_ALERT_FORMAT}]
+),
 default: %(
 Wavefront CLI
 
@@ -158,6 +185,7 @@ Commands:
   ts          view timeseries data
   alerts      view alerts
   event       open and close events
+  source      view and manage source tags and descriptions
   write       send data points to a Wavefront proxy
 
 Use '#{ME} <command> --help' for further information.)
@@ -182,8 +210,8 @@ rescue Docopt::Exit => e
   end
 end
 
-# Load the config file. Values in there take priority. Probably
-# should be the other way round.
+# Load the config file. Values in there take priority, otherwise
+# default (unset) options will win.
 #
 opts.merge!(Wavefront::Cli.new(opts, nil).load_profile || {})
 
@@ -197,6 +225,9 @@ when :event
 when :alerts
   require 'wavefront/cli/alerts'
   cli = Wavefront::Cli::Alerts.new(opts, [opts[:'<state>']])
+when :source
+  require 'wavefront/cli/sources'
+  cli = Wavefront::Cli::Sources.new(opts, [opts[:'<state>']])
 when :write
   if opts[:file]
     require 'wavefront/cli/batch_write'
