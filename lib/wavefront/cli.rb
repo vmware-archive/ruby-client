@@ -35,17 +35,24 @@ module Wavefront
       #
       # Load in configuration options from the (optionally) given
       # section of an ini-style configuration file. If the file's
-      # not there, we don't consider that an error.
+      # not there, we don't consider that an error: it's not
+      # entirely reasonable to demand the user has one. Options
+      # passed on the command-line trump the same values in the
+      # file.
       #
       return unless options[:config].is_a?(String)
       cf = Pathname.new(options[:config])
       return unless cf.exist?
 
       pf = options[:profile] || 'default'
+      raw = IniFile.load(cf)
+      profile = raw[pf]
+
       puts "using #{pf} profile from #{cf}" if options[:debug]
 
-      IniFile.load(cf)[pf].each_with_object({}) do |(k, v), memo|
-        memo[k.to_sym] = v
+      profile.each_with_object({}) do |(k, v), memo|
+        k = k.to_sym
+        memo[k] = (options.include?(k) && options[k]) ? options[k] : v
       end
     end
   end

@@ -15,18 +15,15 @@ See the License for the specific language governing permissions and
 =end
 
 module Wavefront
-  #
-  # Various things which help around the place
-  #
   module Mixins
     def interpolate_schema(label, host, prefix_length)
       label_parts = label.split('.')
-      interpolated = []
+      interpolated = Array.new
       interpolated << label_parts.shift(prefix_length)
       interpolated << host
       interpolated << label_parts
       interpolated.flatten!
-      interpolated.join('.')
+      return interpolated.join('.')
     end
 
     def parse_time(t)
@@ -37,7 +34,8 @@ module Wavefront
         return t if t.is_a?(Integer)
         return t.to_i if t.is_a?(Time)
         return t.to_i if t.is_a?(String) && t.match(/^\d+$/)
-        DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc.to_i
+        return DateTime.parse("#{t} #{Time.now.getlocal.zone}").
+          to_time.utc.to_i
       rescue
         raise "cannot parse timestamp '#{t}'."
       end
@@ -49,18 +47,6 @@ module Wavefront
       #
       return false unless t.is_a?(Integer)
       (t.to_f * 1000).round
-    end
-
-    def hash_to_qs(payload)
-      #
-      # Make a properly escaped query string out of a key: value
-      # hash.
-      #
-      URI.escape(payload.map { |k, v| [k, v].join('=') }.join('&'))
-    end
-
-    def uri_concat(*args)
-      args.join('/').squeeze('/')
     end
   end
 end

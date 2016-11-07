@@ -9,6 +9,7 @@ require 'socket'
 # backward compatibility.
 #
 class Wavefront::Cli::Write < Wavefront::Cli
+
   include Wavefront::Constants
   include Wavefront::Mixins
 
@@ -18,7 +19,7 @@ class Wavefront::Cli::Write < Wavefront::Cli
     ts = options[:time] ? parse_time(options[:time]) : false
 
     [:proxy, :host].each do |h|
-      fail Wavefront::Exception::InvalidHostname unless valid_host?(h)
+      raise Wavefront::Exception::InvalidHostname unless valid_host?(h)
     end
 
     write_opts = {
@@ -27,7 +28,7 @@ class Wavefront::Cli::Write < Wavefront::Cli
       metric_name:  options[:'<metric>'],
       point_tags:   prep_tags(options[:tag]),
       timestamp:    ts,
-      noop:         options[:noop]
+      noop:         options[:noop],
     }
 
     write_metric(options[:'<value>'].to_i, options[:'<metric>'], write_opts)
@@ -53,7 +54,7 @@ class Wavefront::Cli::Write < Wavefront::Cli
     #
     unless value.is_a?(Numeric) || value.match(/^-?\d*\.?\d*$/) ||
            value.match(/^-?\d*\.?\d*e\d+$/)
-      fail Wavefront::Exception::InvalidMetricValue
+      raise Wavefront::Exception::InvalidMetricValue
     end
     true
   end
@@ -65,12 +66,12 @@ class Wavefront::Cli::Write < Wavefront::Cli
     # through odd characters or whitespace.
     #
     begin
-      fail unless metric.is_a?(String) &&
-                  metric.split('.').length > 1 &&
-                  metric.match(/^[\w\-\._]+$/) &&
-                  metric.length < 1024
+      raise unless metric.is_a?(String) &&
+                   metric.split('.').length > 1 &&
+                   metric.match(/^[\w\-\._]+$/) &&
+                   metric.length < 1024
     rescue
-      raise Wavefront::Exception::InvalidMetricName
+      fail Wavefront::Exception::InvalidMetricName
     end
     true
   end
