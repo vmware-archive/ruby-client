@@ -4,7 +4,6 @@ require 'rest_client'
 require 'uri'
 require 'logger'
 require 'wavefront/constants'
-require 'wavefront/mixins'
 #
 # Add basic support to cover Wavefront's events API. I have followed
 # the standards and conventions established in the files already in
@@ -20,7 +19,6 @@ module Wavefront
   #
   class Events
     include Wavefront::Constants
-    include Wavefront::Mixins
     DEFAULT_PATH = '/api/events/'
 
     attr_reader :headers
@@ -95,6 +93,14 @@ module Wavefront
 
     def make_call(uri, query)
       RestClient.post(uri.to_s, query, headers)
+    end
+
+    def hash_to_qs(payload)
+      #
+      # Make a properly escaped query string out of a key: value
+      # hash.
+      #
+      URI.escape(payload.map { |k, v| [k, v].join('=') }.join('&'))
     end
 
     def debug(enabled)

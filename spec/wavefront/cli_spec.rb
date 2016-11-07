@@ -59,10 +59,10 @@ describe Wavefront::Cli do
     expect(pf[:token]).to eq('12345678-abcd-1234-abcd-123456789012')
   end
 
-  it 'prefers config file values to command-line options' do
+  it 'prefers command-line options to config file values' do
     k = Wavefront::Cli.new({config: cf, format: 'graphite'}, false)
     pf = k.load_profile
-    expect(pf[:format]).to eq('human')
+    expect(pf[:format]).to eq('graphite')
     expect(pf[:token]).to eq('12345678-abcd-1234-abcd-123456789012')
   end
 end

@@ -65,9 +65,10 @@ class Wavefront::Cli::Events < Wavefront::Cli
     end
 
     begin
-      wf_event.delete(startTime: options[:'<timestamp>'],
-                      name: options[:'<event>']
-                     )
+      response = wf_event.delete({
+        startTime: options[:'<timestamp>'],
+        name: options[:'<event>'],
+      })
     rescue RestClient::Unauthorized
       raise 'Cannot connect to Wavefront API.'
     rescue RestClient::ResourceNotFound
@@ -77,7 +78,7 @@ class Wavefront::Cli::Events < Wavefront::Cli
       raise 'Cannot delete event.'
     end
 
-    puts 'Deleted event.'
+    puts "Deleted event."
   end
 
   def prep_time(t)

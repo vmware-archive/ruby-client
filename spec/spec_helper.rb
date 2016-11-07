@@ -21,13 +21,11 @@ require 'wavefront/metadata'
 require 'wavefront/alerting'
 require 'wavefront/events'
 require 'wavefront/batch_writer'
-require 'wavefront/validators'
 require 'wavefront/cli'
 require 'wavefront/cli/alerts'
 require 'wavefront/cli/events'
 require 'wavefront/cli/batch_write'
 require 'wavefront/cli/write'
-require 'wavefront/cli/sources'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
@@ -74,8 +72,4 @@ class Mocket
   def puts(str)
     return true
   end
-end
-
-def concat_url(*args)
-  'https://' + args.join('/').squeeze('/')
 end
