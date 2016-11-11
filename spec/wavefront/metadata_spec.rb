@@ -90,6 +90,7 @@ describe Wavefront::Metadata do
       expect(RestClient).to receive(:get).with(
         concat_url(host, path, '?'), wf.headers
       )
+      expect(JSON).to receive(:parse)
       wf.show_sources
     end
 
@@ -97,6 +98,7 @@ describe Wavefront::Metadata do
       expect(RestClient).to receive(:get).with(
         concat_url(host, path, '?limit=100&pattern=test-*'), wf.headers
       )
+      expect(JSON).to receive(:parse)
       wf.show_sources({ limit: 100, pattern: 'test-*' })
     end
 
@@ -132,6 +134,7 @@ describe Wavefront::Metadata do
       expect(RestClient).to receive(:get).with(
         concat_url(host, path, 'mysource'), wf.headers
       )
+      expect(JSON).to receive(:parse)
       wf.show_source('mysource')
     end
 
