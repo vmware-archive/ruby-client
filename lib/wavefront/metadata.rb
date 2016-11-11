@@ -18,6 +18,7 @@ require "wavefront/client/version"
 require "wavefront/constants"
 require "wavefront/exception"
 require 'wavefront/validators'
+require 'wavefront/mixins'
 require 'rest_client'
 require 'uri'
 require 'logger'
@@ -119,9 +120,12 @@ module Wavefront
 
     def show_sources(params = {})
       #
-      # return a list of sources. Maps to
+      # Return a list of sources as a Ruby object. Maps to
       # GET /api/manage/source
       # call it with a hash as described in the Wavefront API docs.
+      #
+      # See the Wavefront API docs for the format of the returned
+      # object.
       #
       # At the time of writing, supported paramaters are:
       #   lastEntityId (string)
@@ -152,16 +156,18 @@ module Wavefront
         end
       end
 
-      call_get(build_uri(nil, query: hash_to_qs(params)))
+      JSON.parse(call_get(build_uri(nil, query: hash_to_qs(params))))
     end
 
     def show_source(source)
       #
-      # return information about a single source. Maps to
-      # GET /api/manage/source/{source}
+      # return information about a single source as a Ruby object. Maps to
+      # GET /api/manage/source/{source}.
+      #
+      # See the Wavefront API docs for the structure of the object.
       #
       fail Wavefront::Exception::InvalidSource unless valid_source?(source)
-      call_get(build_uri(source))
+      JSON.parse(call_get(build_uri(source)))
     end
 
     def set_description(source, desc)

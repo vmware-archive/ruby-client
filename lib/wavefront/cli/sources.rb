@@ -54,7 +54,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
 
     q[:lastEntityId] = start if start
 
-    display_data(JSON.parse(wf.show_sources(q)), 'list_source')
+    display_data(wf.show_sources(q), 'list_source')
   end
 
   def describe_handler(hosts, desc)
@@ -113,7 +113,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   def show_source_handler(sources)
     sources.each do |s|
       begin
-        result = JSON.parse(wf.show_source(s))
+        result = wf.show_source(s)
       rescue RestClient::ResourceNotFound
         puts "Source '#{s}' not found."
         next
