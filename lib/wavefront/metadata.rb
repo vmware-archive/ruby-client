@@ -18,6 +18,7 @@ require "wavefront/client/version"
 require "wavefront/constants"
 require "wavefront/exception"
 require 'wavefront/validators'
+require 'wavefront/mixins'
 require 'rest_client'
 require 'uri'
 require 'logger'
