@@ -46,6 +46,7 @@ Global options:
   -c, --config=FILE    path to configuration file [default: #{DEF_CF}]
   -P, --profile=NAME   profile in configuration file [default: default]
   -D, --debug          enable debug mode
+  -V, --verbose        be verbose
   -h, --help           show this message
 )
 
@@ -55,7 +56,7 @@ Global options:
 usage = {
 ts: %(
 Usage:
-  #{ME} ts [-c file] [-P profile] [-E endpoint] [-t token] [-OD]
+  #{ME} ts [-c file] [-P profile] [-E endpoint] [-t token] [-ODV]
             [-S | -m | -H | -d] [-s time] [-e time] [-f format] [-p num]
             [-X bool] <query>
 #{global_opts}
@@ -81,7 +82,7 @@ Options:
 
 alerts: %(
 Usage:
-  #{ME} alerts [-c file] [-P profile] [-E endpoint] [-t token]
+  #{ME} alerts [-c file] [-P profile] [-E endpoint] [-t token] [-V]
             [-f format] [-p tag] [ -s tag] <state>
 #{global_opts}
 Options:
@@ -108,7 +109,6 @@ Usage:
 #{global_opts}
 Options:
   -i, --instant        create an instantaneous event
-  -V, --verbose        be verbose
   -s, --start=TIME     time at which event begins
   -e, --end=TIME       time at which event ends
   -l, --level=LEVEL    level of event (#{EVENT_LEVELS.join(', ')})
@@ -139,7 +139,6 @@ Options:
   -m, --metric=STRING  the metric path to which contents of a file will be
                        assigned. If the file contains a metric name, the two
                        will be concatenated
-  -V, --verbose        be verbose
 
 Files are whitespace separated, and fields can be defined with the -F
 option.  Use 't' for timestamp; 'm' for metric name; 'v' for value
@@ -147,19 +146,19 @@ and 'T' for tags. Put 'T' last.
 ),
 source: %(
 Usage:
-  #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token]
+  #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token] [-V]
            [-f format] [-T tag ...] [-at] [-s source] [-l limit] <pattern>
-  #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token]
+  #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token] [-V]
            [-f format] <host> ...
   #{ME} source describe [-c file] [-P profile] [-E endpoint] [-t token]
-           [-H host ... ] <description>
+           [-V] [-H host ... ] <description>
   #{ME} source undescribe [-c file] [-P profile] [-E endpoint] [-t token]
-           [<host>] ...
+           [-V] [<host>] ...
   #{ME} source tag add [-c file] [-P profile] [-E endpoint] [-t token]
-           [-H host ... ] <tag> ...
+           [-V] [-H host ... ] <tag> ...
   #{ME} source tag delete [-c file] [-P profile] [-E endpoint] [-t token]
-           [-H host ... ] <tag> ...
-  #{ME} source untag [-c file] [-P profile] [-E endpoint] [-t token]
+           [-V] [-H host ... ] <tag> ...
+  #{ME} source untag [-c file] [-P profile] [-E endpoint] [-t token] [-V]
            [<host>] ...
   #{ME} source --help
 #{global_opts}
