@@ -40,14 +40,16 @@ module Wavefront
     include Wavefront::Validators
     DEFAULT_PATH = '/api/manage/source/'.freeze
 
-    attr_reader :headers, :host
+    attr_reader :headers, :host, :verbose, :endpoint
 
-    def initialize(token, host=DEFAULT_HOST, debug=false)
+    def initialize(token, host=DEFAULT_HOST, debug=false, options = {})
       #
       # 'host' is the Wavefront API endpoint
       #
       @headers = {'X-AUTH-TOKEN' => token}
       @base_uri = URI::HTTPS.build(:host => host, :path => DEFAULT_PATH)
+      @endpoint = host
+      @verbose = options[:verbose] || false
       debug(debug)
     end
 
@@ -193,7 +195,7 @@ module Wavefront
     private
 
     def build_uri(path_ext = '', options = {})
-      options[:host] ||= DEFAULT_HOST
+      options[:host] ||= endpoint
       options[:path] ||= DEFAULT_PATH
 
       URI::HTTPS.build(
@@ -204,14 +206,17 @@ module Wavefront
     end
 
     def call_get(uri)
+      puts "GET #{uri.to_s}" if verbose
       RestClient.get(uri.to_s, headers)
     end
 
     def call_delete(uri)
+      puts "DELETE #{uri.to_s}" if verbose
       RestClient.delete(uri.to_s, headers)
     end
 
     def call_post(uri, query = nil)
+      puts "POST #{uri.to_s} #{query}" if verbose
       h = headers
 
       RestClient.post(uri.to_s, query,

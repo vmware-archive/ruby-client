@@ -10,7 +10,8 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   attr_accessor :wf, :out_format, :show_hidden, :show_tags
 
   def setup_wf
-    @wf = Wavefront::Metadata.new(options[:token])
+    @wf = Wavefront::Metadata.new(options[:token], options[:endpoint],
+                                 false, { verbose: options[:verbose] })
   end
 
   def run
