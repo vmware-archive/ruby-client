@@ -29,6 +29,12 @@ module Wavefront
         puts options
         exit 0
       end
+
+      # Don't validate options on this class. When it's
+      # instantiated, the CLI and config file options haven't been
+      # merged.
+
+      validate_opts unless self.class.name == 'Wavefront::Cli'
     end
 
     def load_profile
@@ -42,11 +48,24 @@ module Wavefront
       return unless cf.exist?
 
       pf = options[:profile] || 'default'
-      puts "using #{pf} profile from #{cf}" if options[:debug]
+      puts "using '#{pf}' profile from '#{cf}'" if options[:debug]
 
       IniFile.load(cf)[pf].each_with_object({}) do |(k, v), memo|
         memo[k.to_sym] = v
       end
+    end
+
+    def validate_opts
+      #
+      # There are things we need to have. If we don't have them,
+      # stop the user right now. Also, if we're in debug mode, print
+      # out a hash of options, which can be very useful when doing
+      # actual debugging.
+      #
+      pp @options if options[:debug]
+
+      abort 'Please supply an API token.' unless options[:token]
+      abort 'Please supply an API endpoint.' unless options[:endpoint]
     end
   end
 end

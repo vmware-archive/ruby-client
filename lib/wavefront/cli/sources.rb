@@ -11,7 +11,8 @@ class Wavefront::Cli::Sources < Wavefront::Cli
 
   def setup_wf
     @wf = Wavefront::Metadata.new(options[:token], options[:endpoint],
-                                 false, { verbose: options[:verbose] })
+                                  options[:debug],
+                                  { verbose: options[:verbose] })
   end
 
   def run

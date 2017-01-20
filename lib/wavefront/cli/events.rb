@@ -44,7 +44,7 @@ class Wavefront::Cli::Events < Wavefront::Cli
     @t_start = prep_time(:start)
     @t_end = prep_time(:end)
 
-    @wf_event = Wavefront::Events.new(options[:token])
+    @wf_event = Wavefront::Events.new(options[:token], options[:debug])
 
     if options[:create]
       create_event_handler

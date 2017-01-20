@@ -66,12 +66,15 @@ module Wavefront
                    rejected: 0,
                    unsent:   0,
                  }
+
       @opts = setup_options(options, defaults)
 
       if opts[:tags]
         valid_tags?(opts[:tags])
         @global_tags = opts[:tags]
       end
+
+      debug(options[:debug])
     end
 
     def setup_options(user, defaults)
@@ -209,6 +212,10 @@ module Wavefront
       return if opts[:noop]
       puts 'Closing connection to proxy.' if opts[:verbose]
       sock.close
+    end
+
+    def debug(enabled)
+      RestClient.log = 'stdout' if enabled
     end
   end
 end

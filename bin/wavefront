@@ -15,11 +15,14 @@
 #
 
 require 'pathname'
+$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
+
 require 'wavefront/client'
 require 'wavefront/client/version'
 require 'wavefront/cli'
 require 'docopt'
 require 'socket'
+require 'pp'
 include Wavefront::Constants
 
 def sanitize_keys(hash)
@@ -82,7 +85,7 @@ Options:
 
 alerts: %(
 Usage:
-  #{ME} alerts [-c file] [-P profile] [-E endpoint] [-t token] [-V]
+  #{ME} alerts [-D] [-c file] [-P profile] [-E endpoint] [-t token] [-V]
             [-f format] [-p tag] [ -s tag] <state>
 #{global_opts}
 Options:
@@ -98,7 +101,7 @@ Options:
 
 event: %(
 Usage:
-  #{ME} event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
+  #{ME} event create [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
            [-d description] [-s time] [-i | -e time] [-l level] [-T type]
            [-H host] [-n] <event>
   #{ME} event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
@@ -108,6 +111,8 @@ Usage:
   #{ME} event --help
 #{global_opts}
 Options:
+  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
+  -t, --token=TOKEN    Wavefront authentication token
   -i, --instant        create an instantaneous event
   -s, --start=TIME     time at which event begins
   -e, --end=TIME       time at which event ends
@@ -146,25 +151,27 @@ and 'T' for tags. Put 'T' last.
 ),
 source: %(
 Usage:
-  #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token] [-V]
-           [-f format] [-T tag ...] [-at] [-s source] [-l limit] <pattern>
-  #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token] [-V]
+  #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
+           [-f format] [-T tag ...] [-ag] [-s source] [-l limit] <pattern>
+  #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
            [-f format] <host> ...
   #{ME} source describe [-c file] [-P profile] [-E endpoint] [-t token]
-           [-V] [-H host ... ] <description>
+           [-DV] [-H host ... ] <description>
   #{ME} source undescribe [-c file] [-P profile] [-E endpoint] [-t token]
-           [-V] [<host>] ...
+           [-DV] [<host>] ...
   #{ME} source tag add [-c file] [-P profile] [-E endpoint] [-t token]
-           [-V] [-H host ... ] <tag> ...
+           [-DV] [-H host ... ] <tag> ...
   #{ME} source tag delete [-c file] [-P profile] [-E endpoint] [-t token]
-           [-V] [-H host ... ] <tag> ...
-  #{ME} source untag [-c file] [-P profile] [-E endpoint] [-t token] [-V]
+           [-DV] [-H host ... ] <tag> ...
+  #{ME} source untag [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
            [<host>] ...
   #{ME} source --help
 #{global_opts}
 Options:
+  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
+  -t, --token=TOKEN    Wavefront authentication token
   -a, --all            including hidden sources in 'human' output
-  -t, --tags           show tag counts in 'human' output
+  -g, --tags           show tag counts in 'human' output
   -T, --tagged=STRING  only list sources with this tag in 'human' output
   -s, --start=STRING   start the list after the named source
   -l, --limit=NUMBER   only list NUMBER sources
@@ -190,29 +197,46 @@ Commands:
 Use '#{ME} <command> --help' for further information.)
 }
 
-# Parse the input. We have to do this twice because of the nested
-# help/option parser generation.
+# Parse the input. The first Docopt.docopt handles the default
+# options, the second works on the command.
 #
 begin
   opts = Docopt.docopt(usage[:default], version: Wavefront::Client::VERSION)
 rescue Docopt::Exit => e
+
   cmd = ARGV.length > 0 ? ARGV.first.to_sym : nil
 
   if usage.keys.include?(cmd)
     begin
       opts = sanitize_keys(Docopt.docopt(usage[cmd]))
     rescue Docopt::Exit => e
-      abort e.message
+      abort e.message # command help
     end
   else
-    abort e.message
+    abort e.message # default help
   end
 end
 
-# Load the config file. Values in there take priority, otherwise
-# default (unset) options will win.
-#
-opts.merge!(Wavefront::Cli.new(opts, nil).load_profile || {})
+def merge_opts_and_config(opts)
+  #
+  # We get a hash of command-line options, and possibly a hash from
+  # a configuration file stanza. If something is set in both, what
+  # should take precedence? My feeling is that command-line options
+  # should override equivalents in the configuration file. But,
+  # using docopt with defaults, we can't tell whether a value was
+  # given by the user or selected by docopt as a default. Our
+  # options, therefore, are to always let the config file win, in
+  # which case the user cannot, say, use '-f' to temporarily change
+  # their output format; or to not use docopt's default mechanism,
+  # but have a hash of defaults and do a three-way merge here, with
+  # default being the lowest, then config-file, then command-line.
+  #
+  # For now we take the first option. Values in the config file
+  # always win.
+  opts.merge(Wavefront::Cli.new(opts, nil).load_profile || {})
+end
+
+opts = merge_opts_and_config(opts)
 
 case cmd
 when :ts

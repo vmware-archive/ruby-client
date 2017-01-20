@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 require "wavefront/client/version"
 require "wavefront/constants"
 require 'wavefront/mixins'
+require 'wavefront/validators'
 require 'rest_client'
 require 'uri'
 require 'logger'

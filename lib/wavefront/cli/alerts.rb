@@ -28,7 +28,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     raise 'Missing query.' if arguments.empty?
     query = arguments[0].to_sym
 
-    wfa = Wavefront::Alerting.new(@options[:token])
+    wfa = Wavefront::Alerting.new(@options[:token], @options[:debug])
     valid_state?(wfa, query)
     valid_format?(@options[:format].to_sym)
     options = { host: @options[:endpoint] }
