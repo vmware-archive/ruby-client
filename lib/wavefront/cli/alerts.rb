@@ -30,7 +30,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
 
     wfa = Wavefront::Alerting.new(@options[:token], @options[:debug])
     valid_state?(wfa, query)
-    valid_format?(@options[:format].to_sym)
+    valid_format?(@options[:alertformat].to_sym)
     options = { host: @options[:endpoint] }
 
     if @options[:shared]
@@ -47,7 +47,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
       raise 'Unable to execute query.'
     end
 
-    format_result(result, @options[:format].to_sym)
+    format_result(result, @options[:alertformat].to_sym)
     exit
   end
 

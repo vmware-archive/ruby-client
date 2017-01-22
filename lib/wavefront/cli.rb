@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 
 =end
 
-require 'inifile'
-
 module Wavefront
+  #
+  # Parent of all the CLI classes.
+  #
   class Cli
-
     attr_accessor :options, :arguments
 
     def initialize(options, arguments)
@@ -30,29 +30,7 @@ module Wavefront
         exit 0
       end
 
-      # Don't validate options on this class. When it's
-      # instantiated, the CLI and config file options haven't been
-      # merged.
-
-      validate_opts unless self.class.name == 'Wavefront::Cli'
-    end
-
-    def load_profile
-      #
-      # Load in configuration options from the (optionally) given
-      # section of an ini-style configuration file. If the file's
-      # not there, we don't consider that an error.
-      #
-      return unless options[:config].is_a?(String)
-      cf = Pathname.new(options[:config])
-      return unless cf.exist?
-
-      pf = options[:profile] || 'default'
-      puts "using '#{pf}' profile from '#{cf}'" if options[:debug]
-
-      IniFile.load(cf)[pf].each_with_object({}) do |(k, v), memo|
-        memo[k.to_sym] = v
-      end
+      validate_opts
     end
 
     def validate_opts
@@ -60,7 +38,9 @@ module Wavefront
       # There are things we need to have. If we don't have them,
       # stop the user right now. Also, if we're in debug mode, print
       # out a hash of options, which can be very useful when doing
-      # actual debugging.
+      # actual debugging. Some classes may have to override this
+      # method. The writer, for instance, uses a proxy and has no
+      # token.
       #
       pp @options if options[:debug]
 

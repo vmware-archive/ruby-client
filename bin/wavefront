@@ -15,13 +15,15 @@
 #
 
 require 'pathname'
+
+# uncomment for development
 $LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
 
 require 'wavefront/client'
 require 'wavefront/client/version'
 require 'wavefront/cli'
+require 'wavefront/opt_handler'
 require 'docopt'
-require 'socket'
 require 'pp'
 include Wavefront::Constants
 
@@ -36,18 +38,18 @@ ME = Pathname.new(__FILE__).basename
 # If we are a normal user, look for wavefront config in our home
 # directory; if not, look in /etc
 #
-DEF_CF = if ENV['HOME']
-           Pathname.new(ENV['HOME']) + '.wavefront'
-         else
-           Pathname.new('/etc/wavefront/client.conf')
-         end
+conf_file = if ENV['HOME']
+              Pathname.new(ENV['HOME']) + '.wavefront'
+            else
+              Pathname.new('/etc/wavefront/client.conf')
+            end
 
 # The global_opts are available in every command.
 #
 global_opts = %(
 Global options:
-  -c, --config=FILE    path to configuration file [default: #{DEF_CF}]
-  -P, --profile=NAME   profile in configuration file [default: default]
+  -c, --config=FILE    path to configuration file [#{conf_file}]
+  -P, --profile=NAME   profile in configuration file [#{DEFAULT_OPTS[:profile]}]
   -D, --debug          enable debug mode
   -V, --verbose        be verbose
   -h, --help           show this message
@@ -64,7 +66,7 @@ Usage:
             [-X bool] <query>
 #{global_opts}
 Options:
-  -E, --endpoint=URI            cluster endpoint [default: #{DEFAULT_HOST}]
+  -E, --endpoint=URI            cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
   -t, --token=TOKEN             Wavefront authentication token
   -S, --seconds                 query granularity of seconds
   -m, --minutes                 query granularity of minutes
@@ -75,11 +77,11 @@ Options:
   -e, --end=TIME                end of query window in epoch seconds or
                                 strptime parseable format
   -f, --format=STRING           output format (#{FORMATS.join(', ')})
-                                [default: #{DEFAULT_FORMAT}]
+                                [#{DEFAULT_OPTS[:format]}]
   -p, --prefixlength=NUM        number of path elements to treat as prefix
-                                in schema manipulation. [default: #{DEFAULT_PREFIX_LENGTH}]
+                                in schema manipulation. [#{DEFAULT_OPTS[:prefixlength]}]
   -X, --strict=BOOL             Do not return points outside the query
-                                window. [default: #{DEFAULT_STRICT}]
+                                window. [#{DEFAULT_OPTS[:strict]}]
   -O, --includeObsoleteMetrics  include metrics unreported for > 4 weeks
 ),
 
@@ -89,14 +91,14 @@ Usage:
             [-f format] [-p tag] [ -s tag] <state>
 #{global_opts}
 Options:
-  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
-  -t, --token=TOKEN    Wavefront authentication token
-  -f, --format=STRING  output format (#{ALERT_FORMATS.join(', ')})
-                       [default: #{DEFAULT_ALERT_FORMAT}]
-  -p, --private=TAG    retrieve only alerts with named private tags,
-                       comma delimited.
-  -s, --shared=TAG     retrieve only alerts with named shared tags, comma
-                       delimited.
+  -E, --endpoint=URI       cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
+  -t, --token=TOKEN        Wavefront authentication token
+  -f, --alertformat=STRING output format (#{ALERT_FORMATS.join(', ')})
+                           [#{DEFAULT_OPTS[:aformat]}]
+  -p, --private=TAG        retrieve only alerts with named private tags,
+                           comma delimited.
+  -s, --shared=TAG         retrieve only alerts with named shared tags,
+                           comma delimited.
 ),
 
 event: %(
@@ -104,14 +106,15 @@ Usage:
   #{ME} event create [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
            [-d description] [-s time] [-i | -e time] [-l level] [-T type]
            [-H host] [-n] <event>
-  #{ME} event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
+  #{ME} event close [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
            [<event>] [<timestamp>]
-  #{ME} event delete [-V] <timestamp> <event>
+  #{ME} event delete [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
+           <timestamp> <event>
   #{ME} event show
   #{ME} event --help
 #{global_opts}
 Options:
-  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
+  -E, --endpoint=URI   cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
   -t, --token=TOKEN    Wavefront authentication token
   -i, --instant        create an instantaneous event
   -s, --start=TIME     time at which event begins
@@ -134,16 +137,17 @@ Usage:
   #{ME} write --help
 #{global_opts}
 Options:
-  -E, --proxy=URI      proxy endpoint [default: #{DEFAULT_PROXY}]
-  -t, --time=TIME      time of data point (omit to use current time)
-  -H, --host=STRING    source host [default: #{Socket.gethostname}]
-  -p, --port=INT       Wavefront proxy port [default: #{DEFAULT_PROXY_PORT}]
-  -T, --tag=TAG        point tag in key=value form
-  -F, --format=STRING  format of input file or stdin [default: #{DEFAULT_INFILE_FORMAT}]
-  -n, --noop           show the metric without sending it
-  -m, --metric=STRING  the metric path to which contents of a file will be
-                       assigned. If the file contains a metric name, the two
-                       will be concatenated
+  -E, --proxy=URI            proxy endpoint [#{DEFAULT_OPTS[:proxy]}]
+  -t, --time=TIME            time of data point (omit to use current time)
+  -H, --host=STRING          source host [#{DEFAULT_OPTS[:host]}]
+  -p, --port=INT             Wavefront proxy port [#{DEFAULT_OPTS[:port]}]
+  -T, --tag=TAG              point tag in key=value form
+  -F, --infileformat=STRING  format of input file or stdin [#{DEFAULT_OPTS[:infileformat]}]
+  -n, --noop                 show the metric without sending it
+  -m, --metric=STRING        the metric path to which contents of a
+                             file will be assigned. If the file
+                             contains a metric name, the two will be
+                             concatenated
 
 Files are whitespace separated, and fields can be defined with the -F
 option.  Use 't' for timestamp; 'm' for metric name; 'v' for value
@@ -168,16 +172,17 @@ Usage:
   #{ME} source --help
 #{global_opts}
 Options:
-  -E, --endpoint=URI   cluster endpoint [default: #{DEFAULT_HOST}]
-  -t, --token=TOKEN    Wavefront authentication token
-  -a, --all            including hidden sources in 'human' output
-  -g, --tags           show tag counts in 'human' output
-  -T, --tagged=STRING  only list sources with this tag in 'human' output
-  -s, --start=STRING   start the list after the named source
-  -l, --limit=NUMBER   only list NUMBER sources
-  -H, --host=STRING    source to manipulate
-  -f, --format=STRING  output format (#{ALERT_FORMATS.join(', ')})
-                       [default: #{DEFAULT_ALERT_FORMAT}]
+  -E, --endpoint=URI         cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
+  -t, --token=TOKEN          Wavefront authentication token
+  -a, --all                  including hidden sources in 'human' output
+  -g, --tags                 show tag counts in 'human' output
+  -T, --tagged=STRING        only list sources with this tag when using
+                             'human' output
+  -s, --start=STRING         start the list after the named source
+  -l, --limit=NUMBER         only list NUMBER sources
+  -H, --host=STRING          source to manipulate
+  -f, --sourceformat=STRING  output format (#{SOURCE_FORMATS.join(', ')})
+                             [#{DEFAULT_OPTS[:sourceformat]}]
 ),
 default: %(
 Wavefront CLI
@@ -204,7 +209,7 @@ begin
   opts = Docopt.docopt(usage[:default], version: Wavefront::Client::VERSION)
 rescue Docopt::Exit => e
 
-  cmd = ARGV.length > 0 ? ARGV.first.to_sym : nil
+  cmd = ARGV.empty? ? nil : ARGV.first.to_sym
 
   if usage.keys.include?(cmd)
     begin
@@ -217,26 +222,12 @@ rescue Docopt::Exit => e
   end
 end
 
-def merge_opts_and_config(opts)
-  #
-  # We get a hash of command-line options, and possibly a hash from
-  # a configuration file stanza. If something is set in both, what
-  # should take precedence? My feeling is that command-line options
-  # should override equivalents in the configuration file. But,
-  # using docopt with defaults, we can't tell whether a value was
-  # given by the user or selected by docopt as a default. Our
-  # options, therefore, are to always let the config file win, in
-  # which case the user cannot, say, use '-f' to temporarily change
-  # their output format; or to not use docopt's default mechanism,
-  # but have a hash of defaults and do a three-way merge here, with
-  # default being the lowest, then config-file, then command-line.
-  #
-  # For now we take the first option. Values in the config file
-  # always win.
-  opts.merge(Wavefront::Cli.new(opts, nil).load_profile || {})
-end
+opts = Wavefront::OptHandler.new(conf_file, opts).opts
 
-opts = merge_opts_and_config(opts)
+if opts[:debug]
+  puts 'Combined options:'
+  pp opts
+end
 
 case cmd
 when :ts
@@ -264,5 +255,7 @@ end
 begin
   cli.run
 rescue => e
-  abort "#{cmd} query failed. #{e}"
+  puts "#{cmd} query failed. #{e}"
+  puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}" if opts[:debug]
+  exit 1
 end

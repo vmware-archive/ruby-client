@@ -12,10 +12,17 @@ The following options are valid in almost all contexts.
 ```
 -c, --config=FILE    path to configuration file [default: ~/.wavefront]
 -P, --profile=NAME   profile in configuration file [default: default]
--t, --token=TOKEN    Wavefront authentication token
 -D, --debug          enable debug mode
+-V, --verbose        enable verbose mode
 -h, --help           show help for command
 ```
+
+Debug mode will show you combined options, and debug output from
+`rest-client`. It also shows the full stack trace should a command
+fail.
+
+In the following usage examples, the global options have been omitted
+to save space.
 
 ## `ts` Mode: Retrieving Timeseries Data
 
@@ -26,13 +33,13 @@ query.
 
 ```
 Usage:
-  wavefront ts [-c file] [-P profile] [-E endpoint] [-t token] [-OD]
+  wavefront ts [-c file] [-P profile] [-E endpoint] [-t token] [-ODV]
             [-S | -m | -H | -d] [-s time] [-e time] [-f format] [-p num]
             [-X bool] <query>
 
 Options:
-  -E, --endpoint=URI            cluster endpoint [default:
-                                metrics.wavefront.com]
+  -E, --endpoint=URI            cluster endpoint [metrics.wavefront.com]
+  -t, --token=TOKEN             Wavefront authentication token
   -S, --seconds                 query granularity of seconds
   -m, --minutes                 query granularity of minutes
   -H, --hours                   query granularity of hours
@@ -41,13 +48,12 @@ Options:
                                 strptime parseable format
   -e, --end=TIME                end of query window in epoch seconds or
                                 strptime parseable format
-  -f, --format=STRING           output format (raw, ruby, graphite,
-                                highcharts, human)
-                                [default: raw]
+  -f, --format=STRING           output format (raw, ruby, graphite, highcharts, human)
+                                [raw]
   -p, --prefixlength=NUM        number of path elements to treat as prefix
-                                in schema manipulation. [default: 1]
+                                in schema manipulation. [1]
   -X, --strict=BOOL             Do not return points outside the query
-                                window. [default: true]
+                                window. [true]
   -O, --includeObsoleteMetrics  include metrics unreported for > 4 weeks
 ```
 
@@ -106,17 +112,18 @@ formatters.
 
 ```
 Usage:
-  wavefront alerts [-c file] [-P profile] [-E endpoint] [-t token]
+  wavefront alerts [-D] [-c file] [-P profile] [-E endpoint] [-t token] [-V]
             [-f format] [-p tag] [ -s tag] <state>
 
 Options:
-  -E, --endpoint=URI   cluster endpoint [default: metrics.wavefront.com]
-  -f, --format=STRING  output format (ruby, json, human)
-                       [default: human]
-  -p, --private=TAG    retrieve only alerts with named private tags,
-                       comma delimited.
-  -s, --shared=TAG     retrieve only alerts with named shared tags, comma
-                       delimited.
+  -E, --endpoint=URI       cluster endpoint [metrics.wavefront.com]
+  -t, --token=TOKEN        Wavefront authentication token
+  -f, --alertformat=STRING output format (ruby, json, human)
+                           []
+  -p, --private=TAG        retrieve only alerts with named private tags,
+                           comma delimited.
+  -s, --shared=TAG         retrieve only alerts with named shared tags,
+                           comma delimited.
 ```
 
 ### Examples
@@ -160,19 +167,20 @@ The `event` command is used to open and close Wavefront events.
 
 ```
 Usage:
-  wavefront event create [-V] [-c file] [-P profile] [-E endpoint] [-t token]
-           [-d description] [-s time] [-i | -e time] [-l level] [-t type]
+  wavefront event create [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
+           [-d description] [-s time] [-i | -e time] [-l level] [-T type]
            [-H host] [-n] <event>
-  wavefront event close [-V] [-c file] [-P profile] [-E endpoint] [-t token]
+  wavefront event close [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
            [<event>] [<timestamp>]
-  wavefront event delete [-V] <timestamp> <event>
+  wavefront event delete [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
+           <timestamp> <event>
   wavefront event show
   wavefront event --help
 
 Options:
-  -E, --endpoint=URI   cluster endpoint [default: metrics.wavefront.com]
+  -E, --endpoint=URI   cluster endpoint [metrics.wavefront.com]
+  -t, --token=TOKEN    Wavefront authentication token
   -i, --instant        create an instantaneous event
-  -V, --verbose        be verbose
   -s, --start=TIME     time at which event begins
   -e, --end=TIME       time at which event ends
   -l, --level=LEVEL    level of event (info, smoke, warn, severe)
@@ -180,6 +188,8 @@ Options:
   -d, --desc=STRING    description of event
   -H, --host=STRING    list of hosts to tag with even (comma separated)
   -n, --nostate        do not create a local file recording the event
+
+View events in detail using the 'ts' command with the 'events()' function.
 ```
 
 To close an event in the Wavefront API it must be identified by its
@@ -266,19 +276,31 @@ Usage:
            [-p port] [-H host] [-n] [-T tag...] <metric> <value>
   wavefront write file [-DV] [-c file] [-P profile] [-E proxy] [-H host]
            [-p port] [-n] [-F format] [-m metric] [-T tag...] <file>
+  wavefront write --help
+
+Global options:
+  -c, --config=FILE    path to configuration file [/home/rob/.wavefront]
+  -P, --profile=NAME   profile in configuration file [default]
+  -D, --debug          enable debug mode
+  -V, --verbose        be verbose
+  -h, --help           show this message
 
 Options:
-  -E, --proxy=URI      proxy endpoint [default: wavefront]
-  -t, --time=TIME      time of data point (omit to use current time)
-  -H, --host=STRING    source host [default: box]
-  -p, --port=INT       Wavefront proxy port [default: 2878]
-  -T, --tag=TAG        point tag in key=value form
-  -F, --format=STRING  format of input file or stdin [default: tmv]
-  -n, --noop           show the metric without sending it
-  -m, --metric=STRING  the metric path to which contents of a file will be
-                       assigned. If the file contains a metric name, the two
-                       will be concatenated
-  -V, --verbose        be verbose
+  -E, --proxy=URI            proxy endpoint [wavefront]
+  -t, --time=TIME            time of data point (omit to use current time)
+  -H, --host=STRING          source host [box]
+  -p, --port=INT             Wavefront proxy port [2878]
+  -T, --tag=TAG              point tag in key=value form
+  -F, --infileformat=STRING  format of input file or stdin [tmv]
+  -n, --noop                 show the metric without sending it
+  -m, --metric=STRING        the metric path to which contents of a
+                             file will be assigned. If the file
+                             contains a metric name, the two will be
+                             concatenated
+
+Files are whitespace separated, and fields can be defined with the -F
+option.  Use 't' for timestamp; 'm' for metric name; 'v' for value
+and 'T' for tags. Put 'T' last.
 ```
 
 `write` has two sub-commands: `write point` and `write file`. Both
@@ -364,37 +386,34 @@ sources. Note that source tags are not the same as point tags.
 
 ```
 Usage:
-  wavefront source list [-c file] [-P profile] [-E endpoint] [-t token]
-           [-f format] [-T tag ...] [-at] [-s source] [-l limit] <pattern>
-  wavefront source show [-c file] [-P profile] [-E endpoint] [-t token]
+  wavefront source list [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
+           [-f format] [-T tag ...] [-ag] [-s source] [-l limit] <pattern>
+  wavefront source show [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
            [-f format] <host> ...
   wavefront source describe [-c file] [-P profile] [-E endpoint] [-t token]
-           [-H host ... ] <description>
+           [-DV] [-H host ... ] <description>
   wavefront source undescribe [-c file] [-P profile] [-E endpoint] [-t token]
-           [<host>] ...
+           [-DV] [<host>] ...
   wavefront source tag add [-c file] [-P profile] [-E endpoint] [-t token]
-           [-H host ... ] <tag> ...
+           [-DV] [-H host ... ] <tag> ...
   wavefront source tag delete [-c file] [-P profile] [-E endpoint] [-t token]
-           [-H host ... ] <tag> ...
-  wavefront source untag [-c file] [-P profile] [-E endpoint] [-t token]
+           [-DV] [-H host ... ] <tag> ...
+  wavefront source untag [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
            [<host>] ...
   wavefront source --help
 
-Global options:
-  -c, --config=FILE    path to configuration file [default: /home/rob/.wavefront]
-  -P, --profile=NAME   profile in configuration file [default: default]
-  -D, --debug          enable debug mode
-  -h, --help           show this message
-
 Options:
-  -a, --all            including hidden sources in 'human' output
-  -t, --tags           show tag counts in 'human' output
-  -T, --tagged=STRING  only list sources with this tag in 'human' output
-  -s, --start=STRING   start the list after the named source
-  -l, --limit=NUMBER   only list NUMBER sources
-  -H, --host=STRING    source to manipulate
-  -f, --format=STRING  output format (ruby, json, human)
-                       [default: human]
+  -E, --endpoint=URI        cluster endpoint [metrics.wavefront.com]
+  -t, --token=TOKEN         Wavefront authentication token
+  -a, --all                 including hidden sources in 'human' output
+  -g, --tags                show tag counts in 'human' output
+  -T, --tagged=STRING       only list sources with this tag when using
+                            'human' output
+  -s, --start=STRING        start the list after the named source
+  -l, --limit=NUMBER        only list NUMBER sources
+  -H, --host=STRING         source to manipulate
+  -f, --sourceformat=STRING output format (ruby, json, human)
+                            [human]
 ```
 
 Tags and descriptions can be applied to multiple sources by repeated
@@ -480,7 +499,9 @@ string.
 Passing tokens and endpoints into the `wavefront` command can become
 tiresome, so you can put such data into an `ini`-style configuration
 file. By default this file should be located at `${HOME}/.wavefront`,
-though you can override the location with the `-c` flag.
+though you can override the location with the `-c` flag. You can
+also put a system-wide file at `/etc/wavefront/client.conf`, though
+the user-specific file will take precedentce.
 
 You can switch between Wavefront accounts using profile stanzas,
 selected with the `-P` option.  If `-P` is not supplied, the
@@ -493,16 +514,19 @@ A configuration file looks like this:
 [default]
 token = abcdefab-1234-abcd-1234-abcdefabcdef
 endpoint = companya.wavefront.com
-format = human
+format = json
+alertformat = human
 
 [companyb]
 token = 12345678-abcd-0123-abcd-123456789abc
 endpoint = metrics.wavefront.com
+proxy = wavefront.local
+sourceformat = json
 ```
 
 The key for each key-value pair can match any long option show in the
 command `help`, so you can set, for instance, a default output
-format, as shown above.
+format for timeseries, alerts and source commands, as shown above.
 
 If an option is defined by a command-line switch, and in the
 configuration file, the config file will win.

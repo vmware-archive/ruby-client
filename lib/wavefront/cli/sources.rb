@@ -17,7 +17,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
 
   def run
     setup_wf
-    @out_format = options[:format]
+    @out_format = options[:sourceformat]
     @show_hidden = options[:all]
     @show_tags = options[:tags]
 

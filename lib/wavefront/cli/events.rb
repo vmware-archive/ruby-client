@@ -27,7 +27,8 @@ require 'socket'
 # in a timeseries API call.
 #
 class Wavefront::Cli::Events < Wavefront::Cli
-  attr_accessor :state_dir, :hosts, :hostname, :t_start, :t_end, :wf_event
+  attr_accessor :state_dir, :hosts, :hostname, :t_start, :t_end,
+                :wf_event
 
   include Wavefront::Constants
   include Wavefront::Mixins
@@ -248,5 +249,14 @@ class Wavefront::Cli::Events < Wavefront::Cli
     end
 
     puts "Event state recorded at #{fname}."
+  end
+
+  def validate_opts
+    #
+    # the 'show' sub-command does not make an API call
+    #
+    return true if options[:show]
+    abort 'Please supply an API token.' unless options[:token]
+    abort 'Please supply an API endpoint.' unless options[:endpoint]
   end
 end
