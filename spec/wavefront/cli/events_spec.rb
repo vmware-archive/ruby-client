@@ -8,7 +8,8 @@ states = %w(active affected_by_maintenance all invalid snoozed)
 formats = %w(ruby json human)
 
 opts = {
-  token: TEST_TOKEN,
+  token:    TEST_TOKEN,
+  endpoint: TEST_HOST,
 }
 
 describe Wavefront::Cli::Alerts do

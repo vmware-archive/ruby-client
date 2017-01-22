@@ -1,7 +1,9 @@
 require 'spec_helper'
 require 'socket'
 
-opts = {}
+opts = {
+  proxy: 'wavefront.localnet',
+}
 args = 'write'
 k = Wavefront::Cli::Write.new(opts, args)
 

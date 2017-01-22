@@ -6,7 +6,8 @@ require 'spec_helper'
 #require 'webmock/rspec'
 
 opts = {
-  token: TEST_TOKEN,
+  token:    TEST_TOKEN,
+  endpoint: TEST_HOST,
 }
 
 describe Wavefront::Cli::Sources do
