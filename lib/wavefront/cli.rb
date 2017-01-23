@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 
 =end
 
+require 'wavefront/constants'
+
 module Wavefront
   #
   # Parent of all the CLI classes.
@@ -44,8 +46,8 @@ module Wavefront
       #
       pp @options if options[:debug]
 
-      abort 'Please supply an API token.' unless options[:token]
-      abort 'Please supply an API endpoint.' unless options[:endpoint]
+      raise 'Please supply an API token.' unless options[:token]
+      raise 'Please supply an API endpoint.' unless options[:endpoint]
     end
   end
 end
