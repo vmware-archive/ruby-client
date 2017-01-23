@@ -24,7 +24,6 @@ require 'wavefront/client/version'
 require 'wavefront/cli'
 require 'wavefront/opt_handler'
 require 'docopt'
-require 'pp'
 include Wavefront::Constants
 
 def sanitize_keys(hash)
@@ -225,6 +224,7 @@ end
 opts = Wavefront::OptHandler.new(conf_file, opts).opts
 
 if opts[:debug]
+  require 'pp'
   puts 'Combined options:'
   pp opts
 end
@@ -253,6 +253,7 @@ when :write
 end
 
 begin
+  cli.validate_opts
   cli.run
 rescue => e
   puts "#{cmd} query failed. #{e}"

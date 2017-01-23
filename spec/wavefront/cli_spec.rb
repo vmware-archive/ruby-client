@@ -20,16 +20,17 @@ require_relative '../spec_helper'
 
 describe Wavefront::Cli do
   it 'raises an error if no token is set' do
-    expect{Wavefront::Cli.new({}, nil)}.to raise_exception(RuntimeError)
+    wf = Wavefront::Cli.new({}, nil)
+    expect{wf.validate_opts}.to raise_exception(RuntimeError)
   end
 
   it 'raises an error if no endpoint is set' do
-    expect{Wavefront::Cli.new({token: 'abcdef' }, nil)}.
-      to raise_exception(RuntimeError)
+    wf = Wavefront::Cli.new({token: 'abcdef' }, nil)
+    expect{wf.validate_opts}.to raise_exception(RuntimeError)
   end
 
   it 'does not raise an error if an endpoint and token are set' do
-    expect{Wavefront::Cli.new({token: 'abcdef', endpoint: 'wavefront' }, nil)}.
-      to_not raise_exception
+    wf = Wavefront::Cli.new({token: 'abcdef', endpoint: 'wavefront' }, nil)
+    expect{wf.validate_opts}.to_not raise_exception
   end
 end

@@ -31,8 +31,6 @@ module Wavefront
         puts options
         exit 0
       end
-
-      validate_opts
     end
 
     def validate_opts
@@ -44,8 +42,6 @@ module Wavefront
       # method. The writer, for instance, uses a proxy and has no
       # token.
       #
-      pp @options if options[:debug]
-
       raise 'Please supply an API token.' unless options[:token]
       raise 'Please supply an API endpoint.' unless options[:endpoint]
     end
