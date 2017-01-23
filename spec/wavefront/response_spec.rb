@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 
 =end
 
-require 'spec_helper'
+require_relative '../spec_helper'
 require 'pathname'
 require 'json'
 
@@ -72,7 +72,7 @@ describe Wavefront::Response::Highcharts do
   it 'returns something that resembles highcharts output' do
     example_response = File.read(Pathname.new(__FILE__).parent.parent.join('example_response.json'))
     response = Wavefront::Response::Highcharts.new(example_response)
-    
+
     expect(response.highcharts[0]['data'].size).to eq(30)
     JSON.parse(response.to_json).each { |m| expect(m.keys.size).to eq(2) }
   end

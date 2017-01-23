@@ -1,5 +1,5 @@
 require 'pathname'
-require 'spec_helper'
+require_relative '../../spec_helper'
 
 opts = {
   proxy: 'wavefront.localnet',
