@@ -20,19 +20,19 @@ module Wavefront
   # avoiding the magic string 'default: ' in our options stanzas.
   #
   class OptHandler
-    attr_reader :opts, :conf_file
+    include Wavefront::Constants
 
-    def initialize(conf_file, opts = {})
-      @conf_file = if opts[:config]
-                     Pathname.new(opts[:config])
+    attr_reader :opts, :cli_opts, :conf_file
+
+    def initialize(conf_file, cli_opts = {})
+      @conf_file = if cli_opts.key?(:config) && cli_opts[:config]
+                     Pathname.new(cli_opts[:config])
                    else
                      conf_file
                    end
 
-      opts = opts.reject { |_k, v| v.nil? }
-      @opts = DEFAULT_OPTS.merge(opts)
-
-      @opts.merge!(load_profile)
+      @cli_opts = cli_opts.reject { |_k, v| v.nil? }
+      @opts = DEFAULT_OPTS.merge(load_profile).merge(cli_opts)
     end
 
     def load_profile
@@ -48,8 +48,9 @@ module Wavefront
         return {}
       end
 
-      pf = opts[:profile] || 'default'
-      puts "reading '#{pf}' profile from '#{conf_file}'" if opts[:debug]
+      pf = cli_opts[:profile] || 'default'
+
+      puts "reading '#{pf}' profile from '#{conf_file}'" if cli_opts[:debug]
 
       IniFile.load(conf_file)[pf].each_with_object({}) do |(k, v), memo|
         memo[k.to_sym] = v
