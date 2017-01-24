@@ -36,7 +36,7 @@ describe Wavefront::Cli::Alerts do
       k = Wavefront::Cli::Alerts.new(opts, ['all'])
 
       states.each do |state|
-        expect(k.valid_state?(wfa, state.to_sym)).to be(true)
+        expect(k.valid_state?(wfa, state)).to be(true)
       end
     end
   end
@@ -95,7 +95,7 @@ describe Wavefront::Cli::Alerts do
     it 'reconstructs human output' do
       out = ERB.new(IO.read(Pathname.new(__FILE__).dirname +
                             'resources' + 'alert.human.erb')).result
-      expect(k.humanize(JSON.parse(src)).join("\n") + "\n").to eq(out)
+      expect(k.humanize(JSON.parse(src)).join("\n")).to eq(out)
     end
   end
 

@@ -88,11 +88,10 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     # Check the alert type we've been given is valid. There needs to
     # be a public method in the 'alerting' class for every one.
     #
-    s = wfa.public_methods(false).sort
-    s.delete(:token)
-    unless s.include?(state)
-      raise 'State must be one of: ' + s.each { |q| q.to_s }.join(', ') +
-        '.'
+    states = %w(active affected_by_maintenance all invalid snoozed)
+
+    unless states.include?(state.to_s)
+      raise "State must be one of: #{states.join(', ')}."
     end
     true
   end
@@ -125,7 +124,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
         else
           human_line(key, alert[key])
         end
-      end
+      end.<< ''
     end
   end
 
@@ -171,6 +170,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     #
     # hanging indent long lines to fit in an 80-column terminal
     #
+    return unless line
     line.gsub(/(.{1,#{cols - offset}})(\s+|\Z)/, "\\1\n#{' ' *
               offset}").rstrip
   end
