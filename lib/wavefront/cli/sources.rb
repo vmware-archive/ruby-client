@@ -12,12 +12,13 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   def setup_wf
     @wf = Wavefront::Metadata.new(options[:token], options[:endpoint],
                                   options[:debug],
-                                  { verbose: options[:verbose] })
+                                  { verbose: options[:verbose],
+                                    noop:    options[:noop]})
   end
 
   def run
     setup_wf
-    @out_format = options[:sourceformat]
+    @out_format = options[:sourceformat].to_s
     @show_hidden = options[:all]
     @show_tags = options[:tags]
 
@@ -126,6 +127,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   end
 
   def display_data(result, method)
+    return if noop
     if out_format == 'human'
       puts public_send('humanize_' + method, result)
     elsif out_format == 'json'
@@ -147,7 +149,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
       if options[:tagged]
         skip = false
         options[:tagged].each do |t|
-          unless s['userTags'].include?(t)
+          unless s.key?('userTags') && s['userTags'].include?(t)
             skip = true
             break
           end

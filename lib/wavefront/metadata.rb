@@ -40,7 +40,7 @@ module Wavefront
     include Wavefront::Validators
     DEFAULT_PATH = '/api/manage/source/'.freeze
 
-    attr_reader :headers, :host, :verbose, :endpoint
+    attr_reader :headers, :host, :verbose, :endpoint, :noop
 
     def initialize(token, host=DEFAULT_HOST, debug=false, options = {})
       #
@@ -50,6 +50,7 @@ module Wavefront
       @base_uri = URI::HTTPS.build(:host => host, :path => DEFAULT_PATH)
       @endpoint = host
       @verbose = options[:verbose] || false
+      @noop = options[:noop] || false
       debug(debug)
     end
 
@@ -158,7 +159,8 @@ module Wavefront
         end
       end
 
-      JSON.parse(call_get(build_uri(nil, query: hash_to_qs(params))))
+      resp = call_get(build_uri(nil, query: hash_to_qs(params)))
+      resp && JSON.parse(resp) || {}
     end
 
     def show_source(source)
@@ -206,18 +208,22 @@ module Wavefront
     end
 
     def call_get(uri)
-      puts "GET #{uri.to_s}" if verbose
+      puts "GET #{uri.to_s}" if (verbose || noop)
+      return if noop
       RestClient.get(uri.to_s, headers)
     end
 
     def call_delete(uri)
-      puts "DELETE #{uri.to_s}" if verbose
+      puts "DELETE #{uri.to_s}" if (verbose || noop)
+      return if noop
       RestClient.delete(uri.to_s, headers)
     end
 
     def call_post(uri, query = nil)
-      puts "POST #{uri.to_s} #{query}" if verbose
       h = headers
+      puts "POST #{uri.to_s} #{query}" if (verbose || noop)
+      puts "HEADERS #{h.to_s} #{query}" if (verbose || noop)
+      return if noop
 
       RestClient.post(uri.to_s, query,
                       h.merge(:'Content-Type' => 'text/plain',

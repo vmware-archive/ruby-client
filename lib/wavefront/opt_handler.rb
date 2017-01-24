@@ -32,7 +32,8 @@ module Wavefront
                    end
 
       @cli_opts = cli_opts.reject { |_k, v| v.nil? }
-      @opts = DEFAULT_OPTS.merge(load_profile).merge(cli_opts)
+
+      @opts = DEFAULT_OPTS.merge(load_profile).merge(@cli_opts)
     end
 
     def load_profile
@@ -48,7 +49,7 @@ module Wavefront
         return {}
       end
 
-      pf = cli_opts[:profile] || 'default'
+      pf = cli_opts.fetch(:profile, 'default')
 
       puts "reading '#{pf}' profile from '#{conf_file}'" if cli_opts[:debug]
 

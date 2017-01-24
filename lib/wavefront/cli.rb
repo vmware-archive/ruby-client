@@ -21,11 +21,12 @@ module Wavefront
   # Parent of all the CLI classes.
   #
   class Cli
-    attr_accessor :options, :arguments
+    attr_accessor :options, :arguments, :noop
 
     def initialize(options, arguments)
       @options   = options
       @arguments = arguments
+      @noop = options[:noop]
 
       if options.include?(:help) && options[:help]
         puts options

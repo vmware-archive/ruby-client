@@ -29,11 +29,18 @@ module Wavefront
     include Wavefront::Mixins
     DEFAULT_PATH = '/api/alert/'
 
-    attr_reader :token
+    attr_reader :token, :noop, :verbose, :endpoint
 
-    def initialize(token, debug=false)
+    def initialize(token, host = DEFAULT_HOST, debug=false, options = {})
+      #
+      # Following existing convention, 'host' is the Wavefront API endpoint.
+      #
+      @headers = { :'X-AUTH-TOKEN' => token }
+      @endpoint = host
       @token = token
       debug(debug)
+      @noop = options[:noop]
+      @verbose = options[:verbose]
     end
 
     def active(options={})
@@ -77,7 +84,7 @@ module Wavefront
     end
 
     def get_alerts(path, options={})
-      options[:host] ||= DEFAULT_HOST
+      options[:host] ||= endpoint
       options[:path] ||= DEFAULT_PATH
 
       uri = URI::HTTPS.build(
@@ -85,6 +92,9 @@ module Wavefront
         path:  uri_concat(options[:path], path),
 	      query: mk_qs(options),
       )
+
+      puts "GET #{uri.to_s}" if (verbose || noop)
+      return if noop
 
       RestClient.get(uri.to_s)
     end

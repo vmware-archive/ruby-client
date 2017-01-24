@@ -44,8 +44,11 @@ class Wavefront::Cli::Events < Wavefront::Cli
     @hosts = prep_hosts(options[:host])
     @t_start = prep_time(:start)
     @t_end = prep_time(:end)
+    @noop = options[:noop]
 
-    @wf_event = Wavefront::Events.new(options[:token], options[:debug])
+    @wf_event = Wavefront::Events.new(
+      options[:token], options[:endpoint], options[:debug],
+      { verbose: options[:verbose], noop: options[:noop]})
 
     if options[:create]
       create_event_handler
@@ -104,6 +107,8 @@ class Wavefront::Cli::Events < Wavefront::Cli
     # Wrapper around the method calls which actually create events.
     #
     output = create_event
+
+    return if noop
 
     unless options[:end] || options[:instant]
       create_state_dir

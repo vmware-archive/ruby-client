@@ -55,8 +55,10 @@ class Wavefront::Cli::Ts < Wavefront::Cli
       options[:end_time] = Time.at(parse_time(@options[:end]))
     end
 
-    wave = Wavefront::Client.new(@options[:token], @options[:endpoint], @options[:debug])
+    wave = Wavefront::Client.new(@options[:token], @options[:endpoint], @options[:debug], { noop: @options[:noop], verbose: @options[:verbose]})
     case options[:response_format]
+    when :json
+      pp wave.query(query, granularity, options)
     when :raw
       puts wave.query(query, granularity, options)
     when :graphite

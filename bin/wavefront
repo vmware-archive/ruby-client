@@ -27,9 +27,7 @@ require 'docopt'
 include Wavefront::Constants
 
 def sanitize_keys(hash)
-  hash.each_with_object({}) do |(k, v), aggr|
-    aggr[k.delete('-').to_sym] = v
-  end
+  hash.each_with_object({}) { |(k, v), aggr| aggr[k.delete('-').to_sym] = v }
 end
 
 ME = Pathname.new(__FILE__).basename
@@ -50,6 +48,7 @@ Global options:
   -c, --config=FILE    path to configuration file [#{conf_file}]
   -P, --profile=NAME   profile in configuration file [#{DEFAULT_OPTS[:profile]}]
   -D, --debug          enable debug mode
+  -n, --noop           don't perform API calls
   -V, --verbose        be verbose
   -h, --help           show this message
 )
@@ -60,7 +59,7 @@ Global options:
 usage = {
 ts: %(
 Usage:
-  #{ME} ts [-c file] [-P profile] [-E endpoint] [-t token] [-ODV]
+  #{ME} ts [-c file] [-P profile] [-E endpoint] [-t token] [-ODnV]
             [-S | -m | -H | -d] [-s time] [-e time] [-f format] [-p num]
             [-X bool] <query>
 #{global_opts}
@@ -86,7 +85,7 @@ Options:
 
 alerts: %(
 Usage:
-  #{ME} alerts [-D] [-c file] [-P profile] [-E endpoint] [-t token] [-V]
+  #{ME} alerts [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
             [-f format] [-p tag] [ -s tag] <state>
 #{global_opts}
 Options:
@@ -102,12 +101,12 @@ Options:
 
 event: %(
 Usage:
-  #{ME} event create [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
+  #{ME} event create [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
            [-d description] [-s time] [-i | -e time] [-l level] [-T type]
-           [-H host] [-n] <event>
-  #{ME} event close [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
+           [-H host] [-N] <event>
+  #{ME} event close [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
            [<event>] [<timestamp>]
-  #{ME} event delete [-DV] [-c file] [-P profile] [-E endpoint] [-t token]
+  #{ME} event delete [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
            <timestamp> <event>
   #{ME} event show
   #{ME} event --help
@@ -122,16 +121,16 @@ Options:
   -T, --type=TYPE      type of event
   -d, --desc=STRING    description of event
   -H, --host=STRING    list of hosts to tag with even (comma separated)
-  -n, --nostate        do not create a local file recording the event
+  -N, --nostate        do not create a local file recording the event
 
 View events in detail using the 'ts' command with the 'events()' function.
 ),
 
 write: %(
 Usage:
-  #{ME} write point [-DV] [-c file] [-P profile] [-E proxy] [-t time]
+  #{ME} write point [-DnV] [-c file] [-P profile] [-E proxy] [-t time]
            [-p port] [-H host] [-n] [-T tag...] <metric> <value>
-  #{ME} write file [-DV] [-c file] [-P profile] [-E proxy] [-H host]
+  #{ME} write file [-DnV] [-c file] [-P profile] [-E proxy] [-H host]
            [-p port] [-n] [-F format] [-m metric] [-T tag...] <file>
   #{ME} write --help
 #{global_opts}
@@ -142,7 +141,6 @@ Options:
   -p, --port=INT             Wavefront proxy port [#{DEFAULT_OPTS[:port]}]
   -T, --tag=TAG              point tag in key=value form
   -F, --infileformat=STRING  format of input file or stdin [#{DEFAULT_OPTS[:infileformat]}]
-  -n, --noop                 show the metric without sending it
   -m, --metric=STRING        the metric path to which contents of a
                              file will be assigned. If the file
                              contains a metric name, the two will be
@@ -154,19 +152,19 @@ and 'T' for tags. Put 'T' last.
 ),
 source: %(
 Usage:
-  #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
+  #{ME} source list [-c file] [-P profile] [-E endpoint] [-t token] [-DnV]
            [-f format] [-T tag ...] [-ag] [-s source] [-l limit] <pattern>
-  #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
+  #{ME} source show [-c file] [-P profile] [-E endpoint] [-t token] [-DnV]
            [-f format] <host> ...
   #{ME} source describe [-c file] [-P profile] [-E endpoint] [-t token]
-           [-DV] [-H host ... ] <description>
+           [-DnV] [-H host ... ] <description>
   #{ME} source undescribe [-c file] [-P profile] [-E endpoint] [-t token]
-           [-DV] [<host>] ...
+           [-DnV] [<host>] ...
   #{ME} source tag add [-c file] [-P profile] [-E endpoint] [-t token]
-           [-DV] [-H host ... ] <tag> ...
+           [-DnV] [-H host ... ] <tag> ...
   #{ME} source tag delete [-c file] [-P profile] [-E endpoint] [-t token]
-           [-DV] [-H host ... ] <tag> ...
-  #{ME} source untag [-c file] [-P profile] [-E endpoint] [-t token] [-DV]
+           [-DnV] [-H host ... ] <tag> ...
+  #{ME} source untag [-c file] [-P profile] [-E endpoint] [-t token] [-DnV]
            [<host>] ...
   #{ME} source --help
 #{global_opts}
@@ -180,8 +178,7 @@ Options:
   -s, --start=STRING         start the list after the named source
   -l, --limit=NUMBER         only list NUMBER sources
   -H, --host=STRING          source to manipulate
-  -f, --sourceformat=STRING  output format (#{SOURCE_FORMATS.join(', ')})
-                             [#{DEFAULT_OPTS[:sourceformat]}]
+  -f, --sourceformat=STRING  output format (#{SOURCE_FORMATS.join(', ')}) [#{DEFAULT_OPTS[:sourceformat]}]
 ),
 default: %(
 Wavefront CLI

@@ -28,7 +28,9 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     raise 'Missing query.' if arguments.empty?
     query = arguments[0].to_sym
 
-    wfa = Wavefront::Alerting.new(@options[:token], @options[:debug])
+    wfa = Wavefront::Alerting.new(@options[:token], @options[:endpoint],
+                                  @options[:debug], {
+      noop: @options[:noop], verbose: @options[:verbose]})
     valid_state?(wfa, query)
     valid_format?(@options[:alertformat].to_sym)
     options = { host: @options[:endpoint] }
@@ -43,7 +45,8 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
 
     begin
       result = wfa.send(query, options)
-    rescue
+    rescue => e
+      puts e if @options[:debug]
       raise 'Unable to execute query.'
     end
 
@@ -56,6 +59,8 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     # Call a suitable method to display the output of the API call,
     # which is JSON.
     #
+    return if noop
+
     case format
     when :ruby
       pp result

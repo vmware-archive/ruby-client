@@ -28,9 +28,11 @@ module Wavefront
     include Wavefront::Constants
     DEFAULT_PATH = '/chart/api'
 
-    attr_reader :headers, :base_uri
+    attr_reader :headers, :base_uri, :noop, :verbose
 
-    def initialize(token, host=DEFAULT_HOST, debug=false)
+    def initialize(token, host=DEFAULT_HOST, debug=false, options = {})
+      @verbose = options[:verbose]
+      @noop = options[:noop]
       @headers = {'X-AUTH-TOKEN' => token}
       @base_uri = URI::HTTPS.build(:host => host, :path => DEFAULT_PATH)
       debug(debug)
@@ -61,6 +63,8 @@ module Wavefront
       if options[:passthru]
         args[:params].merge!(options[:passthru])
       end
+
+      puts "GET #{uri.to_s}\nPARAMS #{args.to_s}" if (verbose || noop)
 
       response = RestClient.get @base_uri.to_s, args
 
