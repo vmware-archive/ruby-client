@@ -39,7 +39,6 @@ module Wavefront
     end
 
     def query(query, granularity='m', options={})
-
       options[:end_time] ||= Time.now.utc
       options[:start_time] ||= options[:end_time] - DEFAULT_PERIOD_SECONDS
       options[:response_format] ||= DEFAULT_FORMAT
@@ -64,13 +63,14 @@ module Wavefront
         args[:params].merge!(options[:passthru])
       end
 
-      puts "GET #{uri.to_s}\nPARAMS #{args.to_s}" if (verbose || noop)
+      puts "GET #{@base_uri.to_s}\nPARAMS #{args.to_s}" if (verbose || noop)
+
+      return if noop
 
       response = RestClient.get @base_uri.to_s, args
 
       klass = Object.const_get('Wavefront').const_get('Response').const_get(options[:response_format].to_s.capitalize)
       return klass.new(response, options)
-
     end
 
     private

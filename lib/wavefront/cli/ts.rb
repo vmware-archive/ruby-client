@@ -56,6 +56,12 @@ class Wavefront::Cli::Ts < Wavefront::Cli
     end
 
     wave = Wavefront::Client.new(@options[:token], @options[:endpoint], @options[:debug], { noop: @options[:noop], verbose: @options[:verbose]})
+
+    if noop
+      wave.query(query, granularity, options)
+      return
+    end
+
     case options[:response_format]
     when :json
       pp wave.query(query, granularity, options)
