@@ -159,8 +159,8 @@ module Wavefront
         end
       end
 
-      resp = call_get(build_uri(nil, query: hash_to_qs(params)))
-      resp && JSON.parse(resp) || {}
+      resp = call_get(build_uri(nil, query: hash_to_qs(params))) || {}
+      JSON.parse(resp) || {}
     end
 
     def show_source(source)
@@ -171,7 +171,9 @@ module Wavefront
       # See the Wavefront API docs for the structure of the object.
       #
       fail Wavefront::Exception::InvalidSource unless valid_source?(source)
-      JSON.parse(call_get(build_uri(source)))
+      resp = call_get(build_uri(source)) || {}
+
+      JSON.parse(resp)
     end
 
     def set_description(source, desc)
