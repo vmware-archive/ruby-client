@@ -52,6 +52,13 @@ module Wavefront
       uri = create_uri(path: [DEFAULT_PATH, payload[:startTime],
                        payload[:name]].join('/').squeeze('/'))
 
+      if (verbose || noop)
+        puts "DELETE #{uri.to_s}"
+        puts "HEADERS #{headers}"
+      end
+
+      return if noop
+
       RestClient.delete(uri.to_s, headers)
     end
 

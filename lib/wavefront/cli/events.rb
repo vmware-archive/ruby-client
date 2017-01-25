@@ -81,7 +81,7 @@ class Wavefront::Cli::Events < Wavefront::Cli
       raise 'Cannot delete event.'
     end
 
-    puts 'Deleted event.'
+    puts 'Deleted event.' unless noop
   end
 
   def prep_time(t)
