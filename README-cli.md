@@ -186,7 +186,7 @@ Options:
   -l, --level=LEVEL    level of event (info, smoke, warn, severe)
   -T, --type=TYPE      type of event
   -d, --desc=STRING    description of event
-  -H, --host=STRING    list of hosts to tag with even (comma separated)
+  -H, --host=STRING    list of hosts to tag with event (comma separated)
   -n, --nostate        do not create a local file recording the event
 
 View events in detail using the 'ts' command with the 'events()' function.
