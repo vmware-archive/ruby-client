@@ -120,7 +120,7 @@ Options:
   -l, --level=LEVEL    level of event (#{EVENT_LEVELS.join(', ')})
   -T, --type=TYPE      type of event
   -d, --desc=STRING    description of event
-  -H, --host=STRING    list of hosts to tag with even (comma separated)
+  -H, --host=STRING    list of sources to which event applies (comma separated)
   -N, --nostate        do not create a local file recording the event
 
 View events in detail using the 'ts' command with the 'events()' function.
@@ -253,7 +253,7 @@ begin
   cli.validate_opts
   cli.run
 rescue => e
-  puts "#{cmd} query failed. #{e}"
-  puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}" if opts[:debug]
+  STDERR.puts "#{cmd} query failed. #{e}"
+  STDERR.puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}" if opts[:debug]
   exit 1
 end
