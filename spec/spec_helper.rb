@@ -96,7 +96,7 @@ def wf(args = '')
   # for easy access
   #
   ret = OpenStruct.new
-  env = {'RUBYLIB' => LIB.to_s}
+  env = {'RUBYLIB' => [LIB.to_s, ENV['RUBYLIB']].join(':') }
 
   puts "testing #{WF} #{args}"
   stdout, stderr, status = Open3.capture3(env, "#{WF} #{args}")
