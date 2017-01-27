@@ -1,12 +1,12 @@
 require 'pathname'
 require 'open3'
 require 'ostruct'
-require 'wavefront/client/version'
 require 'json'
 require 'socket'
 require 'date'
 require 'uri'
 require_relative './spec_helper'
+require 'wavefront/client/version'
 
 ROOT = Pathname.new(__FILE__).dirname.parent
 WF = ROOT + 'bin' + 'wavefront'
