@@ -217,6 +217,7 @@ class Wavefront::Cli::Events < Wavefront::Cli
     #
     # Returns an array of [timestamp, event_name]
     #
+    return false unless state_dir.exist?
     list = state_dir.children
     list.select! { |f| f.basename.to_s.split('::').last == name } if name
     return false if list.length == 0
