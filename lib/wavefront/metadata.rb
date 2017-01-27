@@ -159,8 +159,8 @@ module Wavefront
         end
       end
 
-      resp = call_get(build_uri(nil, query: hash_to_qs(params))) || {}
-      JSON.parse(resp) || {}
+      resp = call_get(build_uri(nil, query: hash_to_qs(params))) || '{}'
+      JSON.parse(resp)
     end
 
     def show_source(source)
@@ -171,7 +171,7 @@ module Wavefront
       # See the Wavefront API docs for the structure of the object.
       #
       fail Wavefront::Exception::InvalidSource unless valid_source?(source)
-      resp = call_get(build_uri(source)) || {}
+      resp = call_get(build_uri(source)) || '{}'
 
       JSON.parse(resp)
     end
@@ -210,21 +210,30 @@ module Wavefront
     end
 
     def call_get(uri)
-      puts "GET #{uri.to_s}" if (verbose || noop)
+      if (verbose || noop)
+        puts 'GET ' + uri.to_s
+        puts 'HEADERS ' + headers.to_s
+      end
       return if noop
       RestClient.get(uri.to_s, headers)
     end
 
     def call_delete(uri)
-      puts "DELETE #{uri.to_s}" if (verbose || noop)
+      if (verbose || noop)
+        puts 'DELETE ' + uri.to_s
+        puts 'HEADERS ' + headers.to_s
+      end
       return if noop
       RestClient.delete(uri.to_s, headers)
     end
 
     def call_post(uri, query = nil)
       h = headers
-      puts "POST #{uri.to_s} #{query}" if (verbose || noop)
-      puts "HEADERS #{h.to_s} #{query}" if (verbose || noop)
+      if (verbose || noop)
+        puts 'POST ' + uri.to_s
+        puts 'QUERY ' + query if query
+        puts 'HEADERS ' + h.to_s
+      end
       return if noop
 
       RestClient.post(uri.to_s, query,
