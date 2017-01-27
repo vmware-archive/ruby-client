@@ -1,3 +1,18 @@
+#
+# cli_spec.rb
+# -----------
+#
+# This spec file adds acceptance testing for the CLI script `bin/wavefront`. It
+# runs all commands and subcommands with the `--noop` option, and ensures that
+# the expected API calls are made, or the correct error is thrown. It takes
+# ~15-25s to run, and is part of the CI pipeline.
+#
+# None of the tests in this file make real API calls, so no endpoint is
+# required.
+#
+# Tests are run as part of the usual `rake spec` job. Custom RSpec matchers and
+# support methods are in `spec_helper.rb`.
+#
 require 'pathname'
 require 'open3'
 require 'ostruct'
