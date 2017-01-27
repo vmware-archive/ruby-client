@@ -506,18 +506,21 @@ describe 'event mode' do
 end
 
 describe 'ts mode' do
-  it 'fails with no granularity' do
+  it 'fails with no granularity and default options' do
     o = wf('ts "ts(dev.cli.test)"')
     expect(o.status).to eq(1)
-    expect(o.stdout).to be_empty
-    expect(o.stderr).to start_with('ts query failed. You must specify a granularity')
+    expect(o.stdout).to match(
+      /^config file.*not found. Taking options from command-line./)
+    expect(o.stderr).to start_with(
+      'ts query failed. You must specify a granularity')
   end
 
   it 'fails with no token if there is no token' do
     o = wf('ts -c/nf -E metrics.wavefront.com "ts(dev.cli.test)"')
     expect(o.status).to eq(1)
     expect(o.stderr).to eq('ts query failed. Please supply an API token.')
-    expect(o.stdout).to eq("config file '/nf' not found. Taking options from command-line.")
+    expect(o.stdout).to eq(
+      "config file '/nf' not found. Taking options from command-line.")
   end
 
   it 'performs a verbose noop with default options' do
