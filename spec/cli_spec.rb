@@ -450,9 +450,9 @@ describe 'event mode' do
 
   describe 'close subcommand' do
     it 'refuses to close an unknown event' do
-      o = wf("event close -c #{CF} -t token -n uknown_event")
+      o = wf("event close -c #{CF} -t token -n unknown_event")
       expect(o.stderr).to eq(
-        "event query failed. No event 'uknown_event' to close.")
+        "event query failed. No event 'unknown_event' to close.")
       expect(o.status).to eq(1)
       expect(o.stdout).to be_empty
     end
@@ -507,7 +507,7 @@ end
 
 describe 'ts mode' do
   it 'fails with no granularity and default options' do
-    o = wf('ts "ts(dev.cli.test)"')
+    o = wf('ts -t token -c/nf "ts(dev.cli.test)"')
     expect(o.status).to eq(1)
     expect(o.stdout).to match(
       /^config file.*not found. Taking options from command-line./)
