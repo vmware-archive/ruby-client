@@ -7,7 +7,7 @@ require 'pp'
 # Turn CLI input, from the 'sources' command, into metadata API calls
 #
 class Wavefront::Cli::Sources < Wavefront::Cli
-  attr_accessor :wf, :out_format, :show_hidden, :show_tags
+  attr_accessor :wf, :out_format, :show_hidden, :show_tags, :verbose
 
   def setup_wf
     @wf = Wavefront::Metadata.new(options[:token], options[:endpoint],
@@ -21,6 +21,7 @@ class Wavefront::Cli::Sources < Wavefront::Cli
     @out_format = options[:sourceformat].to_s
     @show_hidden = options[:all]
     @show_tags = options[:tags]
+    @verbose = options[:verbose]
 
     begin
       if options[:list]
@@ -51,17 +52,20 @@ class Wavefront::Cli::Sources < Wavefront::Cli
 
     q = {
       desc:         false,
-      limit:        limit,
+      limit:        limit.to_i,
       pattern:      pattern
     }
 
     q[:lastEntityId] = start if start
 
-    display_data(wf.show_sources(q), 'list_source')
+    res = wf.show_sources(q)
+    return if noop
+    display_data(res, 'list_source')
   end
 
   def describe_handler(hosts, desc)
     hosts = [Socket.gethostname] if hosts.empty?
+    hosts = [hosts] if hosts.is_a?(String)
 
     hosts.each do |h|
       if desc.empty?
@@ -79,20 +83,22 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   end
 
   def untag_handler(hosts)
-    hosts ||= [Socket.gethostname]
+    hosts ||= Socket.gethostname
+    hosts = [hosts] if hosts.is_a?(String)
 
     hosts.each do |h|
-      puts "Removing all tags from '#{h}'"
+      puts "Removing all tags from '#{h}'" if verbose
       wf.delete_tags(h)
     end
   end
 
   def add_tag_handler(hosts, tags)
-    hosts ||= [Socket.gethostname]
+    hosts ||= Socket.gethostname
+    hosts = [hosts] if hosts.is_a?(String)
 
     hosts.each do |h|
       tags.each do |t|
-        puts "Tagging '#{h}' with '#{t}'"
+        puts "Tagging '#{h}' with '#{t}'" if verbose
         begin
           wf.set_tag(h, t)
         rescue Wavefront::Exception::InvalidString
@@ -103,11 +109,12 @@ class Wavefront::Cli::Sources < Wavefront::Cli
   end
 
   def delete_tag_handler(hosts, tags)
-    hosts ||= [Socket.gethostname]
+    hosts ||= Socket.gethostname
+    hosts = [hosts] if hosts.is_a?(String)
 
     hosts.each do |h|
       tags.each do |t|
-        puts "Removing tag '#{t}' from '#{h}'"
+        puts "Removing tag '#{t}' from '#{h}'" if verbose
         wf.delete_tag(h, t)
       end
     end
