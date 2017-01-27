@@ -49,7 +49,7 @@ module Wavefront
       [ options[:start_time], options[:end_time] ].each { |o| raise Wavefront::Exception::InvalidTimeFormat unless o.is_a?(Time) }
       raise Wavefront::Exception::InvalidGranularity unless GRANULARITIES.include?(granularity)
       raise Wavefront::Exception::InvalidResponseFormat unless FORMATS.include?(options[:response_format])
-      raise InvalidPrefixLength unless options[:prefix_length].is_a?(Fixnum)
+      raise InvalidPrefixLength unless options[:prefix_length].is_a?(Integer)
 
       args = {:params =>
               {:q => query, :g => granularity, :n => 'Unknown',
