@@ -1,4 +1,4 @@
-=begin 
+=begin
     Copyright 2015 Wavefront Inc.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 
 =end
 
-require 'spec_helper'
+require_relative '../spec_helper'
 require 'pathname'
 
 describe Wavefront::Alerting do
@@ -55,7 +55,7 @@ describe Wavefront::Alerting do
     end
 
     it 'makes API request with specified path' do
-      path = '/api/new_alerts' 
+      path = '/api/new_alerts'
       expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, path, "all?t=#{TEST_TOKEN}")}")
       @wave.all({ :path => path })
     end
@@ -73,7 +73,7 @@ describe Wavefront::Alerting do
     end
 
     it 'makes API request with both appended private tags and shared tags' do
-      private_tag = 'first' 
+      private_tag = 'first'
       shared_tag = 'second'
       expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}&customerTag=second&userTag=first")}")
       @wave.all({ :private_tags => private_tag, :shared_tags => shared_tag })
@@ -82,30 +82,29 @@ describe Wavefront::Alerting do
 
   describe '#active' do
     it 'requests all active alerts' do
-      expect(@wave).to receive(:get_alerts).with("active", {}) 
+      expect(@wave).to receive(:get_alerts).with("active", {})
       @wave.active
     end
   end
 
   describe '#snoozed' do
     it 'requests all snoozed alerts' do
-      expect(@wave).to receive(:get_alerts).with("snoozed", {}) 
+      expect(@wave).to receive(:get_alerts).with("snoozed", {})
       @wave.snoozed
     end
   end
 
   describe '#invalid' do
     it 'requests all invalid alerts' do
-      expect(@wave).to receive(:get_alerts).with("invalid", {}) 
+      expect(@wave).to receive(:get_alerts).with("invalid", {})
       @wave.invalid
     end
   end
 
   describe '#affected_by_maintenance' do
     it 'requests all affected_by_maintenance alerts' do
-      expect(@wave).to receive(:get_alerts).with("affected_by_maintenance", {}) 
+      expect(@wave).to receive(:get_alerts).with("affected_by_maintenance", {})
       @wave.affected_by_maintenance
     end
   end
-  
 end

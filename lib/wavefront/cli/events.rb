@@ -27,7 +27,8 @@ require 'socket'
 # in a timeseries API call.
 #
 class Wavefront::Cli::Events < Wavefront::Cli
-  attr_accessor :state_dir, :hosts, :hostname, :t_start, :t_end, :wf_event
+  attr_accessor :state_dir, :hosts, :hostname, :t_start, :t_end,
+                :wf_event
 
   include Wavefront::Constants
   include Wavefront::Mixins
@@ -43,8 +44,11 @@ class Wavefront::Cli::Events < Wavefront::Cli
     @hosts = prep_hosts(options[:host])
     @t_start = prep_time(:start)
     @t_end = prep_time(:end)
+    @noop = options[:noop]
 
-    @wf_event = Wavefront::Events.new(options[:token])
+    @wf_event = Wavefront::Events.new(
+      options[:token], options[:endpoint], options[:debug],
+      { verbose: options[:verbose], noop: options[:noop]})
 
     if options[:create]
       create_event_handler
@@ -77,7 +81,7 @@ class Wavefront::Cli::Events < Wavefront::Cli
       raise 'Cannot delete event.'
     end
 
-    puts 'Deleted event.'
+    puts 'Deleted event.' unless noop
   end
 
   def prep_time(t)
@@ -103,6 +107,8 @@ class Wavefront::Cli::Events < Wavefront::Cli
     # Wrapper around the method calls which actually create events.
     #
     output = create_event
+
+    return if noop
 
     unless options[:end] || options[:instant]
       create_state_dir
@@ -211,6 +217,7 @@ class Wavefront::Cli::Events < Wavefront::Cli
     #
     # Returns an array of [timestamp, event_name]
     #
+    return false unless state_dir.exist?
     list = state_dir.children
     list.select! { |f| f.basename.to_s.split('::').last == name } if name
     return false if list.length == 0
@@ -248,5 +255,14 @@ class Wavefront::Cli::Events < Wavefront::Cli
     end
 
     puts "Event state recorded at #{fname}."
+  end
+
+  def validate_opts
+    #
+    # the 'show' sub-command does not make an API call
+    #
+    return true if options[:show]
+    abort 'Please supply an API token.' unless options[:token]
+    abort 'Please supply an API endpoint.' unless options[:endpoint]
   end
 end

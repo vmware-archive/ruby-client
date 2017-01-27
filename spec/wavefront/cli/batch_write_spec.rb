@@ -1,7 +1,9 @@
 require 'pathname'
-require 'spec_helper'
+require_relative '../../spec_helper'
 
-opts = {}
+opts = {
+  proxy: 'wavefront.localnet',
+}
 
 describe '#run' do
 end

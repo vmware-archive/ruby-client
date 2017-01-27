@@ -14,55 +14,23 @@ See the License for the specific language governing permissions and
 
 =end
 
-require 'spec_helper'
-require 'pathname'
-require 'tempfile'
+require_relative '../spec_helper'
 
-# A sample config file with two profiles.
-#
-pf_src = %Q(
-[default]
-token = 12345678-abcd-1234-abcd-123456789012
-endpoint = metrics.wavefront.com
-format = human
-proxy = wavefront.localnet
-
-[other]
-token = abcdefab-0123-abcd-0123-abcdefabcdef
-endpoint = test.wavefront.com
-format = human
-)
+# Just test initialization
 
 describe Wavefront::Cli do
-
-  profile = Tempfile.new('wf_test_profile')
-  cf = profile.path
-  profile.write(pf_src)
-  profile.close
-
-  it 'does not complain when there is no config file' do
-    k = Wavefront::Cli.new({config: '/no/file', profile: 'default'}, false)
-    expect(k.load_profile).to be_kind_of(NilClass)
+  it 'raises an error if no token is set' do
+    wf = Wavefront::Cli.new({}, nil)
+    expect{wf.validate_opts}.to raise_exception(RuntimeError)
   end
 
-  it 'loads the specified profile' do
-    k = Wavefront::Cli.new({config: cf, profile: 'other'}, false)
-    pf = k.load_profile
-    expect(pf).not_to include('proxy')
-    expect(pf[:token]).to eq('abcdefab-0123-abcd-0123-abcdefabcdef')
+  it 'raises an error if no endpoint is set' do
+    wf = Wavefront::Cli.new({token: 'abcdef' }, nil)
+    expect{wf.validate_opts}.to raise_exception(RuntimeError)
   end
 
-  it 'loads the default when no profile is specified' do
-    k = Wavefront::Cli.new({config: cf}, false)
-    pf = k.load_profile
-    expect(pf[:proxy]).to eq('wavefront.localnet')
-    expect(pf[:token]).to eq('12345678-abcd-1234-abcd-123456789012')
-  end
-
-  it 'prefers config file values to command-line options' do
-    k = Wavefront::Cli.new({config: cf, format: 'graphite'}, false)
-    pf = k.load_profile
-    expect(pf[:format]).to eq('human')
-    expect(pf[:token]).to eq('12345678-abcd-1234-abcd-123456789012')
+  it 'does not raise an error if an endpoint and token are set' do
+    wf = Wavefront::Cli.new({token: 'abcdef', endpoint: 'wavefront' }, nil)
+    expect{wf.validate_opts}.to_not raise_exception
   end
 end

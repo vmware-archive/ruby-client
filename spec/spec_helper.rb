@@ -22,6 +22,7 @@ require 'wavefront/alerting'
 require 'wavefront/events'
 require 'wavefront/batch_writer'
 require 'wavefront/validators'
+require 'wavefront/opt_handler'
 require 'wavefront/cli'
 require 'wavefront/cli/alerts'
 require 'wavefront/cli/events'
@@ -78,4 +79,45 @@ end
 
 def concat_url(*args)
   'https://' + args.join('/').squeeze('/')
+end
+
+def raw(str)
+  #
+  # eval. I know. But some of the CLI tests dump raw Ruby hashes in the
+  # debug output. This parses them so you can check them. They'll be
+  # prefixed with 'POST' or 'GET'
+  #
+  eval(str.split[1..-1].join(' '))
+end
+
+def wf(args = '')
+  #
+  # Run the 'wavefront' CLI command, with arguments, and return a struct
+  # for easy access
+  #
+  ret = OpenStruct.new
+  env = {'RUBYLIB' => [LIB.to_s, ENV['RUBYLIB']].join(':') }
+
+  puts "testing #{WF} #{args}"
+  stdout, stderr, status = Open3.capture3(env, "#{WF} #{args}")
+
+  ret.status = status.exitstatus
+  ret.stdout_a = stdout.split("\n")
+  ret.stdout = stdout.strip
+  ret.stderr_a = stderr.split("\n")
+  ret.stderr = stderr.strip
+  ret
+end
+
+# A matcher that tells you whether you have a key=value setting in a query
+# string. Call it with have_element([:key, value])
+#
+RSpec::Matchers.define :have_element do |expected|
+  match do |str|
+    str.sub(/^\S+ /, '').sub(/^.*\?/, '').split('&').
+        each_with_object([]) do |e, aggr|
+      k, v = e.split('=')
+      aggr.<< [k.to_sym, v]
+    end.include?([expected[0].to_sym, URI.escape(expected[1].to_s)])
+  end
 end

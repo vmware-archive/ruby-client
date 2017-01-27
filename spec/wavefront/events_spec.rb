@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 
 =end
 
-require 'spec_helper'
+require_relative '../spec_helper'
 
 describe Wavefront::Events do
 

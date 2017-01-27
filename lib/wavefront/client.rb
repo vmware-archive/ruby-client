@@ -28,16 +28,17 @@ module Wavefront
     include Wavefront::Constants
     DEFAULT_PATH = '/chart/api'
 
-    attr_reader :headers, :base_uri
+    attr_reader :headers, :base_uri, :noop, :verbose
 
-    def initialize(token, host=DEFAULT_HOST, debug=false)
+    def initialize(token, host=DEFAULT_HOST, debug=false, options = {})
+      @verbose = options[:verbose]
+      @noop = options[:noop]
       @headers = {'X-AUTH-TOKEN' => token}
       @base_uri = URI::HTTPS.build(:host => host, :path => DEFAULT_PATH)
       debug(debug)
     end
 
     def query(query, granularity='m', options={})
-
       options[:end_time] ||= Time.now.utc
       options[:start_time] ||= options[:end_time] - DEFAULT_PERIOD_SECONDS
       options[:response_format] ||= DEFAULT_FORMAT
@@ -48,7 +49,7 @@ module Wavefront
       [ options[:start_time], options[:end_time] ].each { |o| raise Wavefront::Exception::InvalidTimeFormat unless o.is_a?(Time) }
       raise Wavefront::Exception::InvalidGranularity unless GRANULARITIES.include?(granularity)
       raise Wavefront::Exception::InvalidResponseFormat unless FORMATS.include?(options[:response_format])
-      raise InvalidPrefixLength unless options[:prefix_length].is_a?(Fixnum)
+      raise InvalidPrefixLength unless options[:prefix_length].is_a?(Integer)
 
       args = {:params =>
               {:q => query, :g => granularity, :n => 'Unknown',
@@ -62,11 +63,14 @@ module Wavefront
         args[:params].merge!(options[:passthru])
       end
 
+      puts "GET #{@base_uri.to_s}\nPARAMS #{args.to_s}" if (verbose || noop)
+
+      return if noop
+
       response = RestClient.get @base_uri.to_s, args
 
       klass = Object.const_get('Wavefront').const_get('Response').const_get(options[:response_format].to_s.capitalize)
       return klass.new(response, options)
-
     end
 
     private

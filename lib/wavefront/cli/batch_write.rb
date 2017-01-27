@@ -12,14 +12,23 @@ class Wavefront::Cli::BatchWrite < Wavefront::Cli
   include Wavefront::Constants
   include Wavefront::Mixins
 
+  def validate_opts
+    #
+    # Unlike all the API methods, we don't need a token here
+    #
+    abort 'Please supply a proxy endpoint.' unless options[:proxy]
+  end
+
   def run
-    raise 'Invalid format string.' unless valid_format?(options[:format])
+    unless valid_format?(options[:infileformat])
+      raise 'Invalid format string.'
+    end
 
     file = options[:'<file>']
     setup_opts(options)
 
-    if options.key?(:format)
-      setup_fmt(options[:format])
+    if options.key?(:infileformat)
+      setup_fmt(options[:infileformat])
     else
       setup_fmt
     end

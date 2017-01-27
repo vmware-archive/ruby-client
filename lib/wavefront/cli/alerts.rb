@@ -28,9 +28,11 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     raise 'Missing query.' if arguments.empty?
     query = arguments[0].to_sym
 
-    wfa = Wavefront::Alerting.new(@options[:token])
+    wfa = Wavefront::Alerting.new(@options[:token], @options[:endpoint],
+                                  @options[:debug], {
+      noop: @options[:noop], verbose: @options[:verbose]})
     valid_state?(wfa, query)
-    valid_format?(@options[:format].to_sym)
+    valid_format?(@options[:alertformat].to_sym)
     options = { host: @options[:endpoint] }
 
     if @options[:shared]
@@ -43,11 +45,12 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
 
     begin
       result = wfa.send(query, options)
-    rescue
+    rescue => e
+      puts e if @options[:debug]
       raise 'Unable to execute query.'
     end
 
-    format_result(result, @options[:format].to_sym)
+    format_result(result, @options[:alertformat].to_sym)
     exit
   end
 
@@ -56,6 +59,8 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     # Call a suitable method to display the output of the API call,
     # which is JSON.
     #
+    return if noop
+
     case format
     when :ruby
       pp result
@@ -83,11 +88,10 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     # Check the alert type we've been given is valid. There needs to
     # be a public method in the 'alerting' class for every one.
     #
-    s = wfa.public_methods(false).sort
-    s.delete(:token)
-    unless s.include?(state)
-      raise 'State must be one of: ' + s.each { |q| q.to_s }.join(', ') +
-        '.'
+    states = %w(active affected_by_maintenance all invalid snoozed)
+
+    unless states.include?(state.to_s)
+      raise "State must be one of: #{states.join(', ')}."
     end
     true
   end
@@ -120,7 +124,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
         else
           human_line(key, alert[key])
         end
-      end
+      end.<< ''
     end
   end
 
@@ -166,6 +170,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     #
     # hanging indent long lines to fit in an 80-column terminal
     #
+    return unless line
     line.gsub(/(.{1,#{cols - offset}})(\s+|\Z)/, "\\1\n#{' ' *
               offset}").rstrip
   end

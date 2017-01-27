@@ -23,10 +23,17 @@ module Wavefront
     include Wavefront::Mixins
     DEFAULT_PATH = '/api/events/'
 
-    attr_reader :headers
+    attr_reader :headers, :noop, :verbose, :endpoint
 
-    def initialize(token)
+    def initialize(token, host = DEFAULT_HOST, debug = false, options = {})
+      #
+      # Following existing convention, 'host' is the Wavefront API endpoint.
+      #
       @headers = { :'X-AUTH-TOKEN' => token }
+      @endpoint = host
+      debug(debug)
+      @noop = options[:noop]
+      @verbose = options[:verbose]
     end
 
     def create(payload = {}, options = {})
@@ -45,6 +52,13 @@ module Wavefront
       uri = create_uri(path: [DEFAULT_PATH, payload[:startTime],
                        payload[:name]].join('/').squeeze('/'))
 
+      if (verbose || noop)
+        puts "DELETE #{uri.to_s}"
+        puts "HEADERS #{headers}"
+      end
+
+      return if noop
+
       RestClient.delete(uri.to_s, headers)
     end
 
@@ -52,7 +66,7 @@ module Wavefront
       #
       # Build the URI we use to send a 'create' request.
       #
-      options[:host] ||= DEFAULT_HOST
+      options[:host] ||= endpoint
       options[:path] ||= DEFAULT_PATH
 
       URI::HTTPS.build(
@@ -84,7 +98,7 @@ module Wavefront
       #
       # Build the URI we use to send a 'close' request
       #
-      options[:host] ||= DEFAULT_HOST
+      options[:host] ||= endpoint
       options[:path] ||= DEFAULT_PATH
 
       URI::HTTPS.build(
@@ -94,6 +108,14 @@ module Wavefront
     end
 
     def make_call(uri, query)
+      if (verbose || noop)
+        puts "PUT #{uri.to_s}"
+        puts "QUERY #{query}"
+        puts "HEADERS #{headers}"
+      end
+
+      return if noop
+
       RestClient.post(uri.to_s, query, headers)
     end
 
