@@ -62,5 +62,39 @@ module Wavefront
     def uri_concat(*args)
       args.join('/').squeeze('/')
     end
+
+    def call_get(uri)
+      if (verbose || noop)
+        puts 'GET ' + uri.to_s
+        puts 'HEADERS ' + headers.to_s
+      end
+      return if noop
+      RestClient.get(uri.to_s, headers)
+    end
+
+    def call_post(uri, query = nil)
+      h = headers
+      if (verbose || noop)
+        puts 'POST ' + uri.to_s
+        puts 'QUERY ' + query if query
+        puts 'HEADERS ' + h.to_s
+      end
+      return if noop
+
+      RestClient.post(uri.to_s, query,
+                      h.merge(:'Content-Type' => 'text/plain',
+                              :Accept         => 'application/json'
+                             )
+                     )
+    end
+
+    def call_delete(uri)
+      if (verbose || noop)
+        puts 'DELETE ' + uri.to_s
+        puts 'HEADERS ' + headers.to_s
+      end
+      return if noop
+      RestClient.delete(uri.to_s, headers)
+    end
   end
 end
