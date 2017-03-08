@@ -107,24 +107,29 @@ describe 'alerts mode' do
     o = wf('alerts -n -c/nf -t token -E test.wavefront.com active')
     expect(o.status).to eq(0)
     expect(o.stderr).to be_empty
-    expect(o.stdout_a[-1]).to eq(
-      'GET https://test.wavefront.com/api/alert/active?t=token')
+    expect(o.stdout_a[-2]).to eq(
+      'GET https://test.wavefront.com/api/alert/active')
   end
 
   it 'performs a verbose noop with default config file options' do
     o = wf("alerts -n -c #{CF} active")
     expect(o.status).to eq(0)
     expect(o.stderr).to be_empty
+    expect(o.stdout_a[-2]).to eq(
+      'GET https://default.wavefront.com/api/alert/active')
     expect(o.stdout_a.last).to eq(
-      "GET https://default.wavefront.com/api/alert/active?t=#{DEF_TOKEN}")
+      "HEADERS {:\"X-AUTH-TOKEN\"=>\"#{DEF_TOKEN}\"}")
+
   end
 
   it 'performs a verbose noop with config file and CLI options' do
     o = wf("alerts -n -c #{CF} -E cli.wavefront.com active")
     expect(o.status).to eq(0)
     expect(o.stderr).to be_empty
+    expect(o.stdout_a[-2]).to eq(
+      'GET https://cli.wavefront.com/api/alert/active')
     expect(o.stdout_a.last).to eq(
-      "GET https://cli.wavefront.com/api/alert/active?t=#{DEF_TOKEN}")
+      "HEADERS {:\"X-AUTH-TOKEN\"=>\"#{DEF_TOKEN}\"}")
   end
 end
 
