@@ -87,6 +87,10 @@ alerts: %(
 Usage:
   #{ME} alerts [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
             [-f format] [-p tag] [ -s tag] <state>
+  #{ME} alerts export [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
+            [-f format] <timestamp>
+  #{ME} alerts import [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
+            <file>
 #{global_opts}
 Options:
   -E, --endpoint=URI       cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
