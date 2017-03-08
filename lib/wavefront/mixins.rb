@@ -96,5 +96,24 @@ module Wavefront
       return if noop
       RestClient.delete(uri.to_s, headers)
     end
+
+    def load_file(path)
+      #
+      # Give it a path to a file (as a string) and it will return the
+      # contents of that file as a Ruby object. Automatically detects
+      # JSON and YAML. Raises an exception if it doesn't look like
+      # either.
+      #
+      file = Pathname.new(path)
+      raise 'import file does not exist' unless file.exist?
+
+      if file.extname == '.json'
+        IO.read(file)
+      elsif file.extname == '.yaml' || file.extname == '.yml'
+        YAML.load(IO.read(file))
+      else
+        raise 'unsupported file format'
+      end
+    end
   end
 end

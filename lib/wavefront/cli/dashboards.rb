@@ -35,17 +35,6 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
     end
   end
 
-  def load_file(path)
-    file = Pathname.new(path)
-    raise 'import file does not exist' unless file.exist?
-
-    if file.extname == '.json'
-      IO.read(file)
-    elsif file.extname == '.yaml' || file.extname == '.yml'
-      YAML.load(IO.read(file))
-    end
-  end
-
   def clone_dash
     begin
       wfd.clone(options[:source], options[:'<new_id>'],
