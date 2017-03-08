@@ -27,11 +27,18 @@ module Wavefront
     end
 
     def import(schema, force = false)
+      #
+      # Imports a dashboard described as a JSON string (schema)
+      #
       qs = force ? nil : 'rejectIfExists=true'
       call_post(create_uri(qs: qs), schema, 'application/json')
     end
 
     def clone(source_id, dest_id, dest_name, source_ver = nil)
+      #
+      # Clone a dashboard. If source_ver is not truthy, the latest
+      # version of the source is used.
+      #
       qs = hash_to_qs(name: dest_name, url: dest_id)
       qs.<< "&v=#{source_ver}" if source_ver
 
