@@ -98,7 +98,7 @@ module Wavefront
         raise "missing field: #{f}" unless alert.key?(f.to_sym)
       end
 
-      unless %w(INFO SMOKE WARN SEVER).include?(alert[:severity])
+      unless %w(INFO SMOKE WARN SEVERE).include?(alert[:severity])
         raise 'invalid severity'
       end
 
@@ -169,7 +169,7 @@ module Wavefront
       options[:path] ||= ''
       options[:qs]   ||= nil
 
-      options[:qs] = nil if options[:qs].empty?
+      options[:qs] = nil if options[:qs] && options[:qs].empty?
 
       URI::HTTPS.build(
         host:  options[:host],

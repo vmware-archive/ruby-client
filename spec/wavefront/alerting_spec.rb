@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 
 require_relative '../spec_helper'
 require 'pathname'
+RES_DIR = Pathname.new(__FILE__).dirname + 'cli' + 'resources'
 
 describe Wavefront::Alerting do
   before do
@@ -103,6 +104,55 @@ describe Wavefront::Alerting do
       expect(@wave).to receive(:create_uri).with(path: "affected_by_maintenance", qs: "")
       expect(@wave).to receive(:call_get)
       @wave.affected_by_maintenance
+    end
+  end
+
+  describe '#import_to_create' do
+    it 'produces expected output from known input' do
+      raw = JSON.load(IO.read(RES_DIR + 'input_alert.json'))
+      out = @wave.import_to_create(raw)
+      p out
+      expect(out).to be_instance_of(Hash)
+      expect(out.keys).to match_array(
+        [:name, :condition, :minutes, :resolveMinutes, :notifications,
+         :severity, :sharedTags, :additionalInformation])
+      expect(out[:sharedTags]).to be_instance_of(Array)
+      expect(out[:minutes]).to be_instance_of(Fixnum)
+    end
+
+    it 'ignores extraneous fields' do
+      raw = JSON.load(IO.read(RES_DIR + 'input_alert.json'))
+      raw[:junk] = 'nonsense'
+      raw.delete('name')
+      out = @wave.import_to_create(raw)
+      expect(out).to be_instance_of(Hash)
+      expect(out.keys).not_to include(:junk)
+    end
+  end
+
+  describe '#create_alert' do
+    input = {:name=>"test1", :condition=>"ts(\"cpu\") > 0",
+             :minutes=>3, :notifications=>["slackboy@gmail.com",
+             "rob@sysdef.xyz"], :severity=>"INFO",
+             :resolveMinutes=>2, :sharedTags=>[],
+             :additionalInformation=>"some information"}
+
+    it 'makes a correct API call on good data' do
+      expect(@wave).to receive(:create_uri).with(path: 'create')
+      expect(@wave).to receive(:call_post)
+      out = @wave.create_alert(input)
+    end
+
+    it 'throws an error on bad severity data' do
+      input[:severity] = 'NOT_THAT_SERIOUS'
+       expect{@wave.create_alert(input)}.to raise_exception(
+         'invalid severity')
+    end
+
+    it 'throws an error on missing severity data' do
+      input.delete(:severity)
+       expect{@wave.create_alert(input)}.to raise_exception(
+         'missing field: severity')
     end
   end
 end
