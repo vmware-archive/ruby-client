@@ -26,7 +26,7 @@ module Wavefront
     DEFAULT_STRICT = true
     DEFAULT_OBSOLETE_METRICS = false
     FORMATS = [ :raw, :ruby, :graphite, :highcharts, :human ]
-    ALERT_FORMATS = [:ruby, :json, :human]
+    ALERT_FORMATS = [:ruby, :json, :human, :yaml]
     SOURCE_FORMATS = [:ruby, :json, :human]
     DASH_FORMATS = [:json, :human, :yaml]
     DEFAULT_ALERT_FORMAT = :human
