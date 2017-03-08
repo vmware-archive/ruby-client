@@ -72,7 +72,7 @@ module Wavefront
       RestClient.get(uri.to_s, headers)
     end
 
-    def call_post(uri, query = nil)
+    def call_post(uri, query = nil, ctype = 'text/plain')
       h = headers
       if (verbose || noop)
         puts 'POST ' + uri.to_s
@@ -82,7 +82,7 @@ module Wavefront
       return if noop
 
       RestClient.post(uri.to_s, query,
-                      h.merge(:'Content-Type' => 'text/plain',
+                      h.merge(:'Content-Type' => ctype,
                               :Accept         => 'application/json'
                              )
                      )

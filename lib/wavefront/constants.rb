@@ -28,8 +28,10 @@ module Wavefront
     FORMATS = [ :raw, :ruby, :graphite, :highcharts, :human ]
     ALERT_FORMATS = [:ruby, :json, :human]
     SOURCE_FORMATS = [:ruby, :json, :human]
+    DASH_FORMATS = [:json, :human, :yaml]
     DEFAULT_ALERT_FORMAT = :human
     DEFAULT_SOURCE_FORMAT = :human
+    DEFAULT_DASH_FORMAT = :human
     GRANULARITIES = %w( s m h d )
     EVENT_STATE_DIR = Pathname.new('/var/tmp/wavefront/events')
     EVENT_LEVELS = %w(info smoke warn severe)
@@ -51,7 +53,8 @@ module Wavefront
       format:       DEFAULT_FORMAT,        # ts output format
       alertformat:  DEFAULT_ALERT_FORMAT,  # alert command output format
       infileformat: DEFAULT_INFILE_FORMAT, # batch writer file format
-      sourceformat: DEFAULT_SOURCE_FORMAT, # source more output format
+      sourceformat: DEFAULT_SOURCE_FORMAT, # source output format
+      dashformat:   DEFAULT_DASH_FORMAT,   # dashboard output format
     }.freeze
   end
 end
