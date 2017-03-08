@@ -44,66 +44,64 @@ describe Wavefront::Alerting do
 
   describe '#get_alerts' do
     it 'makes API request with default options' do
-      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}")}")
+      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, 'all')}", {:"X-AUTH-TOKEN"=>"test"})
       @wave.all
     end
 
     it 'makes API request with specified host' do
       host = 'madeup.wavefront.com'
-      expect(RestClient).to receive(:get).with("https://#{File.join(host, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}")}")
+      expect(RestClient).to receive(:get).with("https://#{File.join(host, Wavefront::Alerting::DEFAULT_PATH, 'all')}", {:"X-AUTH-TOKEN"=>"test"})
       @wave.all({ :host => host })
-    end
-
-    it 'makes API request with specified path' do
-      path = '/api/new_alerts'
-      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, path, "all?t=#{TEST_TOKEN}")}")
-      @wave.all({ :path => path })
     end
 
     it 'makes API request with appended shared tags' do
       tags = [ 'first', 'second' ]
-      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}&customerTag=first&customerTag=second")}")
+      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?customerTag=first&customerTag=second")}", {:"X-AUTH-TOKEN"=>"test"})
       @wave.all({ :shared_tags => tags })
     end
 
     it 'makes API request with appended private tags' do
       tags = [ 'first', 'second' ]
-      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}&userTag=first&userTag=second")}")
+      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?userTag=first&userTag=second")}", {:"X-AUTH-TOKEN"=>"test"})
       @wave.all({ :private_tags => tags })
     end
 
     it 'makes API request with both appended private tags and shared tags' do
       private_tag = 'first'
       shared_tag = 'second'
-      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?t=#{TEST_TOKEN}&customerTag=second&userTag=first")}")
+      expect(RestClient).to receive(:get).with("https://#{File.join(Wavefront::Alerting::DEFAULT_HOST, Wavefront::Alerting::DEFAULT_PATH, "all?customerTag=second&userTag=first")}", {:"X-AUTH-TOKEN"=>"test"})
       @wave.all({ :private_tags => private_tag, :shared_tags => shared_tag })
     end
   end
 
   describe '#active' do
     it 'requests all active alerts' do
-      expect(@wave).to receive(:get_alerts).with("active", {})
+      expect(@wave).to receive(:create_uri).with(path: "active", qs: "")
+      expect(@wave).to receive(:call_get)
       @wave.active
     end
   end
 
   describe '#snoozed' do
     it 'requests all snoozed alerts' do
-      expect(@wave).to receive(:get_alerts).with("snoozed", {})
+      expect(@wave).to receive(:create_uri).with(path: "snoozed", qs: "")
+      expect(@wave).to receive(:call_get)
       @wave.snoozed
     end
   end
 
   describe '#invalid' do
     it 'requests all invalid alerts' do
-      expect(@wave).to receive(:get_alerts).with("invalid", {})
+      expect(@wave).to receive(:create_uri).with(path: "invalid", qs: "")
+      expect(@wave).to receive(:call_get)
       @wave.invalid
     end
   end
 
   describe '#affected_by_maintenance' do
     it 'requests all affected_by_maintenance alerts' do
-      expect(@wave).to receive(:get_alerts).with("affected_by_maintenance", {})
+      expect(@wave).to receive(:create_uri).with(path: "affected_by_maintenance", qs: "")
+      expect(@wave).to receive(:call_get)
       @wave.affected_by_maintenance
     end
   end

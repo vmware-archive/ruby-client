@@ -6,7 +6,7 @@ require 'erb'
 # Valid alert states as defined in alerting.rb
 #
 states = %w(active affected_by_maintenance all invalid snoozed)
-formats = %w(ruby json human)
+formats = %w(ruby json human yaml)
 
 opts = {
   token:    TEST_TOKEN,
@@ -110,7 +110,7 @@ describe Wavefront::Cli::Alerts do
     k = Wavefront::Cli::Alerts.new(opts, ['all'])
     it 'prints in the correct format' do
       expect(k.human_line_created('time', 1469804504000)).to eq(
-        "time                  #{Time.at(1469804504)}")
+        "time                  #{Time.at(1469804504)} (1469804504000)")
     end
   end
 
