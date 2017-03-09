@@ -108,7 +108,7 @@ module Wavefront
       raise 'import file does not exist' unless file.exist?
 
       if file.extname == '.json'
-        IO.read(file)
+        JSON.parse(IO.read(file))
       elsif file.extname == '.yaml' || file.extname == '.yml'
         YAML.load(IO.read(file))
       else
