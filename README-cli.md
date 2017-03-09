@@ -102,29 +102,54 @@ $ ./wavefront  ts -f human -m --start=18:00 --end=20:00 'events()'
 Output is different for event queries.  The columns are: start time -> end
 time, (duration), severity, event type, [source(s)], details.
 
-## `alerts` Mode: Retrieving Alert Data
+## `alerts` Mode: Retrieving and Importing Alert Data
 
-The `alerts` command lets you view alerts. It does not currently
-allow creation and removal of alerts. Alert data can be presented in
-a number of formats, but defaults to a human-readable form. If you
-wish to parse the output, please use the `ruby` or `json`
-formatters.
+The `alerts` command lets you view, export, and import alerts. It
+does not currently modification removal, or reacting to alerts, as
+these actions are not supported by the v1 API.
+
+Alerts can be presented in a number of formats, but defaults to a
+human-readable form. If you wish to parse the output, please use the
+`ruby`, `yaml` or `json` formatters.
 
 ```
 Usage:
-  wavefront alerts [-D] [-c file] [-P profile] [-E endpoint] [-t token] [-V]
+  wavefront alerts [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
             [-f format] [-p tag] [ -s tag] <state>
+  wavefront alerts export [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
+            [-f format] <timestamp>
+  wavefront alerts import [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
+            <file>
+
+Global options:
+  -c, --config=FILE    path to configuration file [/home/rob/.wavefront]
+  -P, --profile=NAME   profile in configuration file [default]
+  -D, --debug          enable debug mode
+  -n, --noop           don't perform API calls
+  -V, --verbose        be verbose
+  -h, --help           show this message
 
 Options:
   -E, --endpoint=URI       cluster endpoint [metrics.wavefront.com]
   -t, --token=TOKEN        Wavefront authentication token
-  -f, --alertformat=STRING output format (ruby, json, human)
+  -f, --alertformat=STRING output format (ruby, json, human, yaml)
                            []
   -p, --private=TAG        retrieve only alerts with named private tags,
                            comma delimited.
   -s, --shared=TAG         retrieve only alerts with named shared tags,
                            comma delimited.
 ```
+
+When exporting an alert, you must refer to it my its millisecond
+timestamp. This value is in the `created` field when you view an
+alert as `json` or `YAML`, and it is shown in brackets on the
+`created` line if you use `human` output.
+
+Due to v1 API limitations, not all an alert's properties will
+survive the import/export process.
+
+Imports can only be alerted from a file. Importing from stdin is
+currently unsupported.
 
 ### Examples
 
@@ -157,8 +182,21 @@ severity              WARN
 Show alerts currently firing, in JSON format:
 
 ```
-$ wavefront alerts -P sysdef --format ruby active
+$ wavefront alerts -P sysdef --format json active
 "[{\"customerTagsWithCounts\":{},\"userTagsWithCounts\":{},\"created\":1459508340708,\"name\":\"Point Rate\",\"conditionQBEnabled\":false,\"displayExpressionQBEnabled\":false,\"condition\":\"sum(deriv(ts(~collector.points.valid))) > 50000\",\"displayExpression\":\"sum(deriv(ts(~collector.points.valid)))\",\"minutes\":5,\"target\":\"alerts@company.com,\",\"event\":{\"name\":\"Point Rate\",\"startTime\":1467049323203,\"annotations\":{\"severity\":\"severe\",\"type\":\"alert\",\"created\":\"1459508340708\",\"target\":\"alerts@company.com,\"},\"hosts\":[\"\"],\"table\":\"sysdef\"},\"failingHostLabelPairs\":[{\"label\":\"\",\"observed\":5,\"firing\":5}],\"updated\":1467049317802,\"severity\":\"SEVERE\",\"additionalInformation\":\"We have exceeded our agreed point rate.\",\"activeMaintenanceWindows\":[],\"inMaintenanceHostLabelPairs\":[],\"prefiringHostLabelPairs\":[],\"alertStates\":[\"ACTIVE\"],\"inTrash\":false,\"numMetricsUsed\":1,\"numHostsUsed\":1}]"
+```
+
+Export an alert from your default account, in JSON format:
+
+```
+$ wavefront alerts export -f json 1488995981076 >my_alert.json
+```
+
+and re-import it:
+
+```
+$ wavefront alerts import my_alert.json
+Alert imported.
 ```
 
 ## `event` Mode: Opening and Closing Events
@@ -472,6 +510,121 @@ hidden                   339
 physical                 10
 zone                     363
 ```
+
+## `dashboard` Mode:
+
+The `dashboard` command implements all of the v1 API's `dashboard`
+paths.
+
+```
+Usage:
+  wavefront dashboard list [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-f format] [-t token] [-T tag...] [-p tag...] [-a]
+  wavefront dashboard import [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-f format] [-F] <file>
+  wavefront dashboard export [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-f format] [-v version] <dashboard_id>
+  wavefront dashboard create [-DnV] [-c file] [-P profile] [-E endpoint]
+           <dashboard_id> <name>
+  wavefront dashboard clone [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-v version] -s source_id <new_id> <new_name>
+  wavefront dashboard delete [-DnV] [-c file] [-P profile] [-E endpoint]
+           <dashboard_id>
+  wavefront dashboard undelete [-DnV] [-c file] [-P profile] [-E endpoint]
+           <dashboard_id>
+  wavefront dashboard history [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-f format] [-S version] [-L limit] <dashboard_id>
+```
+
+Dashboard IDs are the same as their `url` fields when listed or exported.
+
+Deleting a dashboard once will move it to "trash". Deleting a second
+time removes it for ever. Dashboards can be recovered from the trash
+with the `undelete` command.
+
+Listing dashboards with `-f human` will not ordinarily display
+dashboards in the trash. Supplying the `-a` option will list all
+dashboards, and trashed ones will have `(in trash)` appended to
+their name field. Listing dashboards in a machine-parseable format
+does not do this filtering.
+
+When cloning a dashboard you may use the `-v` flag to clone from a
+specific version. Without `-v` the current dashboard is cloned.
+
+If your dashboard output format, defined either by the `-f` flag or
+the `dashformat` config-file setting is `human`, and you use
+`dashboard export`, the output format will silently switch to JSON
+for that one command.
+
+Importing a dashboard will fail if a dashboard with the same url
+already exists. If  you supply the `-F` flag, the existing dashboard
+will be overwritten.
+
+Dashboards can be imported from YAML or JSON files, but not
+currently from standard in. The file format is automatically
+detected.
+
+### Examples
+
+List active dashboards in a human-readable form:
+
+```
+$ wavefront dashboard list -f human
+ID                               NAME
+S3                               S3
+box                              how busy is box?
+discogs                          discogs data
+internal_metrics                 Internal Metrics
+intro-anomaly-detection-series-1 Intro: Use Case: Anomaly Detection
+Series - Part 1
+intro-code-push-example          Intro: Use Case: Code Push Event
+...
+```
+
+Show the modification history of a dashboard, in human-readable
+form:
+
+```
+$ wavefront dashboard history shark-overview
+25  2016-10-01 16:08:29 +0100 (slackboy@gmail.com)
+      Dashboard Section: Incoming Chart added
+      Chart: swapping events in Section: Memory updated
+24  2016-10-01 16:06:25 +0100 (slackboy@gmail.com)
+      Chart: swapping events in Section: Memory updated
+23  2016-10-01 15:35:39 +0100 (slackboy@gmail.com)
+      Chart: SMF services added to Section: System Health
+      Chart: ZFS ARC in Section: ZFS updated
+22  2016-10-01 15:31:18 +0100 (slackboy@gmail.com)
+      Chart: ZFS ARC in Section: ZFS updated
+21  2016-10-01 15:30:57 +0100 (slackboy@gmail.com)
+      Dashboard Section: Incoming Chart removed
+      Dashboard Section: Memory added
+      Dashboard Section: Memory added
+20  2016-10-01 15:30:07 +0100 (slackboy@gmail.com)
+      Chart: swapping events added to Section: Incoming Chart
+19  2016-10-01 15:25:40 +0100 (slackboy@gmail.com)
+      Dashboard Section: Incoming Chart added
+      Chart: ZFS ARC in Section: ZFS updated
+...
+```
+
+The first column is the version of the dashboard.
+
+Export a dashboard to a JSON file
+
+```
+$ wavefront dashboard export -f json shark-overview >shark_overview.json
+```
+
+And import it back in
+```
+$ wavefront dashboard import shark_overview.json
+```
+
+### Caveats
+
+It is not currently possible to delete the example dashboards
+supplied by Wavefront. This is not the fault of the CLI or SDK.
 
 ## Notes on Options
 
