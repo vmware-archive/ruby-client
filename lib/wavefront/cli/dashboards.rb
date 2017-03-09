@@ -28,7 +28,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
 
   def import_dash
     begin
-      wfd.import(load_file(options[:'<file>']), options[:force])
+      wfd.import(load_file(options[:'<file>']).to_json, options[:force])
       puts 'Dashboard imported'
     rescue RestClient::BadRequest
       raise '400 error: dashboard probably exists, and force not used'
@@ -86,7 +86,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
 
   def export_dash
     resp = wfd.export(options[:'<dashboard_id>'], options[:version] || nil)
-
+    options[:dashformat] = :json if options[:dashformat] == :human
     display_resp(resp)
   end
 
@@ -115,18 +115,28 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
 
   def human_history(resp)
     resp.each do |rev|
-      puts ('%-3s%s%s (%s)' % [rev['version'], Time.at(rev['update_time'].to_i / 1000), rev['change_description'], rev['user']])
+      puts ('%-4s%s (%s)' % [rev['version'],
+                             Time.at(rev['update_time'].to_i / 1000),
+                             rev['update_user']])
+
+      next unless rev['change_description']
+      rev['change_description'].each { |desc| puts '      ' + desc }
     end
   end
 
   def human_list(resp)
     #
-    # For now, just list the names and IDs. I promise to improve this.
+    # Simply list the dashboards we have. If the user wants more
     #
-    puts ('%-22s%s' % ['NAME', 'ID'])
+    max_id_width = resp.map{ |s| s['url'].size }.max
+
+    puts ("%-#{max_id_width + 1}s%s" % ['ID', 'NAME'])
 
     resp.each do |dash|
-       puts ('%-22s%s' % [dash['name'], dash['url']])
+      next if !options[:all] && dash['isTrash']
+      line = "%-#{max_id_width + 1}s%s" % [dash['url'], dash['name']]
+      line.<< ' (in trash)' if dash['isTrash']
+      puts line
     end
   end
 end
