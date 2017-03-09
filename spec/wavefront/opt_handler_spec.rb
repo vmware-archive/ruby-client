@@ -21,8 +21,6 @@ require 'socket'
 # DEFAULT_OPTS come from the real constants.rb file
 
 describe Wavefront::OptHandler do
-  config_file = Pathname.new(__FILE__).dirname + 'resources' + 'conf.yaml'
-
   it 'uses defaults if nothing else is supplied' do
     opts = Wavefront::OptHandler.new(Pathname.new('/nofile'), {}).opts
 
@@ -47,7 +45,7 @@ describe Wavefront::OptHandler do
   end
 
   it 'ensures default config file values override defaults' do
-    opts = Wavefront::OptHandler.new(config_file, {}).opts
+    opts = Wavefront::OptHandler.new(CF, {}).opts
 
     expect(opts.class).to be(Hash)
     expect(opts[:endpoint]).to eq('default.wavefront.com')
@@ -57,7 +55,7 @@ describe Wavefront::OptHandler do
   end
 
   it 'ensures alternate stanza config file values override defaults' do
-    opts = Wavefront::OptHandler.new(config_file, {profile: 'other'}).opts
+    opts = Wavefront::OptHandler.new(CF, {profile: 'other'}).opts
 
     expect(opts.class).to be(Hash)
     expect(opts[:endpoint]).to eq('other.wavefront.com')
@@ -72,7 +70,7 @@ describe Wavefront::OptHandler do
       sourceformat: 'ruby',
     }
 
-    opts = Wavefront::OptHandler.new(config_file, cli_opts).opts
+    opts = Wavefront::OptHandler.new(CF, cli_opts).opts
 
     expect(opts.class).to be(Hash)
     expect(opts[:endpoint]).to eq('cli.wavefront.com')

@@ -16,7 +16,6 @@ See the License for the specific language governing permissions and
 
 require_relative '../spec_helper'
 require 'pathname'
-RES_DIR = Pathname.new(__FILE__).dirname + 'cli' + 'resources'
 
 describe Wavefront::Alerting do
   before do
