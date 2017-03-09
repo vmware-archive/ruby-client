@@ -105,14 +105,14 @@ module Wavefront
       # either.
       #
       file = Pathname.new(path)
-      raise 'import file does not exist' unless file.exist?
+      raise 'Import file does not exist.' unless file.exist?
 
       if file.extname == '.json'
         JSON.parse(IO.read(file))
       elsif file.extname == '.yaml' || file.extname == '.yml'
         YAML.load(IO.read(file))
       else
-        raise 'unsupported file format'
+        raise 'Unsupported file format.'
       end
     end
   end
