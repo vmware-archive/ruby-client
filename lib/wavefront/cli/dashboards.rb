@@ -29,7 +29,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   def import_dash
     begin
       wfd.import(load_file(options[:'<file>']).to_json, options[:force])
-      puts 'Dashboard imported'
+      puts 'Dashboard imported' unless options[:noop]
     rescue RestClient::BadRequest
       raise '400 error: dashboard probably exists, and force not used'
     end
@@ -37,9 +37,9 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
 
   def clone_dash
     begin
-      wfd.clone(options[:source], options[:'<new_id>'],
+      wfd.clone(options[:'<source_id>'], options[:'<new_id>'],
                 options[:'<new_name>'], options[:version])
-      puts 'Dashboard cloned'
+      puts 'Dashboard cloned' unless options[:noop]
     rescue RestClient::BadRequest
       raise '400 error: either target exists or source does not'
     end
@@ -48,7 +48,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   def history_dash
     begin
       resp = wfd.history(options[:'<dashboard_id>'],
-                        options[:start] || nil,
+                        options[:start] || 100,
                         options[:limit] || nil)
     rescue RestClient::ResourceNotFound
       raise 'Dashboard does not exist'
@@ -60,7 +60,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   def undelete_dash
     begin
       resp = wfd.undelete(options[:'<dashboard_id>'])
-      puts 'dashboard undeleted'
+      puts 'dashboard undeleted' unless options[:noop]
     rescue RestClient::ResourceNotFound
       raise 'Dashboard does not exist'
     end
@@ -69,7 +69,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   def delete_dash
     begin
       resp = wfd.delete(options[:'<dashboard_id>'])
-      puts 'dashboard deleted'
+      puts 'dashboard deleted' unless options[:noop]
     rescue RestClient::ResourceNotFound
       raise 'Dashboard does not exist'
     end
@@ -78,7 +78,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   def create_dash
     begin
       resp = wfd.create(options[:'<dashboard_id>'], options[:'<name>'])
-      puts 'dashboard created'
+      puts 'dashboard created' unless options[:noop]
     rescue RestClient::BadRequest
       raise '400 error: dashboard probably exists'
     end
@@ -97,9 +97,15 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   end
 
   def display_resp(resp, human_method = nil)
+    return if options[:noop]
+
     case options[:dashformat].to_sym
     when :json
-      puts resp
+      if resp.is_a?(String)
+        puts resp
+      else
+        puts resp.to_json
+      end
     when :yaml
       puts resp.to_yaml
     when :human

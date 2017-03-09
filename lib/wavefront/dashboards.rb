@@ -42,12 +42,11 @@ module Wavefront
       qs = hash_to_qs(name: dest_name, url: dest_id)
       qs.<< "&v=#{source_ver}" if source_ver
 
-      call_post(create_uri(
-        path:  uri_concat(source_id, 'clone')), qs,
-       'application/x-www-form-urlencoded')
+      call_post(create_uri(path: uri_concat(source_id, 'clone')), qs,
+                           'application/x-www-form-urlencoded')
     end
 
-    def history(id, start = nil, limit = nil)
+    def history(id, start = 100, limit = nil)
       qs = "start=#{start}"
       qs.<< "&limit=#{limit}" if limit
 
@@ -77,7 +76,8 @@ module Wavefront
     end
 
     def export(id, version = nil)
-      call_get(create_uri(path: id))
+      resp = call_get(create_uri(path: id)) || '{}'
+      JSON.parse(resp)
     end
 
     def create(id, name)

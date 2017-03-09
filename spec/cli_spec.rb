@@ -23,11 +23,6 @@ require 'uri'
 require_relative './spec_helper'
 require 'wavefront/client/version'
 
-ROOT = Pathname.new(__FILE__).dirname.parent
-WF = ROOT + 'bin' + 'wavefront'
-LIB = ROOT + 'lib'
-CF = ROOT + 'spec' + 'wavefront' + 'resources' + 'conf.yaml'
-
 # Things from the sample config file, for shorthand
 #
 DEF_TOKEN = '12345678-abcd-1234-abcd-123456789012'
@@ -48,6 +43,266 @@ TIME = {
   }
 }
 
+describe 'dashboard mode' do
+=begin
+  cmds = %W(list import export create clone delete undelete
+            history).each do |cmd|
+    it "#{cmd} fails with no token if there is no token" do
+      args = 'arg1'
+      args = '' if cmd == 'list'
+      args = 'arg1 arg2 arg3' if cmd == 'clone'
+      args = 'arg1 arg2' if cmd == 'create'
+      o = wf("dashboard #{cmd} -c/nf #{args}")
+      expect(o.status).to eq(1)
+      expect(o.stderr).to eq(
+        'dashboard query failed. Please supply an API token.')
+      expect(o.stdout).to eq(
+        "config file '/nf' not found. Taking options from command-line.")
+    end
+  end
+
+  describe 'list subcommand' do
+    it 'performs a verbose noop with default options' do
+      o = wf('dashboard -c /nf -n -t token list')
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+      expect(o.stdout_a[-2]).to match(
+        'GET https://metrics.wavefront.com/api/dashboard')
+      expect(o.stdout).to match(/Taking options from command-line/)
+    end
+
+    it 'performs a verbose noop with default config file options' do
+      o = wf("dashboard -c #{CF} -n -T tag1 list")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-1]).to eq(
+        "HEADERS {:\"X-AUTH-TOKEN\"=>\"#{DEF_TOKEN}\"}")
+      expect(o.stdout_a[-2]).to start_with(
+        'GET https://default.wavefront.com/api/dashboard/')
+      expect(o.stdout_a[-2]).to have_element([:customerTag, 'tag1'])
+      expect(o.stdout).to_not match(/Taking options from command-line/)
+    end
+
+    it 'performs a verbose noop with config file and CLI options' do
+      o = wf("dashboard -c #{CF} -P other -n list -a")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"abcdefab-0123-abcd-0123-abcdefabcdef"}')
+      expect(o.stdout_a[-2]).to start_with(
+        'GET https://other.wavefront.com/api/dashboard/')
+      expect(o.stdout).to_not match(/Taking options from command-line/)
+    end
+  end
+
+  describe 'import subcommand' do
+    it 'errors safely on a non-existent file' do
+      o = wf("dashboard -c #{CF} -t token import /no/such/file")
+      expect(o.stdout).to be_empty
+      expect(o.status).to eq(1)
+      expect(o.stderr).to eq(
+        'dashboard query failed. Import file does not exist.')
+    end
+
+    it 'errors safely on an unsupported file type' do
+      o = wf("dashboard -c #{CF} -t token import #{RES_DIR +
+             'sample_dash.txt'}")
+      expect(o.stdout).to be_empty
+      expect(o.status).to eq(1)
+      expect(o.stderr).to eq(
+        'dashboard query failed. Unsupported file format.')
+    end
+
+    it 'performs a verbose no-op with a JSON import file' do
+      o = wf("dashboard -c #{CF} -n -t token import #{RES_DIR +
+             'sample_dash.json'}")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://default.wavefront.com/api/dashboard/?rejectIfExists=true')
+      expect(o.stdout_a[-2]).to start_with(
+        'QUERY {"customer":"sysdef","url":"internal_metrics"')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose no-op with a YAML import file' do
+      o = wf("dashboard -c #{CF} -P other -n -F import #{RES_DIR +
+             'sample_dash.yaml'}")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://other.wavefront.com/api/dashboard/')
+      expect(o.stdout_a[-2]).to start_with(
+        'QUERY {"customer":"sysdef","url":"internal_metrics"')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"abcdefab-0123-abcd-0123-abcdefabcdef"}')
+    end
+  end
+
+  describe 'export subcommand' do
+    it 'performs a verbose no-op with options' do
+      o = wf("dashboard -E endpoint.wavefront.com -n -t token export mydash")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('GET ' \
+        'https://endpoint.wavefront.com/api/dashboard/mydash')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose no-op with a config file' do
+      o = wf("dashboard -c #{CF} -n export mydash")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('GET ' \
+        'https://default.wavefront.com/api/dashboard/mydash')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"12345678-abcd-1234-abcd-123456789012"}')
+    end
+  end
+
+  describe 'create subcommand' do
+    it 'performs a verbose no-op with defaults' do
+      o = wf("dashboard -t token -n create test_id \"test name\"")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://metrics.wavefront.com/api/dashboard/test_id/create')
+      expect(o.stdout_a[-2]).to eq('QUERY name=test%20name')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose no-op with a config file' do
+      o = wf("dashboard -c #{CF} -P other -n create test_id \"test name\"")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://other.wavefront.com/api/dashboard/test_id/create')
+      expect(o.stdout_a[-2]).to eq('QUERY name=test%20name')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"abcdefab-0123-abcd-0123-abcdefabcdef"}')
+    end
+  end
+
+  describe 'clone subcommand' do
+    it 'performs a verbose no-op with defaults' do
+      o = wf('dashboard clone -t token -n src_id new_id "new name"')
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://metrics.wavefront.com/api/dashboard/src_id/clone')
+      expect(o.stdout_a[-2]).to eq('QUERY name=new%20name&url=new_id')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose no-op with config file' do
+      o = wf("dashboard clone -c #{CF} -n src_id new_id 'new name'")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://default.wavefront.com/api/dashboard/src_id/clone')
+      expect(o.stdout_a[-2]).to eq('QUERY name=new%20name&url=new_id')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"12345678-abcd-1234-abcd-123456789012"}')
+    end
+
+    it 'performs a verbose no-op with options and config file' do
+      o = wf("dashboard clone -E endpoint.wavefront.com -c #{CF} " \
+             '-v 14 -P other -n src_id new_id "new name"')
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://endpoint.wavefront.com/api/dashboard/src_id/clone')
+      expect(o.stdout_a[-2]).to eq('QUERY name=new%20name&url=new_id&v=14')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"abcdefab-0123-abcd-0123-abcdefabcdef"}')
+    end
+  end
+
+  describe 'delete subcommand' do
+    it 'performs a verbose no-op with options ' do
+      o = wf(
+        'dashboard -E endpoint.wavefront.com -t token -n delete mydash')
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('POST ' \
+        'https://endpoint.wavefront.com/api/dashboard/mydash/delete')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose no-op with a config file' do
+      o = wf("dashboard -c #{CF} -n delete mydash")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('POST ' \
+        'https://default.wavefront.com/api/dashboard/mydash/delete')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"12345678-abcd-1234-abcd-123456789012"}')
+    end
+  end
+
+  describe 'undelete subcommand' do
+    it 'performs a verbose no-op with options ' do
+      o = wf(
+        'dashboard -E endpoint.wavefront.com -t token -n undelete mydash')
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('POST ' \
+        'https://endpoint.wavefront.com/api/dashboard/mydash/undelete')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose no-op with a config file' do
+      o = wf("dashboard -c #{CF} -n undelete mydash")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('POST ' \
+        'https://default.wavefront.com/api/dashboard/mydash/undelete')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"12345678-abcd-1234-abcd-123456789012"}')
+    end
+  end
+
+=end
+
+  describe 'history subcommand' do
+    it 'performs a verbose no-op with no options' do
+      o = wf('dashboard -t token -n history mydash')
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('GET https://metrics.wavefront.com/' \
+        'api/dashboard/mydash/history?start=100')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+  end
+
+  describe 'history subcommand' do
+    it 'performs a verbose no-op with config file' do
+      o = wf("dashboard -c #{CF} -S 10 -n history mydash")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('GET https://default.wavefront.com/' \
+        'api/dashboard/mydash/history?start=10')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"12345678-abcd-1234-abcd-123456789012"}')
+    end
+  end
+
+  describe 'history subcommand' do
+    it 'performs a verbose no-op with config file and options' do
+      o = wf("dashboard -c #{CF} -P other -S 10 -L 5 -n history mydash")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to eq('GET https://other.wavefront.com/' \
+        'api/dashboard/mydash/history?start=10&limit=5')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"abcdefab-0123-abcd-0123-abcdefabcdef"}')
+    end
+
+  end
+end
+
+=begin
 describe 'usage' do
   commands = %w(alerts event source ts write)
 
@@ -586,4 +841,4 @@ describe 'ts mode' do
     expect(q[:params][:g]).to eq('m')
     expect(q[:params][:q]).to eq('ts(dev.cli.test)')
   end
-end
+=end
