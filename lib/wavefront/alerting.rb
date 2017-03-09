@@ -150,13 +150,17 @@ module Wavefront
     def mk_qs(options)
       query = []
 
-      query.<< (list_of_tags(options[:shared_tags]).map do |t|
-        "customerTag=#{t}"
-      end.join('&')) if options[:shared_tags]
+      if options[:shared_tags]
+        query.push(list_of_tags(options[:shared_tags]).map do |t|
+          "customerTag=#{t}"
+        end.join('&'))
+      end
 
-      query.<< (list_of_tags(options[:private_tags]).map do |t|
-        "userTag=#{t}"
-      end.join('&')) if options[:private_tags]
+      if options[:private_tags]
+        query.push(list_of_tags(options[:private_tags]).map do |t|
+          "userTag=#{t}"
+        end.join('&'))
+      end
 
       query.join('&')
     end
