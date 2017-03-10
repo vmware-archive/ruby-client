@@ -106,7 +106,7 @@ module Wavefront
       if file.extname == '.json'
         JSON.parse(IO.read(file))
       elsif file.extname == '.yaml' || file.extname == '.yml'
-        YAML.safe_load(IO.read(file))
+        YAML.load(IO.read(file))
       else
         raise 'Unsupported file format.'
       end
