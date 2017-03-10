@@ -44,7 +44,6 @@ TIME = {
 }
 
 describe 'dashboard mode' do
-=begin
   cmds = %W(list import export create clone delete undelete
             history).each do |cmd|
     it "#{cmd} fails with no token if there is no token" do
@@ -263,7 +262,6 @@ describe 'dashboard mode' do
     end
   end
 
-=end
 
   describe 'history subcommand' do
     it 'performs a verbose no-op with no options' do
@@ -302,7 +300,6 @@ describe 'dashboard mode' do
   end
 end
 
-=begin
 describe 'usage' do
   commands = %w(alerts event source ts write)
 
@@ -337,6 +334,75 @@ describe 'usage' do
     expect(o.status).to eq(1)
     expect(o.stdout).to be_empty
     expect(o.stderr).to eq(Wavefront::Client::VERSION)
+  end
+end
+
+describe 'alerts mode' do
+
+  describe 'export subcommand' do
+    it 'performs a verbose noop with a CLI token' do
+      o = wf('alerts -n -t token export 1489152324000')
+      expect(o.status).to eq(0)
+      expect(o.stderr).to be_empty
+      expect(o.stdout_a[-2]).to eq(
+        'GET https://metrics.wavefront.com/api/alert/1489152324000')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose noop with a config file and CLI token' do
+      o = wf("alerts -c #{CF} -n -t token -f yaml export 1489152324000")
+      expect(o.status).to eq(0)
+      expect(o.stderr).to be_empty
+      expect(o.stdout_a[-2]).to eq(
+        'GET https://default.wavefront.com/api/alert/1489152324000')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+  end
+
+  describe 'import subcommand' do
+    it 'errors safely on a non-existent file' do
+      o = wf("alerts -c #{CF} -t token import /no/such/file")
+      expect(o.stdout).to be_empty
+      expect(o.status).to eq(1)
+      expect(o.stderr).to eq(
+        'alerts query failed. Import file does not exist.')
+    end
+
+    it 'errors safely on an unsupported file type' do
+      o = wf("alerts -c #{CF} -t token import #{RES_DIR +
+             'sample_alert.txt'}")
+      expect(o.stdout).to be_empty
+      expect(o.status).to eq(1)
+      expect(o.stderr).to eq(
+        'alerts query failed. Unsupported file format.')
+    end
+
+    it 'performs a verbose no-op with a JSON import file' do
+      o = wf("alerts -c #{CF} -n -t token import #{RES_DIR +
+             'sample_alert.json'}")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to have_element([:severity, 'WARN'])
+      expect(o.stdout_a[-2]).to have_element([:resolveMinutes, 5])
+      expect(o.stdout_a[-2]).to_not have_element([:resolveAfterMinutes, 5])
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://default.wavefront.com/api/alert/create')
+      expect(o.stdout_a[-1]).to eq('HEADERS {:"X-AUTH-TOKEN"=>"token"}')
+    end
+
+    it 'performs a verbose no-op with a YAML import file' do
+      o = wf("alerts -c #{CF} -n -E test.wavefront.com import #{RES_DIR +
+             'sample_alert.yaml'}")
+      expect(o.stderr).to be_empty
+      expect(o.status).to eq(0)
+      expect(o.stdout_a[-2]).to have_element([:severity, 'WARN'])
+      expect(o.stdout_a[-2]).to have_element([:resolveMinutes, 5])
+      expect(o.stdout_a[-2]).to_not have_element([:resolveAfterMinutes, 5])
+      expect(o.stdout_a[-3]).to eq('POST ' \
+        'https://test.wavefront.com/api/alert/create')
+      expect(o.stdout_a[-1]).to eq(
+        'HEADERS {:"X-AUTH-TOKEN"=>"12345678-abcd-1234-abcd-123456789012"}')
+    end
   end
 end
 
@@ -841,4 +907,4 @@ describe 'ts mode' do
     expect(q[:params][:g]).to eq('m')
     expect(q[:params][:q]).to eq('ts(dev.cli.test)')
   end
-=end
+end
