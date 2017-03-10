@@ -67,18 +67,18 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
   end
 
   def import_alert
+    raw = load_file(options[:'<file>'])
+
     begin
-      prepped = wfa.import_to_create(load_file(options[:'<file>']))
+      prepped = wfa.import_to_create(raw)
     rescue => e
       puts e if options[:debug]
       raise 'could not parse input.'
     end
 
-    return if noop
-
     begin
       wfa.create_alert(prepped)
-      puts 'Alert imported.'
+      puts 'Alert imported.' unless options[:noop]
     rescue RestClient::BadRequest
       raise '400 error: alert probably exists.'
     end
@@ -91,6 +91,8 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
       puts e if @options[:debug]
       raise 'Unable to retrieve alert.'
     end
+
+    return if options[:noop]
 
     case options[:alertformat].to_sym
     when :json
