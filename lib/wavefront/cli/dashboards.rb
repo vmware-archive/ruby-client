@@ -13,7 +13,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   def run
     @wfd = Wavefront::Dashboards.new(
       options[:token], options[:endpoint], options[:debug],
-      { noop: options[:noop], verbose: options[:verbose] }
+      noop: options[:noop], verbose: options[:verbose]
     )
 
     list_dashboards if options[:list]
@@ -27,29 +27,25 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   end
 
   def import_dash
-    begin
-      wfd.import(load_file(options[:'<file>']).to_json, options[:force])
-      puts 'Dashboard imported' unless options[:noop]
-    rescue RestClient::BadRequest
-      raise '400 error: dashboard probably exists, and force not used'
-    end
+    wfd.import(load_file(options[:'<file>']).to_json, options[:force])
+    puts 'Dashboard imported' unless options[:noop]
+  rescue RestClient::BadRequest
+    raise '400 error: dashboard probably exists, and force not used'
   end
 
   def clone_dash
-    begin
-      wfd.clone(options[:'<source_id>'], options[:'<new_id>'],
-                options[:'<new_name>'], options[:version])
-      puts 'Dashboard cloned' unless options[:noop]
-    rescue RestClient::BadRequest
-      raise '400 error: either target exists or source does not'
-    end
+    wfd.clone(options[:'<source_id>'], options[:'<new_id>'],
+              options[:'<new_name>'], options[:version])
+    puts 'Dashboard cloned' unless options[:noop]
+  rescue RestClient::BadRequest
+    raise '400 error: either target exists or source does not'
   end
 
   def history_dash
     begin
       resp = wfd.history(options[:'<dashboard_id>'],
-                        options[:start] || 100,
-                        options[:limit] || nil)
+                         options[:start] || 100,
+                         options[:limit] || nil)
     rescue RestClient::ResourceNotFound
       raise 'Dashboard does not exist'
     end
@@ -58,30 +54,24 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
   end
 
   def undelete_dash
-    begin
-      resp = wfd.undelete(options[:'<dashboard_id>'])
-      puts 'dashboard undeleted' unless options[:noop]
-    rescue RestClient::ResourceNotFound
-      raise 'Dashboard does not exist'
-    end
+    wfd.undelete(options[:'<dashboard_id>'])
+    puts 'dashboard undeleted' unless options[:noop]
+  rescue RestClient::ResourceNotFound
+    raise 'Dashboard does not exist'
   end
 
   def delete_dash
-    begin
-      resp = wfd.delete(options[:'<dashboard_id>'])
-      puts 'dashboard deleted' unless options[:noop]
-    rescue RestClient::ResourceNotFound
-      raise 'Dashboard does not exist'
-    end
+    wfd.delete(options[:'<dashboard_id>'])
+    puts 'dashboard deleted' unless options[:noop]
+  rescue RestClient::ResourceNotFound
+    raise 'Dashboard does not exist'
   end
 
   def create_dash
-    begin
-      resp = wfd.create(options[:'<dashboard_id>'], options[:'<name>'])
-      puts 'dashboard created' unless options[:noop]
-    rescue RestClient::BadRequest
-      raise '400 error: dashboard probably exists'
-    end
+    wfd.create(options[:'<dashboard_id>'], options[:'<name>'])
+    puts 'dashboard created' unless options[:noop]
+  rescue RestClient::BadRequest
+    raise '400 error: dashboard probably exists'
   end
 
   def export_dash
@@ -92,7 +82,7 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
 
   def list_dashboards
     resp = wfd.list({ private: options[:privatetag],
-                      shared: options[:sharedtag]}, options)
+                      shared: options[:sharedtag] })
     display_resp(resp, :human_list)
   end
 
@@ -109,11 +99,11 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
     when :yaml
       puts resp.to_yaml
     when :human
-      if human_method
-        self.send(human_method, JSON.parse(resp))
-      else
+      unless human_method
         raise 'human output format is not supported by this subcommand'
       end
+
+      send(human_method, JSON.parse(resp))
     else
       raise 'unsupported output format'
     end
@@ -121,9 +111,9 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
 
   def human_history(resp)
     resp.each do |rev|
-      puts ('%-4s%s (%s)' % [rev['version'],
-                             Time.at(rev['update_time'].to_i / 1000),
-                             rev['update_user']])
+      puts format('%-4s%s (%s)', rev['version'],
+                  Time.at(rev['update_time'].to_i / 1000),
+                  rev['update_user'])
 
       next unless rev['change_description']
       rev['change_description'].each { |desc| puts '      ' + desc }
@@ -134,13 +124,13 @@ class Wavefront::Cli::Dashboards < Wavefront::Cli
     #
     # Simply list the dashboards we have. If the user wants more
     #
-    max_id_width = resp.map{ |s| s['url'].size }.max
+    max_id_width = resp.map { |s| s['url'].size }.max
 
-    puts ("%-#{max_id_width + 1}s%s" % ['ID', 'NAME'])
+    puts format("%-#{max_id_width + 1}s%s", 'ID', 'NAME')
 
     resp.each do |dash|
       next if !options[:all] && dash['isTrash']
-      line = "%-#{max_id_width + 1}s%s" % [dash['url'], dash['name']]
+      line = format("%-#{max_id_width + 1}s%s", dash['url'], dash['name'])
       line.<< ' (in trash)' if dash['isTrash']
       puts line
     end

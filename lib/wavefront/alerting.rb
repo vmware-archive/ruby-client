@@ -117,12 +117,13 @@ module Wavefront
       # created. Returns a hash. Exceptions are just passed on
       # through. You get a 500 if the alert doesn't exist.
       #
-      resp = call_get(create_uri(path: id))
+      resp = call_get(create_uri(path: id)) || '{}'
       return JSON.parse(resp)
     end
 
     def active(options={})
-      call_get(create_uri(options.merge(path: 'active', qs: mk_qs(options))))
+      call_get(create_uri(options.merge(path: 'active',
+                                        qs: mk_qs(options))))
     end
 
     def all(options={})
@@ -130,15 +131,18 @@ module Wavefront
     end
 
     def invalid(options={})
-      call_get(create_uri(options.merge(path: 'invalid', qs: mk_qs(options))))
+      call_get(create_uri(options.merge(path: 'invalid',
+                                        qs: mk_qs(options))))
     end
 
     def snoozed(options={})
-      call_get(create_uri(options.merge(path: 'snoozed', qs: mk_qs(options))))
+      call_get(create_uri(options.merge(path: 'snoozed',
+                                        qs: mk_qs(options))))
     end
 
     def affected_by_maintenance(options={})
-      call_get(create_uri(options.merge(path: 'affected_by_maintenance', qs: mk_qs(options))))
+      call_get(create_uri(options.merge(path: 'affected_by_maintenance',
+                                        qs: mk_qs(options))))
     end
 
     private

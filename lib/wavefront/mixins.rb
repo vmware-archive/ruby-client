@@ -33,14 +33,12 @@ module Wavefront
       #
       # Return a time as an integer, however it might come in.
       #
-      begin
-        return t if t.is_a?(Integer)
-        return t.to_i if t.is_a?(Time)
-        return t.to_i if t.is_a?(String) && t.match(/^\d+$/)
-        DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc.to_i
-      rescue
-        raise "cannot parse timestamp '#{t}'."
-      end
+      return t if t.is_a?(Integer)
+      return t.to_i if t.is_a?(Time)
+      return t.to_i if t.is_a?(String) && t.match(/^\d+$/)
+      DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc.to_i
+    rescue
+      raise "cannot parse timestamp '#{t}'."
     end
 
     def time_to_ms(t)
@@ -64,7 +62,7 @@ module Wavefront
     end
 
     def call_get(uri)
-      if (verbose || noop)
+      if verbose || noop
         puts 'GET ' + uri.to_s
         puts 'HEADERS ' + headers.to_s
       end
@@ -74,7 +72,7 @@ module Wavefront
 
     def call_post(uri, query = nil, ctype = 'text/plain')
       h = headers
-      if (verbose || noop)
+      if verbose || noop
         puts 'POST ' + uri.to_s
         puts 'QUERY ' + query if query
         puts 'HEADERS ' + h.to_s
@@ -83,13 +81,11 @@ module Wavefront
 
       RestClient.post(uri.to_s, query,
                       h.merge(:'Content-Type' => ctype,
-                              :Accept         => 'application/json'
-                             )
-                     )
+                              :Accept         => 'application/json'))
     end
 
     def call_delete(uri)
-      if (verbose || noop)
+      if verbose || noop
         puts 'DELETE ' + uri.to_s
         puts 'HEADERS ' + headers.to_s
       end
@@ -110,7 +106,7 @@ module Wavefront
       if file.extname == '.json'
         JSON.parse(IO.read(file))
       elsif file.extname == '.yaml' || file.extname == '.yml'
-        YAML.load(IO.read(file))
+        YAML.safe_load(IO.read(file))
       else
         raise 'Unsupported file format.'
       end

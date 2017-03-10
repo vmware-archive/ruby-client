@@ -6,12 +6,14 @@ require 'logger'
 require 'wavefront/constants'
 require 'wavefront/mixins'
 
-
 module Wavefront
+  #
+  # Wrappers around the v1 dashboards API
+  #
   class Dashboards
     include Wavefront::Constants
     include Wavefront::Mixins
-    DEFAULT_PATH = '/api/dashboard/'
+    DEFAULT_PATH = '/api/dashboard/'.freeze
 
     attr_reader :headers, :noop, :verbose, :endpoint
 
@@ -43,7 +45,7 @@ module Wavefront
       qs.<< "&v=#{source_ver}" if source_ver
 
       call_post(create_uri(path: uri_concat(source_id, 'clone')), qs,
-                           'application/x-www-form-urlencoded')
+                'application/x-www-form-urlencoded')
     end
 
     def history(id, start = 100, limit = nil)
@@ -53,16 +55,11 @@ module Wavefront
       call_get(create_uri(path: uri_concat(id, 'history'), qs: qs))
     end
 
-    def list(payload = {}, options = {})
+    def list(opts = {})
       qs = []
 
-      if payload[:private]
-        payload[:private].map { |t| qs.<< "userTag=#{t}" }
-      end
-
-      if payload[:shared]
-        payload[:shared].map { |t| qs.<< "customerTag=#{t}" }
-      end
+      opts[:private].map { |t| qs.<< "userTag=#{t}" } if opts[:private]
+      opts[:shared].map { |t| qs.<< "customerTag=#{t}" } if opts[:shared]
 
       call_get(create_uri(qs: qs.join('&')))
     end
@@ -76,7 +73,8 @@ module Wavefront
     end
 
     def export(id, version = nil)
-      resp = call_get(create_uri(path: id)) || '{}'
+      path = version ? uri_concat(id, version) : id
+      resp = call_get(create_uri(path: path)) || '{}'
       JSON.parse(resp)
     end
 
@@ -97,7 +95,7 @@ module Wavefront
       URI::HTTPS.build(
         host:  options[:host],
         path:  uri_concat(DEFAULT_PATH, options[:path]),
-        query: options[:qs],
+        query: options[:qs]
       )
     end
 
