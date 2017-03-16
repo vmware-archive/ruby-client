@@ -17,7 +17,7 @@
 require 'pathname'
 
 # uncomment for development
-$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
+# $LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
 
 require 'wavefront/client'
 require 'wavefront/client/version'
