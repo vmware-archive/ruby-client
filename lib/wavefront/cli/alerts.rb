@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 #     Copyright 2015 Wavefront Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,24 +13,38 @@
 
 require 'wavefront/alerting'
 require 'wavefront/cli'
+require 'wavefront/mixins'
 require 'json'
+require 'yaml'
 require 'pp'
 require 'time'
 
 class Wavefront::Cli::Alerts < Wavefront::Cli
+  include Wavefront::Mixins
 
-  attr_accessor :options, :arguments
+  attr_accessor :options, :arguments, :wfa
 
   def run
     raise 'Missing token.' if ! @options[:token] || @options[:token].empty?
     raise 'Missing query.' if arguments.empty?
-    query = arguments[0].to_sym
+    valid_format?(@options[:alertformat].to_sym)
 
-    wfa = Wavefront::Alerting.new(@options[:token], @options[:endpoint],
+    @wfa = Wavefront::Alerting.new(@options[:token], @options[:endpoint],
                                   @options[:debug], {
       noop: @options[:noop], verbose: @options[:verbose]})
+
+    if options[:export]
+      export_alert(options[:'<timestamp>'])
+      return
+    end
+
+    if options[:import]
+      import_alert
+      return
+    end
+
+    query = arguments[0].to_sym
     valid_state?(wfa, query)
-    valid_format?(@options[:alertformat].to_sym)
     options = { host: @options[:endpoint] }
 
     if @options[:shared]
@@ -54,6 +66,46 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     exit
   end
 
+  def import_alert
+    raw = load_file(options[:'<file>'])
+
+    begin
+      prepped = wfa.import_to_create(raw)
+    rescue => e
+      puts e if options[:debug]
+      raise 'could not parse input.'
+    end
+
+    begin
+      wfa.create_alert(prepped)
+      puts 'Alert imported.' unless options[:noop]
+    rescue RestClient::BadRequest
+      raise '400 error: alert probably exists.'
+    end
+  end
+
+  def export_alert(id)
+    begin
+      resp = wfa.get_alert(id)
+    rescue => e
+      puts e if @options[:debug]
+      raise 'Unable to retrieve alert.'
+    end
+
+    return if options[:noop]
+
+    case options[:alertformat].to_sym
+    when :json
+      puts JSON.pretty_generate(resp)
+    when :yaml
+      puts resp.to_yaml
+    when :human
+      puts humanize([resp])
+    else
+      puts 'unknown output format.'
+    end
+  end
+
   def format_result(result, format)
     #
     # Call a suitable method to display the output of the API call,
@@ -66,6 +118,8 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
       pp result
     when :json
       puts JSON.pretty_generate(JSON.parse(result))
+    when :yaml
+      puts JSON.parse(result).to_yaml
     when :human
       puts humanize(JSON.parse(result))
     else
@@ -137,7 +191,7 @@ class Wavefront::Cli::Alerts < Wavefront::Cli
     # The 'created' and 'updated' timestamps are in epoch
     # milliseconds
     #
-    human_line(k, Time.at(v / 1000))
+    human_line(k, "#{Time.at(v / 1000)} (#{v})")
   end
 
   def human_line_updated(k, v)

@@ -23,15 +23,22 @@ require 'wavefront/events'
 require 'wavefront/batch_writer'
 require 'wavefront/validators'
 require 'wavefront/opt_handler'
+require 'wavefront/dashboards'
 require 'wavefront/cli'
 require 'wavefront/cli/alerts'
 require 'wavefront/cli/events'
 require 'wavefront/cli/batch_write'
 require 'wavefront/cli/write'
 require 'wavefront/cli/sources'
+require 'wavefront/cli/dashboards'
 
 TEST_TOKEN = "test"
 TEST_HOST = "metrics.wavefront.com"
+ROOT = Pathname.new(__FILE__).dirname.parent
+RES_DIR = ROOT + 'spec' + 'wavefront' + 'cli' + 'resources'
+CF = RES_DIR + 'conf.yaml'
+WF = ROOT + 'bin' + 'wavefront'
+LIB = ROOT + 'lib'
 
 # The following RSpec matcher is used to test things which `puts`
 # (or related), which RSpec can't do by default. It works with RSpec

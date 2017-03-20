@@ -17,7 +17,7 @@
 require 'pathname'
 
 # uncomment for development
-$LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
+# $LOAD_PATH.<< Pathname.new(__FILE__).dirname.realpath.parent + 'lib'
 
 require 'wavefront/client'
 require 'wavefront/client/version'
@@ -87,6 +87,10 @@ alerts: %(
 Usage:
   #{ME} alerts [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
             [-f format] [-p tag] [ -s tag] <state>
+  #{ME} alerts export [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
+            [-f format] <timestamp>
+  #{ME} alerts import [-DnV] [-c file] [-P profile] [-E endpoint] [-t token]
+            <file>
 #{global_opts}
 Options:
   -E, --endpoint=URI       cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
@@ -180,6 +184,38 @@ Options:
   -H, --host=STRING          source to manipulate
   -f, --sourceformat=STRING  output format (#{SOURCE_FORMATS.join(', ')}) [#{DEFAULT_OPTS[:sourceformat]}]
 ),
+dashboard: %(
+Usage:
+  #{ME} dashboard list [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] [-f format] [-a] [-T tag...] [-p tag...]
+  #{ME} dashboard import [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] [-f format] [-F] <file>
+  #{ME} dashboard export [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] [-f format] [-v version] <dashboard_id>
+  #{ME} dashboard create [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] <dashboard_id> <name>
+  #{ME} dashboard clone [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] [-v version] <source_id> <new_id> <new_name>
+  #{ME} dashboard delete [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] <dashboard_id>
+  #{ME} dashboard undelete [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] <dashboard_id>
+  #{ME} dashboard history [-DnV] [-c file] [-P profile] [-E endpoint]
+           [-t token] [-f format] [-S version] [-L limit] <dashboard_id>
+  #{ME} dashboard --help
+#{global_opts}
+Options:
+  -E, --endpoint=URI       cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
+  -t, --token=TOKEN        Wavefront authentication token
+  -a, --all                in human output mode, list all dashboards
+  -T, --sharedtag=TAG      only select dashboards with this shared tag
+  -p, --privatetag=TAG     only select dashboards with this private tag
+  -S, --start=VERSION      highest version number from which to descend
+  -L, --limit=COUNT        number of versions to report
+  -v, --version=INTEGER    version of dashboard to clone
+  -F, --force              import dashboard even if it already exists
+  -f, --dashformat=STRING  output format (#{DASH_FORMATS.join(', ')}) [#{DEFAULT_OPTS[:dashformat]}]
+),
 default: %(
 Wavefront CLI
 
@@ -191,6 +227,7 @@ Usage:
 Commands:
   ts          view timeseries data
   alerts      view alerts
+  dashboard   view and manage dashboards
   event       open and close events
   source      view and manage source tags and descriptions
   write       send data points to a Wavefront proxy
@@ -247,6 +284,9 @@ when :write
     require 'wavefront/cli/write'
     cli = Wavefront::Cli::Write.new(opts, [opts[:'<state>']])
   end
+when :dashboard
+  require 'wavefront/cli/dashboards'
+  cli = Wavefront::Cli::Dashboards.new(opts, [opts[:'<state>']])
 end
 
 begin

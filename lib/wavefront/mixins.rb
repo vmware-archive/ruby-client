@@ -33,14 +33,12 @@ module Wavefront
       #
       # Return a time as an integer, however it might come in.
       #
-      begin
-        return t if t.is_a?(Integer)
-        return t.to_i if t.is_a?(Time)
-        return t.to_i if t.is_a?(String) && t.match(/^\d+$/)
-        DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc.to_i
-      rescue
-        raise "cannot parse timestamp '#{t}'."
-      end
+      return t if t.is_a?(Integer)
+      return t.to_i if t.is_a?(Time)
+      return t.to_i if t.is_a?(String) && t.match(/^\d+$/)
+      DateTime.parse("#{t} #{Time.now.getlocal.zone}").to_time.utc.to_i
+    rescue
+      raise "cannot parse timestamp '#{t}'."
     end
 
     def time_to_ms(t)
@@ -61,6 +59,57 @@ module Wavefront
 
     def uri_concat(*args)
       args.join('/').squeeze('/')
+    end
+
+    def call_get(uri)
+      if verbose || noop
+        puts 'GET ' + uri.to_s
+        puts 'HEADERS ' + headers.to_s
+      end
+      return if noop
+      RestClient.get(uri.to_s, headers)
+    end
+
+    def call_post(uri, query = nil, ctype = 'text/plain')
+      h = headers
+      if verbose || noop
+        puts 'POST ' + uri.to_s
+        puts 'QUERY ' + query if query
+        puts 'HEADERS ' + h.to_s
+      end
+      return if noop
+
+      RestClient.post(uri.to_s, query,
+                      h.merge(:'Content-Type' => ctype,
+                              :Accept         => 'application/json'))
+    end
+
+    def call_delete(uri)
+      if verbose || noop
+        puts 'DELETE ' + uri.to_s
+        puts 'HEADERS ' + headers.to_s
+      end
+      return if noop
+      RestClient.delete(uri.to_s, headers)
+    end
+
+    def load_file(path)
+      #
+      # Give it a path to a file (as a string) and it will return the
+      # contents of that file as a Ruby object. Automatically detects
+      # JSON and YAML. Raises an exception if it doesn't look like
+      # either.
+      #
+      file = Pathname.new(path)
+      raise 'Import file does not exist.' unless file.exist?
+
+      if file.extname == '.json'
+        JSON.parse(IO.read(file))
+      elsif file.extname == '.yaml' || file.extname == '.yml'
+        YAML.load(IO.read(file))
+      else
+        raise 'Unsupported file format.'
+      end
     end
   end
 end
