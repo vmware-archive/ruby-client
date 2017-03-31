@@ -92,6 +92,7 @@ module Wavefront
       #   privateTags:          array      (optional)
       #   sharedTags:           array      (optional)
       #   additionalInformation string     (optional)
+      #   id                    string     (optional - will trigger update behaviour)
       # }
       #
       %w(name condition minutes notifications severity).each do |f|
@@ -107,7 +108,9 @@ module Wavefront
         alert[f] = alert[f].join(',') if alert[f] && alert[f].is_a?(Array)
       end
 
-      call_post(create_uri(path: 'create'),
+      path = alert.has_key?(:id) ? alert[:id] : 'create'
+
+      call_post(create_uri(path: path),
                 hash_to_qs(alert), 'application/x-www-form-urlencoded')
     end
 
