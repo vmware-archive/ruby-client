@@ -37,7 +37,7 @@ class Wavefront::Cli::Write < Wavefront::Cli
       noop:         options[:noop]
     }
 
-    write_metric(options[:'<value>'].to_i, options[:'<metric>'], write_opts)
+    write_metric(options[:'<value>'].to_f, options[:'<metric>'], write_opts)
   end
 
   def write_metric(value, name, opts)
