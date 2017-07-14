@@ -135,7 +135,8 @@ Usage:
   #{ME} ingest point [-c file] [-P profile] [-E endpoint] [-t token]
            [-DnV] [-H host] [-d time] [-T tag...] <metric> <value>
   #{ME} ingest file [-c file] [-P profile] [-E endpoint] [-t token]
-           [-DnV] [-H host] [-d time] <file>
+           [-DnV] [-H host] [-d time] [-T tag...] [-m metric]
+           [-F format] <file>
 #{global_opts}
 Options:
   -E, --endpoint=URI         cluster endpoint [#{DEFAULT_OPTS[:endpoint]}]
@@ -143,6 +144,15 @@ Options:
   -d, --time=TIME            time of data point (omit to use current time)
   -H, --host=STRING          source host [#{DEFAULT_OPTS[:host]}]
   -T, --tag=TAG              point tag in key=value form
+  -m, --metric=STRING        the metric path to which contents of a
+                             file will be assigned. If the file
+                             contains a metric name, the two will be
+                             concatenated
+  -F, --infileformat=STRING  format of input file or stdin [mv]
+
+Files are whitespace separated and must have the metric path in the first
+field and value in the second. key=value point tags may optionally be
+appended.
 ),
 write: %(
 Usage:

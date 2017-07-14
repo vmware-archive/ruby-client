@@ -75,6 +75,9 @@ module Wavefront
       q = { h: source || DEFAULT_OPTIONS[:host],
             d: parse_time(timestamp) }
 
+      if verbose
+        puts "sending points: #{points}"
+      end
       call_post(create_uri(qs: hash_to_qs(q)), points.to_json,
                 'application/json')
     end
