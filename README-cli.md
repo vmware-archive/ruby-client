@@ -417,6 +417,31 @@ second. Plot the parabola in Wavefront.
 $ parabola.rb | wavefront write file -F tv -m cli.demo.parabola -
 ```
 
+## `ingest` Mode: Sending Points to Wavefront Without a Proxy
+
+Wavefront has a "secret" feature which lets you poke data in via the
+API. The `ingest` command works like `write`, but goes via the API
+rather than a proxy. This has some limitations.
+
+* The rate limit is far less via the API. Wavefront tell me that
+  they have one client hitting around 300pps.
+* You miss out on the preprocessing, buffering and whatnot that the
+  proxy does.
+* The timestamp and source ID are (oddly) encoded in the API request
+  URI, rather than in the payload with the points. That means a
+  single request is forced to have the same source and timestamp.
+  This isn't great and I've filed a feature request to have it made
+  better.
+* It's an undocumented and therefore unsupported feature. It may
+  break or disappear at any time
+
+The main difference between `ingest file` and `write file` is that
+you can't have the timestamp in your input: it has to be derived by
+the script, dynamically.
+
+For this to work the user must have the "Direct Ingestion"
+privilege in Wavefront.
+
 ## `sources` Mode: Tagging and Describing
 
 This command is used to add tags and descriptions to Wavefront
