@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.5.0"
   spec.add_development_dependency 'yard',  '~> 0.9.5'
 
-  spec.add_dependency "rest-client", ">= 1.6.7", "< 1.8"
+  spec.add_dependency "rest-client", "~> 1.8.0"
   spec.add_dependency "docopt", "~> 0.5.0"
   spec.add_dependency 'inifile',  '3.0.0'
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
