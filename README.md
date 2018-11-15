@@ -1,7 +1,9 @@
-Wavefront [![Build Status](https://travis-ci.org/wavefrontHQ/ruby-client.svg?branch=master)](https://travis-ci.org/wavefrontHQ/ruby-client) [![Gem Version](https://badge.fury.io/rb/wavefront-client.svg)](https://badge.fury.io/rb/wavefront-client) ![](http://ruby-gem-downloads-badge.herokuapp.com/wavefront-client?type=total)
+Wavefront (Deprecated) [![Build Status](https://travis-ci.org/wavefrontHQ/ruby-client.svg?branch=master)](https://travis-ci.org/wavefrontHQ/ruby-client) [![Gem Version](https://badge.fury.io/rb/wavefront-client.svg)](https://badge.fury.io/rb/wavefront-client) ![](http://ruby-gem-downloads-badge.herokuapp.com/wavefront-client?type=total)
 ==========
 
 This is a ruby gem for speaking to the [Wavefront][1] monitoring and graphing system.
+
+**Note**: This client uses the deprecated V1 Wavefront APIs and is no longer supported. Use the [wavefront-sdk](https://github.com/snltd/wavefront-sdk) developed by Robert Fisher that supports the V2 Wavefront APIs.
 
 ## Usage
 
